@@ -5,6 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bipin Saha - Portfolio</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+
+      .photos-button {
+      display: block;
+      width: 100px;
+      padding: 10px;
+      text-align: center;
+      margin: 20px auto;
+      background-color: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    }
+
+    /* Adjusted alignment slightly left */
+    #education,
+    #experience,
+    #personal-info {
+      width: 70%;
+      float: left;
+    }
+
+    /* Clear floats */
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -12,6 +42,31 @@
   </header>
 
   <main>
+    <section id="experience">
+        <h2>Experience</h2>
+        <div class="experience-item">
+          <div class="experience-details">
+            <h3>Machine Learning Engineer</h3>
+            <p class="institution">Business Automation Ltd.</p>
+            <p>Joy Silicon Tower, Hi-Tech Park, Rajshahi</p>
+          </div>
+          <div class="date">
+            <p>Starting from December 2023</p>
+          </div>
+        </div>
+        <div class="experience-item">
+          <div class="experience-details">
+            <h3>IoT Engineer</h3>
+            <p class="institution">Get-Aid. Ltd.</p>
+            <p>Location</p>
+          </div>
+          <div class="date">
+            <p>January 2023 - Present</p>
+          </div>
+        </div>
+      </section>
+  
+  
     <section id="education">
       <h2>Education</h2>
       <div class="education-item">
@@ -52,34 +107,26 @@
       </div>
     </section>
 
-    <section id="experience">
-      <h2>Experience</h2>
-      <div class="experience-item">
-        <div class="experience-details">
-          <h3>Machine Learning Engineer</h3>
-          <p class="institution">Business Automation Ltd.</p>
-          <p>Joy Silicon Tower, Hi-Tech Park, Rajshahi</p>
-        </div>
-        <div class="date">
-          <p>Starting from December 2023</p>
-        </div>
-      </div>
-      <div class="experience-item">
-        <div class="experience-details">
-          <h3>IoT Engineer</h3>
-          <p class="institution">Get-Aid. Ltd.</p>
-          <p>Location</p>
-        </div>
-        <div class="date">
-          <p>January 2023 - Present</p>
-        </div>
-      </div>
-    </section>
-
     <section id="personal-info">
-      <h2>Personal Information</h2>
-      <p>Replace this text with your personal information.</p>
-    </section>
+        <h2>Personal Information</h2>
+        <div class="cv-info">
+          <div class="left-info">
+            <p><strong>Age:</strong> 26 Years 11 Days (By January 1, 2024)</p>
+            <p><strong>Zodiac:</strong> Leo</p>
+            <p><strong>Weight:</strong> 88 KG</p>
+            <p><strong>Height:</strong> 178 cm</p>
+            <p><strong>Blood Group:</strong> O+</p>
+          </div>
+          <div class="right-info">
+            <p><strong>Father's Name:</strong> Bijon Krisna Saha</p>
+            <p><strong>Occupation:</strong> General Manager, International Jute Traders, Narayangnaj</p>
+            <p><strong>Mother's Name:</strong> Rina Rani Saha</p>
+            <p><strong>Occupation:</strong> Homemaker</p>
+          </div>
+        </div>
+      </section>
+        
+      <a href="https://photos.app.goo.gl/ThXW21fwuVNGH9fC6" class="photos-button" target="_blank">PHOTOS</a>
   </main>
 
   <script src="script.js"></script>
