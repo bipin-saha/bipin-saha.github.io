@@ -20,8 +20,8 @@
 
         .projects-container {
             display: flex;
-            justify-content: space-between;
             flex-wrap: wrap;
+            justify-content: space-between;
         }
 
         .project {
@@ -32,22 +32,46 @@
             border-radius: 8px;
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
 
-        .project img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin-top: 10px;
+        .project-details,
+        .right-column {
+            width: 48%;
+            box-sizing: border-box;
         }
 
-        .project-details {
+        .project-details h2,
+        .right-column h3 {
+            margin-top: 0;
+        }
+
+        .project-details p,
+        .right-column li {
             margin-bottom: 10px;
         }
 
         .tech-skills {
             font-weight: bold;
             color: #555;
+        }
+
+        .project img {
+            width: 48%;
+            border-radius: 5px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+
+        .right-column h3 {
+            color: #0066cc;
+        }
+
+        .right-column ul {
+            list-style-type: none;
+            padding: 0;
         }
 
         a {
@@ -62,7 +86,7 @@
 </head>
 
 <body>
-    <h1>Projects</h1>
+    <h1>My Projects</h1>
 
     <div class="projects-container">
         <div class="project">
@@ -99,6 +123,18 @@
             <div>
                 <img src="quadcopter_aerial_mapping.jpg" alt="Quadcopter Aerial Mapping Project Image">
             </div>
+        </div>
+
+        <!-- Right Column with Random Deep Learning Project Names -->
+        <div class="project right-column">
+            <h3>Other Deep Learning Projects</h3>
+            <ul>
+                <li><a href="#">Image Recognition using CNN</a></li>
+                <li><a href="#">Natural Language Processing with LSTM</a></li>
+                <li><a href="#">Generative Adversarial Networks (GANs)</a></li>
+                <li><a href="#">Speech Recognition using RNN</a></li>
+                <li><a href="#">Reinforcement Learning for Game AI</a></li>
+            </ul>
         </div>
     </div>
 
