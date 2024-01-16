@@ -75,6 +75,22 @@
         height: 100%;
         }
 
+        button {
+        padding: 5px 5px;
+        font-size: 16px;
+        background-color: #3498db; /* Set the background color */
+        color: #ffffff; /* Set the text color */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease; /* Add a smooth transition effect */
+        }
+
+        /* Change the button color on hover */
+        button:hover {
+        background-color: #2980b9;
+        }
+
     </style>
 </head>
 <body>
@@ -86,8 +102,9 @@
                     <div class="description">
                         <h3>Behavioral Cloning of Self Driving Car (Udacity, Simulation)</h3>
                         This project, titled above, has an objective to train a model to drive a car autonomously on a simulated track. The ability of the model to drive the car is learned from cloning the behaviour of a human driver. Training data is gotten from examples of a human driving in the simulator, then fed into a deep learning network which learns the response (steering angle) for every encountered frame in the simulation. In other words, the model is trained to predict an appropriate steering angle for every frame while driving. The model is then validated on a new track to check for generalization of the learned features for performing steering angle prediction.
+                        
                     </div>
-                    
+                    <button type="button" onclick="tagClicked()">Tag</button>
                 </div>
             </div>
             <div class="project-container">
