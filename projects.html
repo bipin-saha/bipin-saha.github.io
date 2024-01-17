@@ -53,6 +53,8 @@
         img {
         width: 100%; /* Make the image fill its container */
         height: auto; /* Maintain the aspect ratio */
+        padding: 5px 5px;
+    
         }
 
         
@@ -67,7 +69,8 @@
 
         .video-container iframe,
         .video-container object,
-        .video-container embed {
+        .video-container embed 
+        .img {
         position: absolute;
         top: 0;
         left: 0;
@@ -104,13 +107,14 @@
                         This project, titled above, has an objective to train a model to drive a car autonomously on a simulated track. The ability of the model to drive the car is learned from cloning the behaviour of a human driver. Training data is gotten from examples of a human driving in the simulator, then fed into a deep learning network which learns the response (steering angle) for every encountered frame in the simulation. In other words, the model is trained to predict an appropriate steering angle for every frame while driving. The model is then validated on a new track to check for generalization of the learned features for performing steering angle prediction.
                         
                     </div>
-                    <button type="button" onclick="tagClicked()">Tag</button>
+                    
                 </div>
             </div>
             <div class="project-container">
                 <div class="project">
-                    <img src="rrt_path_planning.jpg" alt="Robot RRT Path Planning (Simulation)">
+                    <img src="project_images\rrt.png" alt="Robot RRT Path Planning (Simulation)" width="426" height="240">
                     <div class="description">
+                        <h3>Robot RRT Path Planning (Simulation)</h3>
                         The tree is constructed incrementally from samples drawn randomly from
                         the search space and is inherently biased to grow towards large unsearched
                         areas of the problem.
@@ -119,8 +123,9 @@
             </div>
             <div class="project-container">
                 <div class="project">
-                    <img src="quadcopter_mapping.jpg" alt="Teleoperated Quadcopter for Aerial Mapping">
+                    <img src="project_images\drone.jpg" alt="Teleoperated Quadcopter for Aerial Mapping" width="426" height="240">
                     <div class="description">
+                        <h3>Teleoperated Quadcopter for Aerial Mapping</h3>
                         Build a four‐rotor quadcopter which provides 20 minutes of flight time. The
                         project’s purpose was aerial mapping. Omnidirectional control range – 10KM.
                         IMU, and GPS provide hovering stability. Gird mapping is used for path planning.
@@ -133,16 +138,18 @@
         <div class="column">
             <div class="project-container">
                 <div class="project">
-                    <img src="vehicle_detection.jpg" alt="Native Vehicle Detection using Deep Learning">
+                    <img src="project_images\vehicle.jpg" alt="Native Vehicle Detection using Deep Learning">
                     <div class="description">
+                        <h3>Native Vehicle Detection using Deep Learning</h3>
                         State of the art deep-learning models has been used in this research to create a native vehicle identification system The dataset consists of over 14,500 images containing more than 72,000 instances of vehicles, classified into 17 distinct vehicle classes. The detection task is performed using a combination of YOLO (You Only Look Once) models, including RetinaNet, YOLO v5, v6, v7, and v8. The trained models have demonstrated an accuracy of 88% in identifying and localizing vehicles accurately.
                     </div>
                 </div>
             </div>
             <div class="project-container">
                 <div class="project">
-                    <img src="eye_gaze_classification.jpg" alt="Appearance Based Eye Gaze Classification and Multilingual Keyboard">
+                    <img src="project_images\eye.png" alt="Appearance Based Eye Gaze Classification and Multilingual Keyboard">
                     <div class="description">
+                        <h3>Appearance Based Eye Gaze Classification and Multilingual Keyboard</h3>
                         This paper proposes a real-time eye gaze tracking interface based on an active appearance method using a simple web or smartphone camera in an unconstrained environment, where natural head movements have been taken into account. Here, feature extraction from an eye gaze image has been performed by separating the sclera pixel area from the masked eye image. The performance evaluation has been accomplished using decision tree, random forest, and extra tree classifiers. Over 13 targets, the proposed approach has an approximate 98% accuracy with extra tree classifier. The proposed approach may be beneficial to different eye gazed tracking applications in the field of human-computer interaction, robotics, and medical science.
                     </div>
                 </div>
