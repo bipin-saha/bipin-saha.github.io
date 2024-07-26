@@ -62,3 +62,6 @@ function initSwitcher(delay) {
 
 initSwitcher()
 })()
+
+
+
