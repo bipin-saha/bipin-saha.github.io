@@ -146,35 +146,44 @@
     <div class="container">
         <div class="paper featured-paper">
             <h2>BNVD: Bangladeshi Native Vehicle Detection in Wild</h2>
-            <img id="main-image-1" class="main-image" src="https://via.placeholder.com/400x200" alt="Featured Research Paper Image">
+            <img id="main-image-1" class="main-image" src="research_images/bnvd_result.jpg" alt="BNVD Detection with YOLO v8">
             <div class="thumbnail-row">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200" alt="Thumbnail 1" onclick="openModal('https://via.placeholder.com/400x200')">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200/007acc" alt="Thumbnail 2" onclick="openModal('https://via.placeholder.com/400x200/007acc')">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200/ff0000" alt="Thumbnail 3" onclick="openModal('https://via.placeholder.com/400x200/ff0000')">
+                <img class="thumbnail" src="research_images/bnvd_ds_overview.jpg" alt="Thumbnail 1" onclick="openModal('research_images/bnvd_ds_overview.jpg')">
+                <img class="thumbnail" src="research_images/bnvd_Rickshaw_Types.jpg" alt="Thumbnail 2" onclick="openModal('research_images/bnvd_Rickshaw_Types.jpg')">
+                <img class="thumbnail" src="research_images/bnvd_Lighting_Condition.jpg" alt="Thumbnail 3" onclick="openModal('research_images/bnvd_Lighting_Condition.jpg')">
             </div>
             <p>Abstract: The success of autonomous navigation relies on robust and precise vehicle recognition, hindered by the scarcity of region-specific vehicle detection datasets, impeding the development of context-aware systems. To advance terrestrial object detection research, this paper proposes a native vehicle detection dataset for the most commonly appeared vehicle classes in Bangladesh. 17 distinct vehicle classes have been taken into account, with fully annotated 81542 instances of 17326 images. Each image width is set to at least 1280px. The dataset’s average vehicle bounding box-to-image ratio is 4.7036. This Bangladesh Native Vehicle Dataset (BNVD) has accounted for several geographical, illumination, variety of vehicle sizes, and orientations to be more robust on surprised scenarios. In the context of examining the BNVD dataset, this work provides a thorough assessment with four successive You Only Look Once (YOLO) models, namely YOLO v5, v6, v7, and v8. These dataset’s effectiveness is methodically evaluated and contrasted with other vehicle datasets already in use. The BNVD dataset exhibits mean average precision(mAP) at 50% intersection over union(IoU) is 0.848 corresponding precision and recall values of 0.841 and 0.774. The research findings indicate a mAP of 0.643 at an IoU range of 0.5 to 0.95. The experiments show that the BNVD dataset serves as a reliable representation of vehicle distribution and presents considerable complexities.</p>
             <button class="toggle-button" onclick="toggleInsights(1)">Show Insights</button>
             <div class="insights" id="insights-1" style="display: none;">
                 <h3>Key Contributions</h3>
-                <p>Insight 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                <p>Insight 2: Proin ac neque sed quam bibendum.</p>
+                <p>So far, the proposed BNVD is the largest establishment of
+                    datasets of View-Point Invariant Vehicle Detection in the Bangladeshi environment, with a wide variety of classes,
+                    highly focused on native classes </p>
+                    <p>The research delved into identifying the most suitable
+                    model for vehicle detection, exploring performance fluctuations resulting from the sequential transition between
+                    different models. </p>
+                    <p>This study investigated how category-specific performance impacts the overall effectiveness of the detectors
+                    employed in this analysis.</p>
+                    <p>Furthermore, an assessment of performance was conducted on subsets characterized by adverse weather conditions and varying light conditions. This evaluation
+                    utilized the two most effective models identified in the
+                    study.</p>
             </div>
         </div>
 
         <div class="paper">
             <h2>A Transformer-Based Approach for Summarizing Employee Logs</h2>
-            <img id="main-image-2" class="main-image" src="https://via.placeholder.com/400x200" alt="Research Paper 2 Image">
+            <img id="main-image-2" class="main-image" src="research_images/textsum_overview.jpeg" alt="Research Paper 2 Image">
             <div class="thumbnail-row">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200" alt="Thumbnail 1" onclick="openModal('https://via.placeholder.com/400x200')">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200/007acc" alt="Thumbnail 2" onclick="openModal('https://via.placeholder.com/400x200/007acc')">
-                <img class="thumbnail" src="https://via.placeholder.com/400x200/ff0000" alt="Thumbnail 3" onclick="openModal('https://via.placeholder.com/400x200/ff0000')">
+                <img class="thumbnail" src="research_images/textsum_overview.jpeg" alt="Thumbnail 1" onclick="openModal('research_images/textsum_overview.jpeg')">
+                <img class="thumbnail" src="research_images/textsum_rouge.png" alt="Thumbnail 2" onclick="openModal('research_images/textsum_rouge.png')">
+                <img class="thumbnail" src="research_images/textsum_loss.png" alt="Thumbnail 3" onclick="openModal('research_images/textsum_loss.png')">
             </div>
             <p>Abstract: Efficient summarization of employee daily logs is crucial for organizational productivity. This study utilizes the Google Pegasus model to enhance summarization, addressing traditional challenges with complex document structures. A dataset of daily work logs from a software development firm was augmented with advanced Generative AI techniques. The Pegasus model was fine-tuned with an input token length of 1024 and an output token length of 128. Evaluated using the ROUGE metric, the model achieved a ROUGE-1 score of 0.613, ROUGE-2 score of 0.373, ROUGE-L score of 0.557, and ROUGE-Lsum score of 0.556, demonstrating strong performance in generating coherent and contextually relevant summaries.</p>
             <button class="toggle-button" onclick="toggleInsights(2)">Show Insights</button>
             <div class="insights" id="insights-2" style="display: none;">
                 <h3>Insights</h3>
-                <p>Insight 1: Vivamus lacinia odio vitae vestibulum vestibulum.</p>
-                <p>Insight 2: Cras venenatis euismod malesuada.</p>
+                <p>Insight 1: </p>
+                <p>Insight 2: </p>
             </div>
         </div>
         <!-- Add more papers as needed -->
