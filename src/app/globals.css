@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+
+.raw h1 {
+  @apply text-4xl font-bold mt-6 mb-4;
+}
+
+.raw h2 {
+  @apply text-3xl font-semibold mt-6 mb-3;
+}
+
+.raw h3 {
+  @apply text-2xl font-semibold mt-5 mb-2;
+}
+
+.raw h4 {
+  @apply text-xl font-semibold mt-4 mb-2;
+}
+
+.raw h5 {
+  @apply text-lg font-medium mt-4 mb-2;
+}
+
+.raw h6 {
+  @apply text-base font-medium mt-4 mb-2;
+}
+
+.raw p {
+  @apply mb-4;
+}
+
+.raw a {
+  @apply text-orange-500 underline hover:text-orange-700;
+}
+
+.raw ul {
+  @apply list-disc pl-6 mb-4;
+}
+
+.raw ol {
+  @apply list-decimal pl-6 mb-4;
+}
+
+.raw li {
+  @apply mb-1;
+}
+
+.raw blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
+}
+
+.raw code {
+  @apply bg-gray-100 text-sm font-mono px-1 py-0.5 rounded;
+}
+
+.raw pre {
+  @apply bg-gray-900 text-white text-sm font-mono p-4 overflow-x-auto rounded mb-4;
+}
+
+.raw table {
+  @apply table-auto border-collapse w-full mb-4;
+}
+
+.raw th {
+  @apply bg-gray-100 font-semibold text-left px-4 py-2 border;
+}
+
+.raw td {
+  @apply px-4 py-2 border;
+}
+
+.raw img {
+  @apply max-w-full h-auto my-4 rounded;
+}
+
+.raw hr {
+  @apply my-6 border-gray-300;
+}
+
+.raw strong {
+  @apply font-semibold;
+}
+
+.raw em {
+  @apply italic;
+}
+
+.raw h3{
+    font-size: 1.75rem;
+    font-weight: 500;
+}
+
+.raw h4{
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.raw h5{
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.raw h6{
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.raw p {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.raw ul, .raw ol {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    text-indent: -1.5rem;
+}
+
+.raw li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    text-indent: -1.5rem;
+}
