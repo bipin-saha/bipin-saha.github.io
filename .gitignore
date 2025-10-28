@@ -1,2 +1,5 @@
 key
 key.pubnode_modules/
+node_modules
+.next
+.env
