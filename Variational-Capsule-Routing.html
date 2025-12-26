@@ -1,0 +1,1011 @@
+<!-- saved from url=(0057)https://fabio-deep.github.io/Variational-Capsule-Routing/ -->
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="color-scheme" content="light dark">
+</head>
+
+<body>
+    <div class="line-gutter-backdrop"></div>
+    <form autocomplete="off"><label class="line-wrap-control">Line wrap<input type="checkbox"
+                aria-label="Line wrap"></label></form>
+    <table>
+        <tbody>
+            <tr>
+                <td class="line-number" value="1"></td>
+                <td class="line-content"><span class="html-doctype">&lt;!DOCTYPE html&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="2"></td>
+                <td class="line-content"><span class="html-tag">&lt;html <span
+                            class="html-attribute-name">lang</span>="<span
+                            class="html-attribute-value">en-US</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="3"></td>
+                <td class="line-content"> <span class="html-tag">&lt;head&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="4"></td>
+                <td class="line-content"> <span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">charset</span>="<span
+                            class="html-attribute-value">UTF-8</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="5"></td>
+                <td class="line-content"> <span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">http-equiv</span>="<span
+                            class="html-attribute-value">X-UA-Compatible</span>" <span
+                            class="html-attribute-name">content</span>="<span
+                            class="html-attribute-value">IE=edge</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="6"></td>
+                <td class="line-content"> <span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">name</span>="<span class="html-attribute-value">viewport</span>"
+                        <span class="html-attribute-name">content</span>="<span
+                            class="html-attribute-value">width=device-width, initial-scale=1</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="7"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="8"></td>
+                <td class="line-content"><span class="html-comment">&lt;!-- Begin Jekyll SEO tag v2.7.1 --&gt;</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="9"></td>
+                <td class="line-content"><span class="html-tag">&lt;title&gt;</span>Capsule Routing via Variational
+                    Bayes (AAAI 2020) | Variational-Capsule-Routing<span class="html-tag">&lt;/title&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="10"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">name</span>="<span
+                            class="html-attribute-value">generator</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">Jekyll
+                            v3.9.0</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="11"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">og:title</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">Capsule
+                            Routing via Variational Bayes (AAAI 2020)</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="12"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">og:locale</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">en_US</span>"
+                        /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="13"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">name</span>="<span
+                            class="html-attribute-value">description</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">Official
+                            Pytorch code for (AAAI 2020) paper “Capsule Routing via Variational Bayes”,
+                            https://arxiv.org/pdf/1905.11455.pdf</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="14"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">og:description</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">Official
+                            Pytorch code for (AAAI 2020) paper “Capsule Routing via Variational Bayes”,
+                            https://arxiv.org/pdf/1905.11455.pdf</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="15"></td>
+                <td class="line-content"><span class="html-tag">&lt;link <span
+                            class="html-attribute-name">rel</span>="<span class="html-attribute-value">canonical</span>"
+                        <span class="html-attribute-name">href</span>="<a
+                            class="html-attribute-value html-resource-link" target="_blank"
+                            href="https://fabio-deep.github.io/Variational-Capsule-Routing/"
+                            rel="noreferrer noopener">https://fabio-deep.github.io/Variational-Capsule-Routing/</a>"
+                        /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="16"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">og:url</span>" <span
+                            class="html-attribute-name">content</span>="<span
+                            class="html-attribute-value">https://fabio-deep.github.io/Variational-Capsule-Routing/</span>"
+                        /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="17"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">og:site_name</span>" <span
+                            class="html-attribute-name">content</span>="<span
+                            class="html-attribute-value">Variational-Capsule-Routing</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="18"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">name</span>="<span
+                            class="html-attribute-value">twitter:card</span>" <span
+                            class="html-attribute-name">content</span>="<span
+                            class="html-attribute-value">summary</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="19"></td>
+                <td class="line-content"><span class="html-tag">&lt;meta <span
+                            class="html-attribute-name">property</span>="<span
+                            class="html-attribute-value">twitter:title</span>" <span
+                            class="html-attribute-name">content</span>="<span class="html-attribute-value">Capsule
+                            Routing via Variational Bayes (AAAI 2020)</span>" /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="20"></td>
+                <td class="line-content"><span class="html-tag">&lt;script <span
+                            class="html-attribute-name">type</span>="<span
+                            class="html-attribute-value">application/ld+json</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="21"></td>
+                <td class="line-content">{"headline":"Capsule Routing via Variational Bayes (AAAI
+                    2020)","description":"Official Pytorch code for (AAAI 2020) paper “Capsule Routing via Variational
+                    Bayes”,
+                    https://arxiv.org/pdf/1905.11455.pdf","url":"https://fabio-deep.github.io/Variational-Capsule-Routing/","@type":"WebSite","name":"Variational-Capsule-Routing","@context":"https://schema.org"}<span
+                        class="html-tag">&lt;/script&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="22"></td>
+                <td class="line-content"><span class="html-comment">&lt;!-- End Jekyll SEO tag --&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="23"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="24"></td>
+                <td class="line-content"> <span class="html-tag">&lt;link <span
+                            class="html-attribute-name">rel</span>="<span
+                            class="html-attribute-value">stylesheet</span>" <span
+                            class="html-attribute-name">href</span>="<a class="html-attribute-value html-resource-link"
+                            target="_blank"
+                            href="https://fabio-deep.github.io/Variational-Capsule-Routing/assets/css/style.css?v=78fb69dc10c71210fad8f456f1f2ce97766c4bb3"
+                            rel="noreferrer noopener">/Variational-Capsule-Routing/assets/css/style.css?v=78fb69dc10c71210fad8f456f1f2ce97766c4bb3</a>"&gt;</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="25"></td>
+                <td class="line-content"> <span class="html-tag">&lt;/head&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="26"></td>
+                <td class="line-content"> <span class="html-tag">&lt;body&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="27"></td>
+                <td class="line-content"> <span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span class="html-attribute-value">container-lg
+                            px-3 my-5 markdown-body</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="28"></td>
+                <td class="line-content"> </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="29"></td>
+                <td class="line-content"> <span class="html-tag">&lt;h1&gt;</span><span class="html-tag">&lt;a <span
+                            class="html-attribute-name">href</span>="<a class="html-attribute-value html-external-link"
+                            target="_blank" href="https://fabio-deep.github.io/Variational-Capsule-Routing/"
+                            rel="noreferrer noopener">https://fabio-deep.github.io/Variational-Capsule-Routing/</a>"&gt;</span>Variational-Capsule-Routing<span
+                        class="html-tag">&lt;/a&gt;</span><span class="html-tag">&lt;/h1&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="30"></td>
+                <td class="line-content"> </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="31"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="32"></td>
+                <td class="line-content"> <span class="html-tag">&lt;h1 <span
+                            class="html-attribute-name">id</span>="<span
+                            class="html-attribute-value">capsule-routing-via-variational-bayes-aaai-2020</span>"&gt;</span>Capsule
+                    Routing via Variational Bayes (AAAI 2020)<span class="html-tag">&lt;/h1&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="33"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span><span class="html-tag">&lt;img <span
+                            class="html-attribute-name">src</span>="<a class="html-attribute-value html-resource-link"
+                            target="_blank"
+                            href="https://fabio-deep.github.io/Variational-Capsule-Routing/images/vbrouting_diagram.png"
+                            rel="noreferrer noopener">images/vbrouting_diagram.png</a>" <span
+                            class="html-attribute-name">width</span>="<span class="html-attribute-value">100%</span>"
+                        <span class="html-attribute-name">height</span>="<span class="html-attribute-value">100%</span>"
+                        /&gt;</span><span class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="34"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="35"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span>[Official Pytorch implementation]<span
+                        class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="36"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="37"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span>Examplary code for our AAAI 2020 <span
+                        class="html-tag">&lt;a <span class="html-attribute-name">href</span>="<a
+                            class="html-attribute-value html-external-link" target="_blank"
+                            href="https://aaai.org/ojs/index.php/AAAI/article/view/5785/5641"
+                            rel="noreferrer noopener">https://aaai.org/ojs/index.php/AAAI/article/view/5785/5641</a>"&gt;</span>paper<span
+                        class="html-tag">&lt;/a&gt;</span> on capsule networks.<span class="html-tag">&lt;/p&gt;</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="38"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="39"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span><span
+                        class="html-tag">&lt;strong&gt;</span>Author<span class="html-tag">&lt;/strong&gt;</span>: Fabio
+                    De Sousa Ribeiro <span class="html-tag">&lt;br /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="40"></td>
+                <td class="line-content"><span class="html-tag">&lt;strong&gt;</span>E-mail<span
+                        class="html-tag">&lt;/strong&gt;</span>: <span class="html-tag">&lt;a <span
+                            class="html-attribute-name">href</span>="<a class="html-attribute-value html-external-link"
+                            target="_blank" href="mailto:fdesousaribeiro@lincoln.ac.uk"
+                            rel="noreferrer noopener">mailto:fdesousaribeiro@lincoln.ac.uk</a>"&gt;</span>fdesousaribeiro@lincoln.ac.uk<span
+                        class="html-tag">&lt;/a&gt;</span><span class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="41"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="42"></td>
+                <td class="line-content"><span class="html-tag">&lt;h2 <span
+                            class="html-attribute-name">id</span>="<span
+                            class="html-attribute-value">overview</span>"&gt;</span>Overview<span
+                        class="html-tag">&lt;/h2&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="43"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span>Modular <span
+                        class="html-tag">&lt;strong&gt;</span>vb-routing<span class="html-tag">&lt;/strong&gt;</span>
+                    and <span class="html-tag">&lt;strong&gt;</span>conv capsule<span
+                        class="html-tag">&lt;/strong&gt;</span> layers so you can stack them to build your own capsnet
+                    to play around with.<span class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="44"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="45"></td>
+                <td class="line-content"><span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span class="html-attribute-value">language-python
+                            highlighter-rouge</span>"&gt;</span><span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span class="html-tag">&lt;pre
+                        <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span
+                        class="html-tag">&lt;code&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="46"></td>
+                <td class="line-content"><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">bp</span>"&gt;</span>self<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>Conv_1<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>nn<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>Conv2d<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>in_channels<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>2<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>out_channels<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>64<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="47"></td>
+                <td class="line-content"> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>kernel_size<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>5<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>stride<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>2<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>)<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="48"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="49"></td>
+                <td class="line-content"><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">bp</span>"&gt;</span>self<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>PrimaryCaps<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>PrimaryCapsules2d<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>in_channels<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>64<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>out_caps<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>16<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="50"></td>
+                <td class="line-content"> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>kernel_size<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>3<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>stride<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>2<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>pose_dim<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>)<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="51"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="52"></td>
+                <td class="line-content"><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">bp</span>"&gt;</span>self<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>ConvCaps<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>ConvCapsules2d<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>in_caps<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>16<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>out_caps<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>5<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="53"></td>
+                <td class="line-content"> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>kernel_size<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>3<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>stride<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>1<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>pose_dim<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>)<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="54"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="55"></td>
+                <td class="line-content"><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">bp</span>"&gt;</span>self<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>Routing<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>VariationalBayesRouting2d<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>in_caps<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>16<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>out_caps<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>5<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="56"></td>
+                <td class="line-content"> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>cov<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">s</span>"&gt;</span>'diag'<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>pose_dim<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">nb</span>"&gt;</span>iter<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>3<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="57"></td>
+                <td class="line-content"> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>alpha0<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mf</span>"&gt;</span>1.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">c1</span>"&gt;</span># Dirichlet(pi | alpha0) prior</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="58"></td>
+                <td class="line-content"><span class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span
+                        <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>m0<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>torch<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>zeros<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>*<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>),<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>kappa0<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mf</span>"&gt;</span>1.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>,<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">c1</span>"&gt;</span># Gaussian(mu_j | m0, (kappa0 *
+                    Lambda_j)**-1) prior</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="59"></td>
+                <td class="line-content"><span class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span
+                        <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>Psi0<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>torch<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>.<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>eye<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>(<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>*<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>),<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">n</span>"&gt;</span>nu0<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>=<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>*<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>4<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">o</span>"&gt;</span>+<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">mi</span>"&gt;</span>1<span
+                        class="html-tag">&lt;/span&gt;</span><span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">p</span>"&gt;</span>)<span
+                        class="html-tag">&lt;/span&gt;</span> <span class="html-tag">&lt;span <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">c1</span>"&gt;</span># Wishart(Lambda_j | Psi0, nu0) prior</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="60"></td>
+                <td class="line-content"><span class="html-tag">&lt;/span&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="61"></td>
+                <td class="line-content"><span class="html-tag">&lt;/code&gt;</span><span
+                        class="html-tag">&lt;/pre&gt;</span><span class="html-tag">&lt;/div&gt;</span><span
+                        class="html-tag">&lt;/div&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="62"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="63"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span><span
+                        class="html-tag">&lt;strong&gt;</span>97.1%<span class="html-tag">&lt;/strong&gt;</span> test
+                    acc on smallNORB with just 1 caps layer. <span class="html-tag">&lt;br /&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="64"></td>
+                <td class="line-content"><span class="html-tag">&lt;strong&gt;</span>98.7%<span
+                        class="html-tag">&lt;/strong&gt;</span> with 3 caps layers (as in <span class="html-tag">&lt;a
+                        <span class="html-attribute-name">href</span>="<a
+                            class="html-attribute-value html-external-link" target="_blank"
+                            href="https://arxiv.org/pdf/1905.11455.pdf"
+                            rel="noreferrer noopener">https://arxiv.org/pdf/1905.11455.pdf</a>"&gt;</span>paper<span
+                        class="html-tag">&lt;/a&gt;</span>).</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="65"></td>
+                <td class="line-content">For more <span class="html-tag">&lt;a <span
+                            class="html-attribute-name">href</span>="<a class="html-attribute-value html-external-link"
+                            target="_blank"
+                            href="https://github.com/fabio-deep/Variational-Capsule-Routing/blob/master/images/Poster_AAAI2020.pdf"
+                            rel="noreferrer noopener">https://github.com/fabio-deep/Variational-Capsule-Routing/blob/master/images/Poster_AAAI2020.pdf</a>"&gt;</span>see
+                    the poster<span class="html-tag">&lt;/a&gt;</span> in <span class="html-tag">&lt;code <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">language-plaintext
+                            highlighter-rouge</span>"&gt;</span>images/Poster_AAAI2020.pdf<span
+                        class="html-tag">&lt;/code&gt;</span>.<span class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="66"></td>
+                <td class="line-content"><span class="html-tag">&lt;h2 <span
+                            class="html-attribute-name">id</span>="<span
+                            class="html-attribute-value">run</span>"&gt;</span>Run<span
+                        class="html-tag">&lt;/h2&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="67"></td>
+                <td class="line-content"><span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">language-plaintext highlighter-rouge</span>"&gt;</span><span
+                        class="html-tag">&lt;div <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span class="html-tag">&lt;pre
+                        <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span
+                        class="html-tag">&lt;code&gt;</span>python src/main.py</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="68"></td>
+                <td class="line-content"><span class="html-tag">&lt;/code&gt;</span><span
+                        class="html-tag">&lt;/pre&gt;</span><span class="html-tag">&lt;/div&gt;</span><span
+                        class="html-tag">&lt;/div&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="69"></td>
+                <td class="line-content"><span class="html-tag">&lt;p&gt;</span><span
+                        class="html-tag">&lt;strong&gt;</span>Dataset Download<span
+                        class="html-tag">&lt;/strong&gt;</span><span class="html-tag">&lt;/p&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="70"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="71"></td>
+                <td class="line-content"><span class="html-tag">&lt;ol&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="72"></td>
+                <td class="line-content"> <span class="html-tag">&lt;li&gt;</span>You can download <span
+                        class="html-tag">&lt;a <span class="html-attribute-name">href</span>="<a
+                            class="html-attribute-value html-external-link" target="_blank"
+                            href="https://drive.google.com/open?id=1AinL9mBzDzd0OC2R05tWVeGtJi_vGi1D"
+                            rel="noreferrer noopener">https://drive.google.com/open?id=1AinL9mBzDzd0OC2R05tWVeGtJi_vGi1D</a>"&gt;</span>smallNORB<span
+                        class="html-tag">&lt;/a&gt;</span> in .npy format and already resized to 48x48 for
+                    convenience.<span class="html-tag">&lt;/li&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="73"></td>
+                <td class="line-content"><span class="html-tag">&lt;/ol&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="74"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="75"></td>
+                <td class="line-content"><span class="html-tag">&lt;h3 <span
+                            class="html-attribute-name">id</span>="<span
+                            class="html-attribute-value">citation</span>"&gt;</span>Citation<span
+                        class="html-tag">&lt;/h3&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="76"></td>
+                <td class="line-content"><span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">language-plaintext highlighter-rouge</span>"&gt;</span><span
+                        class="html-tag">&lt;div <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span class="html-tag">&lt;pre
+                        <span class="html-attribute-name">class</span>="<span
+                            class="html-attribute-value">highlight</span>"&gt;</span><span
+                        class="html-tag">&lt;code&gt;</span>@inproceedings{ribeiro2020capsule,</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="77"></td>
+                <td class="line-content"> title={Capsule Routing via Variational Bayes.},</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="78"></td>
+                <td class="line-content"> author={Ribeiro, Fabio De Sousa and Leontidis, Georgios and Kollias, Stefanos
+                    D},</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="79"></td>
+                <td class="line-content"> booktitle={AAAI},</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="80"></td>
+                <td class="line-content"> pages={3749--3756},</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="81"></td>
+                <td class="line-content"> year={2020}</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="82"></td>
+                <td class="line-content">}</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="83"></td>
+                <td class="line-content"><span class="html-tag">&lt;/code&gt;</span><span
+                        class="html-tag">&lt;/pre&gt;</span><span class="html-tag">&lt;/div&gt;</span><span
+                        class="html-tag">&lt;/div&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="84"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="85"></td>
+                <td class="line-content"><br></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="86"></td>
+                <td class="line-content"> </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="87"></td>
+                <td class="line-content"> <span class="html-tag">&lt;div <span
+                            class="html-attribute-name">class</span>="<span class="html-attribute-value">footer
+                            border-top border-gray-light mt-5 pt-3 text-right text-gray</span>"&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="88"></td>
+                <td class="line-content"> This site is open source. <span class="html-tag">&lt;a <span
+                            class="html-attribute-name">href</span>="<a class="html-attribute-value html-external-link"
+                            target="_blank"
+                            href="https://github.com/fabio-deep/Variational-Capsule-Routing/edit/master/README.md"
+                            rel="noreferrer noopener">https://github.com/fabio-deep/Variational-Capsule-Routing/edit/master/README.md</a>"&gt;</span>Improve
+                    this page<span class="html-tag">&lt;/a&gt;</span>.</td>
+            </tr>
+            <tr>
+                <td class="line-number" value="89"></td>
+                <td class="line-content"> <span class="html-tag">&lt;/div&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="90"></td>
+                <td class="line-content"> </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="91"></td>
+                <td class="line-content"> <span class="html-tag">&lt;/div&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="92"></td>
+                <td class="line-content"> <span class="html-tag">&lt;script <span
+                            class="html-attribute-name">src</span>="<a class="html-attribute-value html-resource-link"
+                            target="_blank" href="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js"
+                            rel="noreferrer noopener">https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js</a>"
+                        <span class="html-attribute-name">integrity</span>="<span
+                            class="html-attribute-value">sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=</span>"
+                        <span class="html-attribute-name">crossorigin</span>="<span
+                            class="html-attribute-value">anonymous</span>"&gt;</span><span
+                        class="html-tag">&lt;/script&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="93"></td>
+                <td class="line-content"> <span class="html-tag">&lt;script&gt;</span>anchors.add();<span
+                        class="html-tag">&lt;/script&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="94"></td>
+                <td class="line-content"> </td>
+            </tr>
+            <tr>
+                <td class="line-number" value="95"></td>
+                <td class="line-content"> <span class="html-tag">&lt;/body&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="96"></td>
+                <td class="line-content"><span class="html-tag">&lt;/html&gt;</span></td>
+            </tr>
+            <tr>
+                <td class="line-number" value="97"></td>
+                <td class="line-content"><span class="html-end-of-file"></span></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
