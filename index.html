@@ -9,6 +9,17 @@
   <meta name="author" content="Bipin Saha">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://bipin-saha.github.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="Bipin Saha | Autonomous Vehicle &amp; AI/ML Researcher Portfolio">
+  <meta property="og:description" content="Autonomous Vehicle and AI/ML researcher and engineer focused on computer vision, robotics, multimodal perception, publications, and applied projects.">
+  <meta property="og:url" content="https://bipin-saha.github.io/">
+  <meta property="og:image" content="https://bipin-saha.github.io/images/profile/Bipin-Headshot.webp">
+  <meta property="og:image:alt" content="Bipin Saha headshot">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bipin Saha | Autonomous Vehicle &amp; AI/ML Researcher Portfolio">
+  <meta name="twitter:description" content="Autonomous Vehicle and AI/ML researcher and engineer focused on perception, robotics, and multimodal intelligence.">
+  <meta name="twitter:image" content="https://bipin-saha.github.io/images/profile/Bipin-Headshot.webp">
   <link rel="shortcut icon" href="images/profile/Bipin-Headshot.webp">
   <title>Bipin Saha | Autonomous Vehicle &amp; AI/ML Researcher Portfolio</title>
 
@@ -29,6 +40,82 @@
         "https://orcid.org/0000-0002-3546-9074",
         "https://huggingface.co/bipinsaha"
       ]
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Bipin Saha Portfolio",
+      "url": "https://bipin-saha.github.io/",
+      "description": "Portfolio website for Bipin Saha, Autonomous Vehicle and AI/ML researcher and engineer."
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://bipin-saha.github.io/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Publications",
+          "item": "https://bipin-saha.github.io/#publications"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Projects",
+          "item": "https://bipin-saha.github.io/#projects"
+        }
+      ]
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": "Comparative Evaluation of CNN, Transformer, and Vision-Language Approaches for Vehicle Detection in Complex Scenarios",
+      "author": [
+        {
+          "@type": "Person",
+          "name": "Bipin Saha"
+        }
+      ],
+      "isPartOf": {
+        "@type": "PublicationVolume",
+        "name": "IEEE QPAIN 2026"
+      },
+      "dateAccepted": "2026-02-15"
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": "Enhancing Vehicle Detection in Adverse Weather with a Weighted YOLO Ensemble Approach and Explainable AI",
+      "author": [
+        {
+          "@type": "Person",
+          "name": "Bipin Saha"
+        }
+      ],
+      "isPartOf": {
+        "@type": "PublicationVolume",
+        "name": "IEEE QPAIN 2025"
+      },
+      "datePublished": "2025-07-31",
+      "identifier": "https://doi.org/10.1109/QPAIN66474.2025.11172268"
     }
   </script>
 
@@ -63,6 +150,67 @@
       box-shadow: 0 0 3px rgb(214, 214, 214);
       background: rgb(252, 252, 252);
       padding: 20px;
+    }
+
+    .intro-role {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 8px 0;
+    }
+
+    .intro-tagline {
+      font-size: 19px;
+      margin: 4px 0 12px 0;
+      color: #2f2f2f;
+    }
+
+    .highlight-strip {
+      border-radius: 12px;
+      box-shadow: 0 0 3px rgb(210, 210, 210);
+      background: linear-gradient(90deg, #f4f8ff 0%, #ecfdf3 100%);
+      padding: 16px 18px;
+      margin: 12px 0 18px 0;
+    }
+
+    .highlight-strip ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .content-card {
+      border-radius: 12px;
+      box-shadow: 0 0 3px rgb(219, 219, 219);
+      background: #ffffff;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .grid-card {
+      display: grid;
+      grid-template-columns: 80px auto;
+      gap: 15px;
+      margin-bottom: 25px;
+      align-items: start;
+    }
+
+    .meta-note {
+      color: #4d4d4d;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 767px) {
+      #sidebar {
+        display: none;
+      }
+
+      #main-content {
+        width: 100%;
+      }
+
+      .grid-card {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 
@@ -130,12 +278,8 @@
           <h6> Bipin Saha (বিপিন সাহা in Bangla/বাংলা);
              <em>Name of origin: Bipin/বিপিন/विपिन (Sanskrit) – Vast Natural Grove </em>
           </h6>
-          <div>
-            <h4>Autonomous Vehicle/AI-ML Researcher &amp; Engineer</h4>
-          </div>
-          <div>
-            <h4>Exploring the frontiers of autonomy by uniting perception and intelligence.</h4>
-          </div>
+          <p class="intro-role">Autonomous Vehicle/AI-ML Researcher &amp; Engineer</p>
+          <p class="intro-tagline">Exploring the frontiers of autonomy by uniting perception and intelligence.</p>
 
           <!-- <br> -->
             <div>
@@ -148,21 +292,21 @@
           <!-- <br> -->
           <div>
             <a href="https://www.linkedin.com/in/bipinsaha/" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/linkedin.svg"
-              style="width:25px; height:25px" title="linkedin" alt="LinkedIn"></a>
+              style="width:25px; height:25px" title="linkedin" alt="LinkedIn" width="25" height="25"></a>
             <a href="https://www.kaggle.com/sahabipin" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/kaggle.svg"
-              style="width:25px; height:25px" title="kaggle" alt="Kaggle"></a>
+              style="width:25px; height:25px" title="kaggle" alt="Kaggle" width="25" height="25"></a>
             <!-- <a href="https://www.aicrowd.com/participants/xihaad" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/aicrowd.png"
                 style="width:25px; height:25px" title="aicrowd" alt="aircrowd"></a> -->
             <a href="https://github.com/bipin-saha" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/github.svg"
-              style="width:25px; height:25px" title="github" alt="GitHub"></a>
+              style="width:25px; height:25px" title="github" alt="GitHub" width="25" height="25"></a>
             <a href="https://scholar.google.com/citations?hl=en&amp;user=3oJ0SboAAAAJ&amp;view_op=list_works&amp;sortby=pubdate" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" 
-              src="icons/gscholar.png" style="width:25px; height:25px" title="gscholar" alt="Google Scholar"></a>
+              src="icons/gscholar.png" style="width:25px; height:25px" title="gscholar" alt="Google Scholar" width="25" height="25"></a>
             <a href="https://x.com/saha_bipin" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/x.png"
-              style="width:25px; height:25px" title="X" alt="X (Twitter)"></a>
+              style="width:25px; height:25px" title="X" alt="X (Twitter)" width="25" height="25"></a>
             <a href="https://www.researchgate.net/profile/Bipin-Saha" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/rg.svg"
-              style="width:25px; height:25px" title="researchgate" alt="ResearchGate"></a>
+              style="width:25px; height:25px" title="researchgate" alt="ResearchGate" width="25" height="25"></a>
             <a href="https://orcid.org/0000-0002-3546-9074" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" src="icons/orcid.svg"
-              style="width:25px; height:25px" title="orcid" alt="ORCID"></a>
+              style="width:25px; height:25px" title="orcid" alt="ORCID" width="25" height="25"></a>
             <a href="https://huggingface.co/bipinsaha" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" 
                 src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
                 alt="Bipin Saha's huggingface Profile" height="25" width="25"></a>
@@ -173,6 +317,7 @@
           <a href="resume/resume.pdf" target="_blank" rel="noopener noreferrer"
             style="
               display:inline-block;
+              margin-left:200px;
               padding:8px 16px;
               background:#000;
               color:#fff;
@@ -224,29 +369,99 @@
             <p
             style="border-radius: 15px 50px 30px 5px; box-shadow: 0px 0px 3px rgb(145, 224, 145); background: #cde6aa; padding: 20px;">
             <strong>Recent Update:</strong> &nbsp; &#128513; &#128513; &#128513;
-            <br>
-            <strong><u>"Comparative Evaluation of CNN, Transformer, and Vision-Language Approaches for Vehicle Detection in Complex Scenarios" accepted in IEEE QPAIN 2026</u></strong>
+            <br><br>
+            <strong>1. IEEE QPAIN 2026 Acceptance</strong>
+            <br>"Comparative Evaluation of CNN, Transformer, and Vision-Language Approaches for Vehicle Detection in Complex Scenarios"
             <br><em>February 15, 2026</em>
             <br><br>
-            <strong><u>Joined ACCESS Lab as Graduate Research Assistant</u></strong>
+            <strong>2. Joined ACCESS Lab as Graduate Research Assistant</strong>
             <br>Started PhD in Electrical and Computer Engineering at North Carolina A&amp;T State University
             <br><em>August 20, 2025</em>
-            <br>Learn more about <a href="https://www.accesslab.net/" target="_blank" rel="noopener noreferrer"><strong>ACCESS Lab</strong></a>
+            <br><br>
+            <!-- <details>
+              <summary><strong>Older Updates</strong></summary>
+              <p class="meta-note">Previous announcements and milestones are archived here as new updates are added.</p>
+            </details> -->
             </p>
 
-          <p
+          <!-- <p
             style="border-radius: 15px 50px 30px 5px; box-shadow: 0px 0px 3px rgb(222, 230, 240); background: rgb(222, 230, 240); padding: 20px;">
             I am open for collaboration on research projects, academic initiatives, and industry partnerships. Feel free to reach out to discuss potential opportunities and synergies.
 
-          </p>
+          </p> -->
 
           <!-- NEWS ENDS -->
 
           <!-- current involvements ends here -->
           <br>
           <div>
-            <strong>Last Updated: December 2025</strong>
+            <strong>Last Updated: <time datetime="2026-03-22">March 22, 2026</time></strong>
           </div>
+
+          <div class="highlight-strip">
+            <strong>Featured Achievements</strong>
+            <ul>
+              <li>IEEE QPAIN 2026 paper acceptance on robust vehicle detection across CNN, Transformer, and VLM methods.</li>
+              <li>43.77% simulated PCE in dual-heterojunction solar-cell modeling research published in AIP Advances.</li>
+              <li>~98% accuracy in appearance-based eye-gaze estimation across 13 directional targets.</li>
+            </ul>
+          </div>
+
+          <h2 class="section-title">Selected Publications</h2>
+          <div class="content-card">
+            <strong>Comparative Evaluation of CNN, Transformer, and Vision-Language Approaches for Vehicle Detection in Complex Scenarios</strong>
+            <br>
+            Accepted in <strong>IEEE QPAIN 2026</strong>.
+            <div class="meta-note">Impact: establishes a practical benchmark framework for complex-scene vehicle detection across multiple model families.</div>
+          </div>
+          <div class="content-card">
+            <strong>Enhancing Vehicle Detection in Adverse Weather with a Weighted YOLO Ensemble Approach and Explainable AI</strong>
+            <br>
+            Published in <strong>IEEE QPAIN 2025</strong>.
+            <div class="meta-note">Impact: improves reliability under low-visibility conditions while keeping model decisions interpretable.</div>
+          </div>
+
+          <h2 class="section-title">Selected Projects</h2>
+          <div class="content-card">
+            <strong>Prescription Digitalization Pipeline</strong>
+            <br>
+            OCR + layout analysis + LLM structuring for clinical text extraction.
+            <div class="meta-note">Outcome: reduced manual workload by 52.68% and supported more than 64k patient records.</div>
+            <a href="project-pages/prescription-digitalization.html">Read full project breakdown</a>
+          </div>
+          <div class="content-card">
+            <strong>ChatPDF RAG for Research Q&amp;A</strong>
+            <br>
+            Retrieval-augmented assistant for technical paper exploration.
+            <div class="meta-note">Outcome: accelerated literature review with grounded contextual retrieval and concise answer synthesis.</div>
+            <a href="project-pages/chatpdf-rag.html">Read full project breakdown</a>
+          </div>
+          <div class="content-card">
+            <strong>Behavioral Cloning Self-Driving Agent</strong>
+            <br>
+            End-to-end steering prediction with speed control loop.
+            <div class="meta-note">Outcome: stable lane-following behavior in simulation with reduced steering oscillation after control tuning.</div>
+            <a href="project-pages/behavioral-cloning.html">Read full project breakdown</a>
+          </div>
+
+          <h2 class="section-title">Technical Writeups</h2>
+          <div class="content-card">
+            <a href="writeups/camera-lidar-fusion.html"><strong>Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns</strong></a>
+          </div>
+          <div class="content-card">
+            <a href="writeups/self-supervised-perception.html"><strong>Self-Supervised Perception for Autonomous Driving: A Practical Overview</strong></a>
+          </div>
+          <div class="content-card">
+            <a href="writeups/vision-language-vehicle-detection.html"><strong>Vision-Language Approaches for Vehicle Detection in Complex Scenarios</strong></a>
+          </div>
+          <div class="content-card">
+            <a href="writeups/bevfusion-roadmap.html"><strong>From 2D Perception to BEV Fusion: Implementation Roadmap</strong></a>
+          </div>
+          <div class="content-card">
+            <a href="writeups/perception-benchmarks.html"><strong>How to Build Reproducible Perception Benchmarks for AV Research</strong></a>
+          </div>
+
+          <p><a href="writeups/index.html">Browse all writeups</a></p>
           <!-- <div>
             <strong style="color:rgb(215, 0, 0)">aggressively looking for grad study opportunities.</strong>
           </div> -->
@@ -607,6 +822,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Added to IEEE Xplore: 29 Sept 2025</a>
             <a href="https://doi.org/10.1109/QPAIN66474.2025.11172268" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: demonstrates robust adverse-weather detection and explainability, improving trust in safety-critical deployments.</div>
             </div>
 
             <br>
@@ -624,6 +840,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Published: 10 July 2025</a>
             <a href="https://doi.org/10.1007/s44257-025-00037-2" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: provides a practical queue-time prediction pipeline with explainability for service-operations optimization.</div>
             </div>
 
             <br>
@@ -640,6 +857,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Added to IEEE Xplore: 15 April 2025</a>
             <a href="https://doi.org/10.1109/ICRPSET64863.2024.10955915" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: validates machine-learning queue estimation strategies for better throughput planning.</div>
             </div>
 
             <br>
@@ -657,6 +875,7 @@
             <a href="https://doi.org/10.48550/arXiv.2409.07484" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             
             </div>
+            <div class="meta-note">Impact: releases a multi-orientation hand-gesture sEMG benchmark supporting robust model evaluation.</div>
             </div>
 
             <br>
@@ -673,6 +892,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Added to ArXiv: 20 May 2024</a>
             <a href="https://doi.org/10.48550/arXiv.2405.12150" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: contributes a region-specific dataset to improve fairness and generalization in vehicle detection research.</div>
             </div>
 
             <br>
@@ -690,6 +910,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Accepted: January 27 2023</a>
             <a href="https://doi.org/10.1063/5.0133889" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: demonstrates efficiency gains from dual-heterojunction design in thin-film solar-cell simulations.</div>
             </div>
 
             <br>
@@ -706,6 +927,7 @@
             <a target="_blank" rel="noopener noreferrer" class="btn btn-default">Added to IEEE Xplore: 10 May 2022</a>
             <a href="https://doi.org/10.1109/IC4ME253898.2021.9768643" target="_blank" rel="noopener noreferrer" class="btn btn-default">DOI</a>
             </div>
+            <div class="meta-note">Impact: enables low-cost gaze interfaces using commodity cameras with high directional classification accuracy.</div>
             </div>
 
             <!-- PUBLICATIONS ENDS -->
@@ -761,132 +983,142 @@
             <hr>
             <!-- <hr> -->
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/prescription.png" style="width:80px; max-height:80px; border-radius:10px;" alt="Prescription OCR">
+                <img loading="lazy" decoding="async" src="images/proj/prescription.webp" style="width:80px; max-height:80px; border-radius:10px;" alt="Medical prescription OCR and layout analysis project" width="80" height="80">
               </div>
               <div>
                 <strong>Handwritten Prescription Digitalization using Layout Analysis and OCR</strong><br>
-                <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
+                <a href="project-pages/prescription-digitalization.html">Project page</a> | <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>PaddleOCR · TrOCR · YOLO · Gemma-7B</em><br>
                 The project focuses on digitizing handwritten prescriptions using advanced layout analysis and OCR pipelines. Line-by-line segmentation extracts patient IDs, medication names, dosage, frequency, quantity, and medical history. Optimized OCR models ensure handwriting robustness, while a generative model converts extracted text into structured clinical records for efficient healthcare data management.
+                <div class="meta-note">Outcome: CER 0.0951, inference around 2.28s, and 52.68% reduction in human workload.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/chatpdf.png" style="width:80px; max-height:80px; border-radius:10px;" alt="ChatPDF RAG">
+                <img loading="lazy" decoding="async" src="images/proj/chatpdf.webp" style="width:80px; max-height:80px; border-radius:10px;" alt="ChatPDF retrieval-augmented generation assistant for research papers" width="80" height="80">
               </div>
               <div>
                 <strong>ChatPDF with RAG System (Research Paper QnA)</strong><br>
-                <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
+                <a href="project-pages/chatpdf-rag.html">Project page</a> | <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>Gemini-Pro · LLaMA-3 · Semantic RAG</em><br>
                 ChatPDF enables conversational interaction with research papers using Retrieval-Augmented Generation. The system retrieves relevant paper segments, summarizes complex ideas, answers technical queries, and can even translate theoretical concepts into executable code to accelerate research understanding and implementation.
+                <div class="meta-note">Outcome: reduced manual reading time by surfacing query-grounded paper segments and concise technical summaries.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/behav-custom-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Behavioral Cloning">
+                <img loading="lazy" decoding="async" src="images/proj/behav-custom-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Behavioral cloning self-driving policy learning project" width="80" height="80">
               </div>
               <div>
                 <strong>End-to-End Behavioral Cloning for Self-Driving Car (Udacity)</strong><br>
-                <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
+                <a href="project-pages/behavioral-cloning.html">Project page</a> | <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>Imitation Learning · TensorFlow · PID Control</em><br>
                 This project implements an end-to-end autonomous driving pipeline using behavioral cloning. A CNN maps camera images directly to steering commands, while a PID controller regulates vehicle speed. Careful tuning of control gains ensures smooth, stable, and safe driving behavior in simulation environments.
+                <div class="meta-note">Outcome: stable lane-following and smoother steering after PID gain optimization in simulation tracks.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/kuka-custom-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="KUKA Robot">
+                <img loading="lazy" decoding="async" src="images/proj/kuka-custom-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="KUKA robotic arm object sorting on conveyor simulation" width="80" height="80">
               </div>
               <div>
                 <strong>KUKA Robot Object Sorting on Conveyor</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>CoppeliaSim · Lua · Inverse Kinematics</em><br>
                 A robotic sorting system using a KUKA manipulator operating over a conveyor belt. Objects are detected using color sensors, picked using a gripper, and transferred to designated locations through inverse kinematics-based motion planning.
+                <div class="meta-note">Outcome: improved pick-and-place consistency through deterministic motion planning and sensor-triggered sorting logic.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/slab-bend-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Slab Detection">
+                <img loading="lazy" decoding="async" src="images/proj/slab-bend-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Industrial slab bend anomaly detection and tracking system" width="80" height="80">
               </div>
               <div>
                 <strong>Slab Bend Detection and Tracking (Collaboration: Tata Steel)</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>YOLO · Tkinter · Multithreading</em><br>
                 A real-time industrial monitoring system for detecting slab bending anomalies using multi-camera feeds. YOLO-based inference identifies defects, while a Tkinter GUI displays camera ID, slab position, timestamps, and confidence scores alongside user authentication and database logging.
+                <div class="meta-note">Outcome: reduced operator reaction time with real-time defect alerts and synchronized multi-camera evidence logging.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/text2textsum.png" style="width:80px; max-height:80px; border-radius:10px;" alt="Text Summarization">
+                <img loading="lazy" decoding="async" src="images/proj/text2textsum.webp" style="width:80px; max-height:80px; border-radius:10px;" alt="Text-to-text summarization pipeline for employee log analytics" width="80" height="80">
               </div>
               <div>
                 <strong>Text-to-Text Generation &amp; Summarization using Pegasus</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>Pegasus · Mistral · ROUGE</em><br>
                 Automated summarization of employee work logs using Pegasus. The system generates concise summaries and achieves strong ROUGE scores (R-1: 0.31, R-2: 0.08), enabling efficient performance evaluation and managerial decision-making.
+                <div class="meta-note">Outcome: achieved ROUGE-1 of 0.31 and ROUGE-2 of 0.08 for concise managerial reporting.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/bn-sentiment.png" style="width:80px; max-height:80px; border-radius:10px;" alt="Bangla Sentiment">
+                <img loading="lazy" decoding="async" src="images/proj/bn-sentiment.webp" style="width:80px; max-height:80px; border-radius:10px;" alt="Bengali sentiment analysis with deep learning" width="80" height="80">
               </div>
               <div>
                 <strong>Bengali Sentiment Analysis using LSTM &amp; BiLSTM</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>PyTorch · CNN · LSTM</em><br>
                 A Bangla sentiment classification system achieving 90.31% accuracy using CNN-BiLSTM architectures with data augmentation. The model classifies text into positive, negative, and neutral sentiments with strong generalization.
+                <div class="meta-note">Outcome: 90.31% classification accuracy on Bangla sentiment classes with improved generalization via augmentation.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/gaze.png" style="width:80px; max-height:80px; border-radius:10px;" alt="Eye Gaze">
+                <img loading="lazy" decoding="async" src="images/proj/gaze.webp" style="width:80px; max-height:80px; border-radius:10px;" alt="Appearance-based eye gaze estimation and multilingual keyboard interface" width="80" height="80">
               </div>
               <div>
                 <strong>Appearance-Based Eye Gaze Estimation &amp; Multilingual Keyboard</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>Scikit-Learn · Dlib · Random Forest</em><br>
                 A real-time eye gaze tracking system using standard cameras. Active appearance modeling and ensemble classifiers achieve ~98% accuracy across multiple gaze targets, enabling robust human-computer interaction.
+                <div class="meta-note">Outcome: around 98% gaze-direction classification accuracy using low-cost camera setup.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/rrt-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="RRT">
+                <img loading="lazy" decoding="async" src="images/proj/rrt-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="RRT path planning algorithm simulation" width="80" height="80">
               </div>
               <div>
                 <strong>RRT Path Planning Algorithm from Scratch</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>NumPy · PyGame</em><br>
                 A full Python implementation of the Rapidly-Exploring Random Tree algorithm for 2D path planning. The simulation visually demonstrates tree expansion and obstacle-aware navigation.
+                <div class="meta-note">Outcome: demonstrates collision-aware path construction with interpretable search behavior for robotics teaching and prototyping.</div>
               </div>
             </div>
 
             <!-- ===================== PROJECT ITEM ===================== -->
-            <div style="display:grid; grid-template-columns:80px auto; gap:15px; margin-bottom:25px; align-items:start;">
+            <div class="grid-card">
               <div>
-                <img loading="lazy" decoding="async" src="images/proj/landm-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Landmine Robot">
+                <img loading="lazy" decoding="async" src="images/proj/landm-reduced.gif" style="width:80px; max-height:80px; border-radius:10px;" alt="Landmine detection and disposal robotic platform" width="80" height="80">
               </div>
               <div>
                 <strong>Landmine Detection and Disposal Robot</strong><br>
                 <a href="https://github.com/your-repo-link" target="_blank" rel="noopener noreferrer">View on GitHub</a><br>
                 <em>Arduino · C++</em><br>
                 An autonomous landmine-detecting robot using sonar sensors and a rotating metal detector. The system transmits detection alerts to a base station and supports manual smartphone control.
+                <div class="meta-note">Outcome: improves operator safety by enabling remote confirmation and controlled response workflow.</div>
               </div>
             </div>
 

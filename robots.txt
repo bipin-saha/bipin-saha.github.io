@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bipin-saha.github.io/sitemap.xml
