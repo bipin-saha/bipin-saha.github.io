@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Home / single-page CV -->
   <url>
     <loc>https://bipin-saha.github.io/</loc>
-    <lastmod>2026-03-22</lastmod>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Resume (PDF) -->
+  <url>
+    <loc>https://bipin-saha.github.io/resume/resume.pdf</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Technical writeups -->
   <url>
     <loc>https://bipin-saha.github.io/writeups/index.html</loc>
     <lastmod>2026-03-22</lastmod>
@@ -15,49 +27,52 @@
   <url>
     <loc>https://bipin-saha.github.io/writeups/camera-lidar-fusion.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/self-supervised-perception.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/bevfusion-roadmap.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/perception-benchmarks.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
+
+  <!-- Project pages -->
   <url>
     <loc>https://bipin-saha.github.io/project-pages/prescription-digitalization.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/project-pages/chatpdf-rag.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/project-pages/behavioral-cloning.html</loc>
     <lastmod>2026-03-22</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
+
 </urlset>

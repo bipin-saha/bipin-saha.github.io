@@ -1,5 +1,11 @@
 key
-key.pubnode_modules/
+key.pub
+node_modules/
 node_modules
 .next
 .env
+.DS_Store
+
+# Local-only Claude Code project notes — never commit
+CLAUDE.local.md
+.claude/
