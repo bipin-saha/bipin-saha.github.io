@@ -42,12 +42,18 @@ cut or condense rather than pad.
   removed in the 2026 "perception" redesign and never came back.
 - Only external `<head>` resource is **Google Fonts**: Space Grotesk (display),
   Newsreader (body serif), IBM Plex Mono (labels / dates / metrics / eyebrows).
+  One other external script loads at end of `<body>`: **GoatCounter**
+  (`gc.zgo.at/count.js`, `async`) — privacy-friendly, cookieless analytics,
+  dashboard at `https://bipinsaha.goatcounter.com`.
 - **`css/main.css`** — all first-party styling (~718 lines), organised into 7
   commented sections (Tokens / Base / Layout / Masthead / Components / Footer /
   Motion & responsive). Light + dark via `prefers-color-scheme`.
-- **`js/main.js`** (~46 lines, loaded with `defer`) — an IntersectionObserver
-  scroll-spy that toggles `.is-active` on the sidebar rail links, plus the
-  disabled Google Analytics snippet.
+- **`js/main.js`** (~115 lines, loaded with `defer`) — an IntersectionObserver
+  scroll-spy that toggles `.is-active` on the sidebar rail links, plus a
+  `track()` helper that fires **GoatCounter custom events** (section-viewed,
+  CV download, publication-link, social, sub-page, and outbound-link clicks).
+  The old disabled Google Analytics snippet was removed when GoatCounter
+  was added.
 - **`favicon.svg`** — inline SVG mark (BEV grid + corner brackets + detection dot).
 
 ## Deployment
@@ -74,7 +80,7 @@ Serve from the repo root so root-relative paths (`/css/main.css`,
 README.md               Short public-facing repo readme (keep distinct from this file).
 index.html              Single-page CV (~657 lines). Everything of substance.
 css/main.css            All first-party CSS (~718 lines), 7 commented sections.
-js/main.js              Deferred script: scroll-spy + disabled analytics.
+js/main.js              Deferred script: scroll-spy + GoatCounter custom events.
 favicon.svg             Inline SVG site mark.
 writeups/               Minimal unstyled article pages + writeups/index.html.
 project-pages/          Minimal unstyled project breakdown pages (3 of them).
