@@ -1,20 +1,584 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Guidelines for building reproducible perception benchmarks with robust metrics, split design, and reporting standards.">
-  <title>Reproducible Perception Benchmarks | Bipin Saha</title>
+  <meta name="description" content="Why 3D-perception leaderboard gains so often fail to reproduce - hidden backbones, test-time augmentation, split leakage, seed variance - a field-wide tour of AV benchmark protocols (KITTI, nuScenes, Waymo Open, Argoverse 2, ONCE, Occ3D), tracking and planning-aware metrics, corruption benchmarks, statistical practice, reproducibility infrastructure, and a concrete checklist for benchmark, metric, and split design.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/perception-benchmarks.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="How to Build Reproducible Perception Benchmarks for AV Research">
+  <meta property="og:description" content="Hidden confounds behind 3D-perception leaderboard gains, a tour of AV benchmark protocols and metrics, and a checklist for benchmark, metric, and split design.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/perception-benchmarks.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="How to Build Reproducible Perception Benchmarks for AV Research">
+  <meta name="twitter:description" content="A field-wide guide to reproducible benchmark, metric, and split design in AV perception.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>How to Build Reproducible Perception Benchmarks for AV Research | Bipin Saha</title>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "How to Build Reproducible Perception Benchmarks for AV Research",
+      "description": "Hidden confounds behind 3D-perception leaderboard gains, a field-wide tour of AV benchmark protocols and metrics, and a concrete reproducibility checklist.",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "publisher": { "@type": "Person", "name": "Bipin Saha" },
+      "datePublished": "2026-04-27",
+      "dateModified": "2026-08-31",
+      "mainEntityOfPage": "https://bipin-saha.github.io/writeups/perception-benchmarks.html",
+      "about": ["Benchmarking", "Reproducibility", "3D object detection", "Evaluation metrics", "Autonomous driving"],
+      "keywords": "nuScenes NDS, Waymo APH, LET-3D-AP, Argoverse 2 CDS, AMOTA, PKL, NAVSIM, reproducibility, test-time augmentation, corruption robustness",
+      "inLanguage": ["en", "bn"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" },
+        { "@type": "ListItem", "position": 3, "name": "How to Build Reproducible Perception Benchmarks", "item": "https://bipin-saha.github.io/writeups/perception-benchmarks.html" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+
+  <!-- Apply the English/Bangla choice before first paint (no flash). A ?lang=bn
+       or ?lang=en query param wins and is remembered; otherwise localStorage. -->
+  <script>
+    (function () {
+      try {
+        var q = (location.search.match(/[?&]lang=(bn|en)\b/) || [])[1];
+        var l = q || localStorage.getItem('writeup-lang');
+        if (l === 'bn' || l === 'en') {
+          document.documentElement.setAttribute('lang', l);
+          if (q) localStorage.setItem('writeup-lang', q);
+        }
+      } catch (e) { /* private mode - fall back to lang="en" */ }
+    })();
+  </script>
 </head>
+
 <body>
-  <p><a href="index.html">Back to writeups</a></p>
-  <h1>How to Build Reproducible Perception Benchmarks for AV Research</h1>
-  <p>This writeup provides a practical checklist for benchmark design that supports fair and reproducible comparisons.</p>
-  <h2>Problem</h2>
-  <p>Benchmark claims often become difficult to reproduce due to inconsistent preprocessing and unclear reporting.</p>
-  <h2>Method</h2>
-  <p>Standardize data splits, document preprocessing, report latency and memory, and include domain-shift evaluations.</p>
-  <h2>Results</h2>
-  <p>Reproducible evaluation improves scientific trust and makes model selection decisions more reliable.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/"><span data-lang="en">Home</span><span data-lang="bn" lang="bn">হোম</span></a><span>/</span><a href="/writeups/"><span data-lang="en">Writeups</span><span data-lang="bn" lang="bn">রাইটআপ</span></a><span>/</span><span class="here">Reproducible Benchmarks</span>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language / ভাষা">
+        <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-set="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="w-layout">
+
+      <aside class="w-toc" aria-label="Contents">
+        <p class="w-toc-label"><span data-lang="en">Contents</span><span data-lang="bn" lang="bn">বিষয়সূচি</span></p>
+        <ul>
+          <li><a href="#problem"><span data-lang="en">1 &middot; The problem</span><span data-lang="bn" lang="bn">১ &middot; সমস্যাটা</span></a></li>
+          <li><a href="#nonrepro"><span data-lang="en">2 &middot; What non-reproduction looks like</span><span data-lang="bn" lang="bn">২ &middot; non-reproduction দেখতে কেমন</span></a></li>
+          <li><a href="#landscape"><span data-lang="en">3 &middot; Datasets &amp; protocols</span><span data-lang="bn" lang="bn">৩ &middot; Dataset ও protocol</span></a></li>
+          <li><a href="#twod"><span data-lang="en">4 &middot; 2D &amp; monocular metrics</span><span data-lang="bn" lang="bn">৪ &middot; 2D ও monocular metric</span></a></li>
+          <li><a href="#metrics"><span data-lang="en">5 &middot; Metric design</span><span data-lang="bn" lang="bn">৫ &middot; Metric নকশা</span></a></li>
+          <li><a href="#tracking"><span data-lang="en">6 &middot; Tracking &amp; stability</span><span data-lang="bn" lang="bn">৬ &middot; Tracking ও stability</span></a></li>
+          <li><a href="#planning"><span data-lang="en">7 &middot; Planning-aware metrics</span><span data-lang="bn" lang="bn">৭ &middot; Planning-aware metric</span></a></li>
+          <li><a href="#splits"><span data-lang="en">8 &middot; Splits &amp; leakage</span><span data-lang="bn" lang="bn">৮ &middot; Split ও leakage</span></a></li>
+          <li><a href="#confounds"><span data-lang="en">9 &middot; The hidden knobs</span><span data-lang="bn" lang="bn">৯ &middot; লুকানো knob</span></a></li>
+          <li><a href="#robustness"><span data-lang="en">10 &middot; Robustness benchmarks</span><span data-lang="bn" lang="bn">১০ &middot; Robustness benchmark</span></a></li>
+          <li><a href="#stats"><span data-lang="en">11 &middot; Statistical rigor</span><span data-lang="bn" lang="bn">১১ &middot; পরিসংখ্যানগত কড়াকড়ি</span></a></li>
+          <li><a href="#infra"><span data-lang="en">12 &middot; Reproducibility infra</span><span data-lang="bn" lang="bn">১২ &middot; Reproducibility অবকাঠামো</span></a></li>
+          <li><a href="#checklist"><span data-lang="en">13 &middot; The checklist</span><span data-lang="bn" lang="bn">১৩ &middot; চেকলিস্ট</span></a></li>
+          <li><a href="#closedloop"><span data-lang="en">14 &middot; Toward closed-loop</span><span data-lang="bn" lang="bn">১৪ &middot; closed-loop-এর দিকে</span></a></li>
+          <li><a href="#refs"><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></a></li>
+        </ul>
+      </aside>
+
+      <main class="warticle" id="content">
+        <p class="w-eyebrow" data-lang="en">Technical Writeup</p>
+        <p class="w-eyebrow" data-lang="bn" lang="bn">টেকনিক্যাল রাইটআপ</p>
+        <h1 data-lang="en">How to Build Reproducible Perception Benchmarks for AV Research</h1>
+        <h1 data-lang="bn" lang="bn">AV গবেষণার জন্য reproducible Perception Benchmark কীভাবে বানাবেন</h1>
+        <p class="w-lede" data-lang="en">A large share of published 3D-perception improvements do not survive a controlled re-run. The gains are real on paper and vanish when the backbone, augmentation budget, sweep count, and test-time tricks are held fixed. This writeup is about why that happens and how to design a benchmark, a metric, and a split so that it does not.</p>
+        <p class="w-lede" data-lang="bn" lang="bn">প্রকাশিত 3D-perception উন্নতির একটা বড় অংশ একটি নিয়ন্ত্রিত re-run টেকে না। কাগজে লাভগুলো সত্যি, কিন্তু backbone, augmentation বাজেট, sweep সংখ্যা, ও test-time কৌশল স্থির রাখলে মিলিয়ে যায়। এই লেখা &mdash; কেন এমন হয়, এবং একটি benchmark, একটি metric ও একটি split এমনভাবে ডিজ়াইন করা যাতে এমন না হয়।</p>
+        <div class="w-meta" data-lang="en">
+          <span>Published 27&nbsp;Apr&nbsp;2026</span>
+          <span>Updated 31&nbsp;Aug&nbsp;2026</span>
+          <span>~29&nbsp;min read</span>
+        </div>
+        <div class="w-meta" data-lang="bn" lang="bn">
+          <span>প্রকাশ ২৭&nbsp;এপ্রিল&nbsp;২০২৬</span>
+          <span>হালনাগাদ ৩১&nbsp;আগস্ট&nbsp;২০২৬</span>
+          <span>~২৯&nbsp;মিনিট পাঠ</span>
+        </div>
+        <ul class="w-tags" data-lang="en">
+          <li>Benchmarking</li>
+          <li>Reproducibility</li>
+          <li>Evaluation metrics</li>
+          <li>Experimental design</li>
+          <li>nuScenes / Waymo</li>
+        </ul>
+        <ul class="w-tags" data-lang="bn" lang="bn">
+          <li>Benchmarking</li>
+          <li>Reproducibility</li>
+          <li>Evaluation metric</li>
+          <li>পরীক্ষামূলক নকশা</li>
+          <li>nuScenes / Waymo</li>
+        </ul>
+
+        <div class="prose">
+
+          <section id="problem">
+            <div data-lang="en">
+              <h2><span class="s-num">1</span>The problem, concretely</h2>
+              <p>Three-dimensional perception has a comparison problem. The typical paper reports a single number on a public <em>val</em> or <em>test</em> split and claims it beats a prior number. But that number is the output of a long pipeline &mdash; backbone, pretraining corpus, input resolution, voxel size, number of LiDAR sweeps, training epochs, class-balanced resampling, model EMA, and test-time augmentation (TTA) &mdash; and prior work rarely held those fixed. When an independent group re-implements two methods on <em>one</em> shared codebase with <em>one</em> backbone and <em>one</em> schedule, the ranking often changes and the margins shrink. Survey-and-recipe papers on BEV perception make exactly this point: much of the apparent progress is attributable to "hidden" training and inference choices rather than architecture <a class="ref-link" href="#ref-11">[11]</a>.</p>
+              <p>This is not fraud; it is under-specified experimental design plus leaderboard pressure. The fix is procedural: control the confounds, report the cost, release the artifacts, and design metrics and splits that resist gaming. The rest of this writeup is that procedure.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১</span>সমস্যাটা, সুনির্দিষ্টভাবে</h2>
+              <p>3D perception-এ একটা তুলনার সমস্যা আছে। সাধারণ paper একটি public <em>val</em> বা <em>test</em> split-এ একটিমাত্র সংখ্যা রিপোর্ট করে এবং দাবি করে তা আগের সংখ্যাকে হারায়। কিন্তু ওই সংখ্যা একটি দীর্ঘ pipeline-এর ফল &mdash; backbone, pretraining corpus, input resolution, voxel size, LiDAR sweep-এর সংখ্যা, training epoch, class-balanced resampling, model EMA, এবং test-time augmentation (TTA) &mdash; আর আগের কাজ কদাচিৎ সেগুলো স্থির রেখেছে। একটি স্বাধীন দল যখন দুটি পদ্ধতিকে <em>এক</em> shared codebase-এ, <em>এক</em> backbone ও <em>এক</em> schedule-এ পুনরায় বাস্তবায়ন করে, তখন র‍্যাঙ্কিং প্রায়ই বদলায় এবং ব্যবধান কমে। BEV perception নিয়ে survey-and-recipe paper ঠিক এই কথাটাই বলে: আপাত অগ্রগতির বেশিরভাগই architecture-এর বদলে "লুকানো" training ও inference পছন্দের কারণে <a class="ref-link" href="#ref-11">[11]</a>।</p>
+              <p>এটা জালিয়াতি নয়; এটা under-specified পরীক্ষামূলক নকশা, সঙ্গে leaderboard-এর চাপ। সমাধান পদ্ধতিগত: confound নিয়ন্ত্রণ করুন, খরচ রিপোর্ট করুন, artifact প্রকাশ করুন, এবং এমন metric ও split ডিজ়াইন করুন যা gaming ঠেকায়। এই লেখার বাকিটা সেই পদ্ধতি।</p>
+            </div>
+          </section>
+
+          <section id="nonrepro">
+            <div data-lang="en">
+              <h2><span class="s-num">2</span>What non-reproduction looks like</h2>
+              <p>Four recurring patterns, stated generically rather than naming papers:</p>
+              <ul>
+                <li><strong>The backbone swap.</strong> "Method A (+2.1 NDS over B)" where A used a heavier image backbone or a stronger pretraining corpus than B. Re-run with a common backbone and the delta is 0.3, inside noise.</li>
+                <li><strong>The TTA gap.</strong> A test-leaderboard entry uses double-flip + multi-scale + rotation TTA; the baseline it is compared against does not. TTA is worth 1&ndash;3 NDS on its own.</li>
+                <li><strong>The schedule creep.</strong> The new method trains for 24 epochs with CBGS; the cited baseline number is from a 20-epoch no-CBGS config. 3D detectors keep improving with schedule.</li>
+                <li><strong>The eval-code drift.</strong> Two methods scored with different evaluation code, different score thresholds, or different NMS &mdash; small implementation differences that move mAP by half a point.</li>
+              </ul>
+              <p>None of these require bad faith. All are eliminated by a single controlled comparison table with every knob disclosed.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">২</span>non-reproduction দেখতে কেমন</h2>
+              <p>চারটি বারবার আসা প্যাটার্ন, কোনো paper-এর নাম না নিয়ে সাধারণভাবে বলা:</p>
+              <ul>
+                <li><strong>Backbone swap।</strong> "Method A (B-এর চেয়ে +2.1 NDS)" যেখানে A, B-এর চেয়ে ভারী image backbone বা শক্তিশালী pretraining corpus ব্যবহার করেছে। এক common backbone দিয়ে re-run করলে delta 0.3, noise-এর ভেতরে।</li>
+                <li><strong>TTA gap।</strong> একটি test-leaderboard entry double-flip + multi-scale + rotation TTA ব্যবহার করে; যে baseline-এর সঙ্গে তুলনা তা করে না। TTA একাই ১&ndash;৩ NDS-এর সমান।</li>
+                <li><strong>Schedule creep।</strong> নতুন পদ্ধতি CBGS সহ ২৪ epoch train করে; উদ্ধৃত baseline সংখ্যা ২০-epoch no-CBGS config থেকে। 3D detector schedule বাড়ালে উন্নতি করতেই থাকে।</li>
+                <li><strong>Eval-code drift।</strong> দুটি পদ্ধতি আলাদা evaluation code, আলাদা score threshold, বা আলাদা NMS দিয়ে scored &mdash; ছোট implementation পার্থক্য যা mAP-কে আধা point সরায়।</li>
+              </ul>
+              <p>এগুলোর কোনোটিতেই অসততা লাগে না। প্রতিটি knob প্রকাশ-করা একটিমাত্র নিয়ন্ত্রিত তুলনার টেবিলেই সব দূর হয়।</p>
+            </div>
+          </section>
+
+          <section id="landscape">
+            <div data-lang="en">
+              <h2><span class="s-num">3</span>The dataset and protocol landscape</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Major AV 3D-detection benchmarks and the shape of their evaluation. Match functions and stratification differ enough that scores are not comparable across datasets.</caption>
+                  <thead><tr><th>Dataset</th><th>Match function</th><th>Headline metric</th><th>Stratification</th></tr></thead>
+                  <tbody>
+                    <tr><td>KITTI <a class="ref-link" href="#ref-1">[1]</a></td><td>3D / BEV IoU (0.7 car, 0.5 ped/cyc)</td><td>AP (40-point recall since 2019 <a class="ref-link" href="#ref-2">[2]</a>)</td><td>Easy / Moderate / Hard by occlusion, truncation, box height</td></tr>
+                    <tr><td>nuScenes <a class="ref-link" href="#ref-3">[3]</a></td><td>2D center distance on ground plane {0.5, 1, 2, 4}&nbsp;m</td><td>NDS = (5&middot;mAP + &Sigma; TP-scores) / 10, over 10 classes</td><td>Per-class; TP errors for translation, scale, orientation, velocity, attribute</td></tr>
+                    <tr><td>Waymo Open <a class="ref-link" href="#ref-4">[4]</a></td><td>3D IoU (0.7 veh, 0.5 ped/cyc); LET-IoU for camera-only <a class="ref-link" href="#ref-5">[5]</a></td><td>mAP / mAPH (heading-weighted); LET-3D-AP</td><td>LEVEL_1 (&gt;5 pts) / LEVEL_2 (&ge;1 pt); range 0&ndash;30 / 30&ndash;50 / 50&nbsp;m+</td></tr>
+                    <tr><td>Argoverse 2 <a class="ref-link" href="#ref-6">[6]</a></td><td>3D center distance</td><td>CDS (composite detection score), 26 classes, 150&nbsp;m</td><td>Per-class; long-tail-heavy taxonomy</td></tr>
+                    <tr><td>ONCE <a class="ref-link" href="#ref-7">[7]</a></td><td>3D IoU</td><td>AP (orientation-aware)</td><td>Large unlabeled pool for semi-/self-supervised study</td></tr>
+                    <tr><td>Occ3D <a class="ref-link" href="#ref-8">[8]</a></td><td>Voxel occupancy + semantics</td><td>mIoU; RayIoU <a class="ref-link" href="#ref-9">[9]</a> to fix depth-penalty inconsistency</td><td>nuScenes / Waymo variants; visible-mask conventions differ</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Details worth internalizing:</p>
+              <ul>
+                <li><strong>nuScenes matches on center distance, not IoU</strong> <a class="ref-link" href="#ref-3">[3]</a> &mdash; a slightly mis-sized box is not punished as hard as a mislocated one, with box quality captured separately by five true-positive metrics (translation mATE, scale mASE, orientation mAOE, velocity mAVE, attribute mAAE), each turned into a score <span class="eq">max(1 &minus; error, 0)</span>. NDS weights mAP by 5 and each TP score by 1, then divides by 10. A method can raise NDS by improving orientation without improving mAP at all &mdash; always show the decomposition.</li>
+                <li><strong>Waymo's APH</strong> <a class="ref-link" href="#ref-4">[4]</a> weights each true positive by heading accuracy <span class="eq">1 &minus; |&#916;&#952;| / &#960;</span> (with <span class="eq">&#916;&#952;</span> the wrapped heading error), so a detector that gets boxes but not orientation is penalized. mAPH is the primary metric; LEVEL_2 (includes 1-point objects) is the harder, headline setting.</li>
+                <li><strong>Waymo's LET-3D-AP</strong> <a class="ref-link" href="#ref-5">[5]</a> loosens the longitudinal (depth) tolerance so camera-only methods are not dominated by inherent range error &mdash; meaning camera and LiDAR entries under LET metrics are <em>not</em> directly comparable to entries under strict IoU.</li>
+                <li><strong>Occupancy metrics are fragmenting.</strong> Plain mIoU over voxels penalizes depth errors inconsistently (a thin surface prediction one voxel off scores zero); RayIoU <a class="ref-link" href="#ref-9">[9]</a> casts query rays and compares first-hit distances instead. Occ3D-nuScenes and Occ3D-Waymo also differ in voxel size and visible-mask handling. State which occupancy metric and mask convention you used.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৩</span>Dataset ও protocol-এর মানচিত্র</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>প্রধান AV 3D-detection benchmark ও তাদের মূল্যায়নের গড়ন। Match function ও stratification যথেষ্ট আলাদা, তাই dataset-জুড়ে score তুলনীয় নয়।</caption>
+                  <thead><tr><th>Dataset</th><th>Match function</th><th>প্রধান metric</th><th>Stratification</th></tr></thead>
+                  <tbody>
+                    <tr><td>KITTI <a class="ref-link" href="#ref-1">[1]</a></td><td>3D / BEV IoU (0.7 car, 0.5 ped/cyc)</td><td>AP (২০১৯ থেকে 40-point recall <a class="ref-link" href="#ref-2">[2]</a>)</td><td>occlusion, truncation, box height অনুযায়ী Easy / Moderate / Hard</td></tr>
+                    <tr><td>nuScenes <a class="ref-link" href="#ref-3">[3]</a></td><td>ground plane-এ 2D center distance {0.5, 1, 2, 4}&nbsp;মি</td><td>NDS = (5&middot;mAP + &Sigma; TP-score) / 10, ১০ class-এ</td><td>per-class; translation, scale, orientation, velocity, attribute-এর TP error</td></tr>
+                    <tr><td>Waymo Open <a class="ref-link" href="#ref-4">[4]</a></td><td>3D IoU (0.7 veh, 0.5 ped/cyc); camera-only-র জন্য LET-IoU <a class="ref-link" href="#ref-5">[5]</a></td><td>mAP / mAPH (heading-weighted); LET-3D-AP</td><td>LEVEL_1 (&gt;5 pt) / LEVEL_2 (&ge;1 pt); range 0&ndash;30 / 30&ndash;50 / 50&nbsp;মি+</td></tr>
+                    <tr><td>Argoverse 2 <a class="ref-link" href="#ref-6">[6]</a></td><td>3D center distance</td><td>CDS (composite detection score), ২৬ class, ১৫০&nbsp;মি</td><td>per-class; long-tail-প্রধান taxonomy</td></tr>
+                    <tr><td>ONCE <a class="ref-link" href="#ref-7">[7]</a></td><td>3D IoU</td><td>AP (orientation-aware)</td><td>semi-/self-supervised গবেষণার জন্য বড় unlabeled pool</td></tr>
+                    <tr><td>Occ3D <a class="ref-link" href="#ref-8">[8]</a></td><td>Voxel occupancy + semantics</td><td>mIoU; depth-penalty অসঙ্গতি ঠিক করতে RayIoU <a class="ref-link" href="#ref-9">[9]</a></td><td>nuScenes / Waymo variant; visible-mask প্রথা আলাদা</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>মনে রাখার মতো বিস্তারিত:</p>
+              <ul>
+                <li><strong>nuScenes IoU নয়, center distance-এ match করে</strong> <a class="ref-link" href="#ref-3">[3]</a> &mdash; সামান্য ভুল-মাপের box, ভুল-অবস্থানের box-এর মতো কঠোরভাবে শাস্তি পায় না, box-এর মান আলাদাভাবে ধরা পড়ে পাঁচটি true-positive metric-এ (translation mATE, scale mASE, orientation mAOE, velocity mAVE, attribute mAAE), প্রতিটি একটি score <span class="eq">max(1 &minus; error, 0)</span>-তে রূপান্তরিত। NDS mAP-কে ৫ এবং প্রতিটি TP score-কে ১ weight দিয়ে তারপর ১০ দিয়ে ভাগ করে। একটি পদ্ধতি mAP মোটেই না বাড়িয়েও orientation উন্নত করে NDS বাড়াতে পারে &mdash; সবসময় decomposition দেখান।</li>
+                <li><strong>Waymo-র APH</strong> <a class="ref-link" href="#ref-4">[4]</a> প্রতিটি true positive-কে heading accuracy <span class="eq">1 &minus; |&#916;&#952;| / &#960;</span> দিয়ে weight করে (<span class="eq">&#916;&#952;</span> হলো wrapped heading error), তাই যে detector box পায় কিন্তু orientation পায় না তা শাস্তি পায়। mAPH প্রধান metric; LEVEL_2 (১-point object সহ) কঠিনতর, প্রধান setting।</li>
+                <li><strong>Waymo-র LET-3D-AP</strong> <a class="ref-link" href="#ref-5">[5]</a> longitudinal (depth) সহনশীলতা শিথিল করে যাতে camera-only পদ্ধতি অন্তর্নিহিত range error-এ ডুবে না যায় &mdash; অর্থাৎ LET metric-এর অধীন camera ও LiDAR entry, strict IoU-র অধীন entry-র সঙ্গে সরাসরি তুলনীয় <em>নয়</em>।</li>
+                <li><strong>Occupancy metric খণ্ডিত হচ্ছে।</strong> voxel-এর উপর সাধারণ mIoU depth error-কে অসঙ্গতভাবে শাস্তি দেয় (এক voxel সরে থাকা পাতলা surface prediction শূন্য পায়); RayIoU <a class="ref-link" href="#ref-9">[9]</a> বদলে query ray ছোড়ে এবং first-hit দূরত্ব তুলনা করে। Occ3D-nuScenes ও Occ3D-Waymo voxel size ও visible-mask handling-এও আলাদা। কোন occupancy metric ও mask প্রথা ব্যবহার করেছেন তা উল্লেখ করুন।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="twod">
+            <div data-lang="en">
+              <h2><span class="s-num">4</span>2D and monocular metrics, briefly</h2>
+              <p>Monocular and multi-view-camera 3D detection is often reported on nuScenes NDS or on KITTI's 3D AP, but 2D image-plane detection (nuImages, BDD100K, Cityscapes) still uses COCO-style AP averaged over IoU 0.5:0.95. Two traps: (a) AP<sub>50</sub> and AP (averaged) tell different stories &mdash; a method can win AP<sub>50</sub> and lose averaged AP by producing loose boxes; (b) the KITTI 11-point (R11) vs 40-point (R40) recall interpolation changed in 2019 <a class="ref-link" href="#ref-2">[2]</a>, so pre- and post-2019 KITTI AP numbers are not comparable &mdash; check which a cited number uses.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৪</span>2D ও monocular metric, সংক্ষেপে</h2>
+              <p>Monocular ও multi-view-camera 3D detection প্রায়ই nuScenes NDS বা KITTI-র 3D AP-তে রিপোর্ট হয়, কিন্তু 2D image-plane detection (nuImages, BDD100K, Cityscapes) এখনও IoU 0.5:0.95-এর উপর গড়-করা COCO-ধাঁচের AP ব্যবহার করে। দুটি ফাঁদ: (ক) AP<sub>50</sub> ও AP (গড়) আলাদা গল্প বলে &mdash; একটি পদ্ধতি ঢিলেঢালা box বানিয়ে AP<sub>50</sub> জিতে গড় AP হারাতে পারে; (খ) KITTI-র 11-point (R11) বনাম 40-point (R40) recall interpolation ২০১৯-এ বদলেছে <a class="ref-link" href="#ref-2">[2]</a>, তাই ২০১৯-এর আগের ও পরের KITTI AP সংখ্যা তুলনীয় নয় &mdash; উদ্ধৃত সংখ্যা কোনটি ব্যবহার করে তা দেখুন।</p>
+            </div>
+          </section>
+
+          <section id="metrics">
+            <div data-lang="en">
+              <h2><span class="s-num">5</span>Metric design principles</h2>
+              <ul>
+                <li><strong>Pick the match function on purpose.</strong> IoU rewards tight boxes and punishes size error heavily; center-distance decouples localization from sizing. State which failure you care about, choose accordingly, and report the orthogonal error separately.</li>
+                <li><strong>Stratify.</strong> A single mean hides the cases that matter. Break out by distance, by occlusion / point-count, and by class. A method that gains 2 points of aggregate AP by improving already-easy near cars is less interesting than one that gains 0.5 overall but 4 at 50&nbsp;m+.</li>
+                <li><strong>Score calibration matters for downstream use.</strong> If confidence is miscalibrated, AP can look fine while the planner gets garbage probabilities. Report a calibration diagnostic (reliability curve, ECE).</li>
+                <li><strong>Temporal stability, not just per-frame accuracy.</strong> Flicker, ID switches, and jittery boxes hurt tracking and prediction and are invisible to per-frame AP (see &sect;6).</li>
+                <li><strong>Safety-relevant summaries.</strong> Miss rate at range for vulnerable road users; planner-centric metrics (see &sect;7). Aggregate AP treats a missed distant cyclist and a missed parked car identically.</li>
+                <li><strong>Announce the metric and freeze it.</strong> A metric adjusted after seeing results is not a benchmark.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৫</span>Metric নকশার নীতি</h2>
+              <ul>
+                <li><strong>Match function সচেতনভাবে বাছুন।</strong> IoU আঁটসাঁট box-কে পুরস্কার দেয় এবং size error-কে ভারীভাবে শাস্তি দেয়; center-distance localization-কে sizing থেকে আলাদা করে। কোন failure নিয়ে আপনি চিন্তিত তা বলুন, সেই অনুযায়ী বাছুন, এবং orthogonal error আলাদাভাবে রিপোর্ট করুন।</li>
+                <li><strong>Stratify করুন।</strong> একটিমাত্র গড় গুরুত্বপূর্ণ ক্ষেত্রগুলো আড়াল করে। দূরত্ব, occlusion / point-count, ও class অনুযায়ী ভাগ করুন। আগে থেকেই সহজ কাছের গাড়ি উন্নত করে ২ point aggregate AP পাওয়া পদ্ধতি, সামগ্রিকভাবে ০.৫ কিন্তু ৫০&nbsp;মি+-এ ৪ পাওয়া পদ্ধতির চেয়ে কম আকর্ষণীয়।</li>
+                <li><strong>downstream ব্যবহারের জন্য score calibration গুরুত্বপূর্ণ।</strong> confidence miscalibrated হলে AP ঠিক দেখাতে পারে অথচ planner আজেবাজে probability পায়। একটি calibration diagnostic রিপোর্ট করুন (reliability curve, ECE)।</li>
+                <li><strong>কেবল per-frame accuracy নয়, temporal stability।</strong> flicker, ID switch, ও কাঁপা box tracking ও prediction-এর ক্ষতি করে এবং per-frame AP-তে অদৃশ্য (&sect;৬ দেখুন)।</li>
+                <li><strong>Safety-সম্পর্কিত সারাংশ।</strong> vulnerable road user-দের জন্য দূরত্বে miss rate; planner-কেন্দ্রিক metric (&sect;৭ দেখুন)। Aggregate AP একটি মিস-করা দূরের cyclist আর একটি মিস-করা পার্ক-করা গাড়িকে একরকম গণ্য করে।</li>
+                <li><strong>Metric ঘোষণা করে freeze করুন।</strong> ফলাফল দেখার পর সমন্বয়-করা metric benchmark নয়।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="tracking">
+            <div data-lang="en">
+              <h2><span class="s-num">6</span>Tracking and temporal-stability metrics</h2>
+              <p>If perception feeds prediction, per-frame detection AP is not enough. The standard 3D multi-object-tracking metrics:</p>
+              <ul>
+                <li><strong>AMOTA / AMOTP</strong> &mdash; the nuScenes tracking metrics <a class="ref-link" href="#ref-16">[16]</a>: MOTA / MOTP integrated over recall thresholds, so they reward consistent identity across the confidence range, not at one operating point.</li>
+                <li><strong>MOTA, MOTP, IDF1, ID switches</strong> &mdash; the classic CLEAR-MOT family; ID switches specifically penalize identity instability.</li>
+                <li><strong>HOTA</strong> <a class="ref-link" href="#ref-17">[17]</a> &mdash; Higher Order Tracking Accuracy, which balances detection, association, and localization into one number and is now the KITTI-tracking primary; increasingly reported alongside AMOTA on nuScenes.</li>
+                <li><strong>Detection stability</strong> &mdash; frame-to-frame variance of box pose/size for the same tracked object; there are dedicated "stability" metrics that a jittery-but-accurate detector fails.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৬</span>Tracking ও temporal-stability metric</h2>
+              <p>perception যদি prediction-কে খাওয়ায়, per-frame detection AP যথেষ্ট নয়। স্ট্যান্ডার্ড 3D multi-object-tracking metric:</p>
+              <ul>
+                <li><strong>AMOTA / AMOTP</strong> &mdash; nuScenes tracking metric <a class="ref-link" href="#ref-16">[16]</a>: recall threshold-জুড়ে integrated MOTA / MOTP, তাই এগুলো একটি operating point-এ নয়, পুরো confidence পরিসরে সঙ্গতিপূর্ণ identity-কে পুরস্কার দেয়।</li>
+                <li><strong>MOTA, MOTP, IDF1, ID switch</strong> &mdash; ক্লাসিক CLEAR-MOT পরিবার; ID switch বিশেষভাবে identity অস্থিরতাকে শাস্তি দেয়।</li>
+                <li><strong>HOTA</strong> <a class="ref-link" href="#ref-17">[17]</a> &mdash; Higher Order Tracking Accuracy, যা detection, association, ও localization-কে এক সংখ্যায় ভারসাম্য করে এবং এখন KITTI-tracking-এর প্রধান; nuScenes-এ AMOTA-র পাশাপাশি ক্রমশ বেশি রিপোর্ট হচ্ছে।</li>
+                <li><strong>Detection stability</strong> &mdash; একই tracked object-এর box pose/size-এর frame-to-frame variance; নির্দিষ্ট "stability" metric আছে যেগুলোতে কাঁপা-কিন্তু-নির্ভুল detector ফেল করে।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="planning">
+            <div data-lang="en">
+              <h2><span class="s-num">7</span>Planning-aware and closed-loop metrics</h2>
+              <p>Per-frame detection AP is an open-loop proxy for what matters: does the car drive well. Metrics that get closer:</p>
+              <ul>
+                <li><strong>PKL</strong> (Planning KL-divergence) <a class="ref-link" href="#ref-10">[10]</a> &mdash; weights a detection error by how much it changes a fixed downstream planner's predicted trajectory distribution. A missed parked car far from the path costs little; a missed lead vehicle costs a lot.</li>
+                <li><strong>nuPlan closed-loop score</strong> <a class="ref-link" href="#ref-14">[14]</a> &mdash; runs the planner in closed loop on real logs with reactive agents, scoring progress, comfort, and collisions.</li>
+                <li><strong>NAVSIM PDMS</strong> <a class="ref-link" href="#ref-15">[15]</a> &mdash; a non-reactive simulation with a predictive driver-model score that correlates with closed-loop far better than open-loop trajectory L2 does.</li>
+                <li><strong>CARLA / Bench2Drive</strong> &mdash; reactive closed-loop scenarios for end-to-end stacks.</li>
+              </ul>
+              <p>Perception papers will increasingly be expected to show that a detection gain survives contact with a planner &mdash; because a surprising number do not.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৭</span>Planning-aware ও closed-loop metric</h2>
+              <p>Per-frame detection AP আসল প্রশ্নের একটি open-loop proxy: গাড়ি কি ভালো চালায়। যেসব metric কাছাকাছি যায়:</p>
+              <ul>
+                <li><strong>PKL</strong> (Planning KL-divergence) <a class="ref-link" href="#ref-10">[10]</a> &mdash; একটি detection error-কে weight করে এই অনুযায়ী যে তা একটি স্থির downstream planner-এর predicted trajectory distribution কতটা বদলায়। পথ থেকে দূরের একটি মিস-করা পার্ক-করা গাড়ির খরচ সামান্য; একটি মিস-করা lead vehicle-এর খরচ অনেক।</li>
+                <li><strong>nuPlan closed-loop score</strong> <a class="ref-link" href="#ref-14">[14]</a> &mdash; reactive agent সহ বাস্তব log-এ planner-কে closed loop-এ চালায়, progress, comfort ও collision-এ score দেয়।</li>
+                <li><strong>NAVSIM PDMS</strong> <a class="ref-link" href="#ref-15">[15]</a> &mdash; একটি non-reactive simulation, যার predictive driver-model score open-loop trajectory L2-র চেয়ে closed-loop-এর সঙ্গে অনেক ভালো correlate করে।</li>
+                <li><strong>CARLA / Bench2Drive</strong> &mdash; end-to-end stack-এর জন্য reactive closed-loop দৃশ্য।</li>
+              </ul>
+              <p>Perception paper থেকে ক্রমশ আশা করা হবে যে একটি detection লাভ planner-এর সংস্পর্শে টেকে &mdash; কারণ অবাক করার মতো অনেকগুলো টেকে না।</p>
+            </div>
+          </section>
+
+          <section id="splits">
+            <div data-lang="en">
+              <h2><span class="s-num">8</span>Splits and leakage</h2>
+              <ul>
+                <li><strong>Scene-level disjointness.</strong> Frames from one drive are highly correlated; any split must be at the scene / log level, never the frame level. A custom subset that splits frames randomly leaks the val set into training and inflates everything.</li>
+                <li><strong>Geographic and temporal holdout.</strong> The strongest generalization test holds out whole areas or days. nuScenes and Waymo separate by location / scene; preserve that when sub-sampling.</li>
+                <li><strong>Sweep leakage.</strong> If you accumulate past / future sweeps, make sure the sweeps pulled into a training frame do not belong to a val scene.</li>
+                <li><strong>Simulation town / route holdout.</strong> For CARLA-based work, held-out towns and weather presets, not just held-out routes in a seen town.</li>
+                <li><strong>Cross-dataset evaluation as a first-class result.</strong> Train nuScenes &#8594; test Waymo (or the reverse) exposes overfitting to a single sensor rig and label convention. If you claim generality, show it.</li>
+                <li><strong>Foundation-model contamination.</strong> Backbones pretrained on web-scale corpora may overlap the benchmark's imagery or its sources. No clean solution yet &mdash; disclose the pretraining data.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৮</span>Split ও leakage</h2>
+              <ul>
+                <li><strong>Scene-স্তরে বিচ্ছিন্নতা।</strong> একটি drive-এর frame-গুলো অত্যন্ত correlated; যেকোনো split scene / log স্তরে হতে হবে, কখনো frame স্তরে নয়। যে custom subset frame-গুলো randomly ভাগ করে তা val set-কে training-এ leak করে এবং সব কিছু স্ফীত করে।</li>
+                <li><strong>ভৌগোলিক ও সময়ভিত্তিক holdout।</strong> সবচেয়ে শক্তিশালী generalization পরীক্ষা পুরো এলাকা বা দিন সরিয়ে রাখে। nuScenes ও Waymo location / scene অনুযায়ী আলাদা করে; sub-sample করার সময় তা বজায় রাখুন।</li>
+                <li><strong>Sweep leakage।</strong> অতীত / ভবিষ্যৎ sweep জমা করলে নিশ্চিত করুন যে একটি training frame-এ টানা sweep কোনো val scene-এর নয়।</li>
+                <li><strong>Simulation town / route holdout।</strong> CARLA-ভিত্তিক কাজে, কেবল দেখা town-এর held-out route নয়, held-out town ও weather preset।</li>
+                <li><strong>Cross-dataset মূল্যায়ন একটি প্রথম-শ্রেণির ফলাফল হিসেবে।</strong> Train nuScenes &#8594; test Waymo (বা উল্টো) একটি একক sensor rig ও label প্রথায় overfitting ফাঁস করে। generality দাবি করলে দেখান।</li>
+                <li><strong>Foundation-model দূষণ।</strong> web-scale corpus-এ pretrained backbone benchmark-এর imagery বা তার উৎসের সঙ্গে ওভারল্যাপ করতে পারে। এখনও পরিষ্কার সমাধান নেই &mdash; pretraining data প্রকাশ করুন।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="confounds">
+            <div data-lang="en">
+              <h2><span class="s-num">9</span>The hidden knobs &mdash; a control checklist</h2>
+              <p>Every one of these has moved reported nuScenes NDS by more than a typical "architecture" delta. Hold them fixed across the methods you compare, and report their values:</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>Confounds to fix and disclose in any 3D-detection comparison.</caption>
+                  <thead><tr><th>Knob</th><th>Why it matters</th></tr></thead>
+                  <tbody>
+                    <tr><td>Image / point backbone</td><td>R50 vs. R101 vs. Swin vs. V2-99 is often larger than the architectural change under study</td></tr>
+                    <tr><td>Pretraining corpus</td><td>ImageNet vs. depth-pretrain vs. large detection pretrain (nuImages, Objects365)</td></tr>
+                    <tr><td>Input resolution</td><td>256&times;704 vs. 512&times;1408 changes small-object recall substantially</td></tr>
+                    <tr><td>Voxel size / BEV resolution</td><td>0.075&nbsp;m vs. 0.1&nbsp;m; 0.4&nbsp;m vs. 0.8&nbsp;m BEV grid</td></tr>
+                    <tr><td>LiDAR sweeps</td><td>1 vs. 10 accumulated sweeps is worth several NDS on its own</td></tr>
+                    <tr><td>Training epochs / schedule</td><td>Longer schedules keep improving; a 20-epoch method vs. a 24-epoch baseline is not a fair fight</td></tr>
+                    <tr><td>CBGS / class-balanced sampling</td><td>Roughly doubles effective epochs; helps rare classes, can hurt car AP</td></tr>
+                    <tr><td>Model EMA</td><td>Typically +0.5&ndash;1 NDS for free</td></tr>
+                    <tr><td>Test-time augmentation</td><td>Double-flip + multi-scale + rotation can add 1&ndash;3 NDS; test entries with and without TTA are routinely compared as if equivalent</td></tr>
+                    <tr><td>GT-paste / copy-paste</td><td>Strength and multimodal handling change results and interact with fusion</td></tr>
+                    <tr><td>Eval code / score threshold / NMS</td><td>Implementation drift moves mAP by tenths of a point</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৯</span>লুকানো knob &mdash; একটি নিয়ন্ত্রণ চেকলিস্ট</h2>
+              <p>এদের প্রত্যেকটি রিপোর্ট-করা nuScenes NDS-কে সাধারণ "architecture" delta-র চেয়ে বেশি সরিয়েছে। যেসব পদ্ধতি তুলনা করছেন তাদের জুড়ে এগুলো স্থির রাখুন এবং মান রিপোর্ট করুন:</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>যেকোনো 3D-detection তুলনায় যেসব confound স্থির ও প্রকাশ করতে হবে।</caption>
+                  <thead><tr><th>Knob</th><th>কেন গুরুত্বপূর্ণ</th></tr></thead>
+                  <tbody>
+                    <tr><td>Image / point backbone</td><td>R50 বনাম R101 বনাম Swin বনাম V2-99 প্রায়ই অধ্যয়নাধীন architectural পরিবর্তনের চেয়ে বড়</td></tr>
+                    <tr><td>Pretraining corpus</td><td>ImageNet বনাম depth-pretrain বনাম বড় detection pretrain (nuImages, Objects365)</td></tr>
+                    <tr><td>Input resolution</td><td>256&times;704 বনাম 512&times;1408 small-object recall উল্লেখযোগ্যভাবে বদলায়</td></tr>
+                    <tr><td>Voxel size / BEV resolution</td><td>0.075&nbsp;মি বনাম 0.1&nbsp;মি; 0.4&nbsp;মি বনাম 0.8&nbsp;মি BEV grid</td></tr>
+                    <tr><td>LiDAR sweep</td><td>১ বনাম ১০ জমা-করা sweep একাই কয়েক NDS-এর সমান</td></tr>
+                    <tr><td>Training epoch / schedule</td><td>দীর্ঘ schedule উন্নতি করতেই থাকে; ২০-epoch পদ্ধতি বনাম ২৪-epoch baseline সুষ্ঠু লড়াই নয়</td></tr>
+                    <tr><td>CBGS / class-balanced sampling</td><td>কার্যকর epoch মোটামুটি দ্বিগুণ করে; বিরল class-এ সাহায্য করে, car AP কমাতে পারে</td></tr>
+                    <tr><td>Model EMA</td><td>সাধারণত বিনামূল্যে +0.5&ndash;1 NDS</td></tr>
+                    <tr><td>Test-time augmentation</td><td>Double-flip + multi-scale + rotation ১&ndash;৩ NDS যোগ করতে পারে; TTA সহ ও ছাড়া test entry নিয়মিতভাবে সমতুল্য ধরে তুলনা করা হয়</td></tr>
+                    <tr><td>GT-paste / copy-paste</td><td>মাত্রা ও multimodal handling ফলাফল বদলায় এবং fusion-এর সঙ্গে interact করে</td></tr>
+                    <tr><td>Eval code / score threshold / NMS</td><td>Implementation drift mAP-কে point-এর দশমাংশে সরায়</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="robustness">
+            <div data-lang="en">
+              <h2><span class="s-num">10</span>Robustness and corruption benchmarks</h2>
+              <p>Clean-set accuracy does not predict deployment behavior. Standard tools:</p>
+              <ul>
+                <li><strong>Common-corruptions for 3D detection</strong> <a class="ref-link" href="#ref-12">[12]</a> &mdash; ~27 corruption types across LiDAR and camera; the headline findings are that motion-level corruptions dominate, that LiDAR&ndash;camera fusion helps on average but does not save you, and that "cross-sensor" and "snow" are the two worst cases.</li>
+                <li><strong>Robo3D</strong> <a class="ref-link" href="#ref-13">[13]</a> &mdash; physically-principled corruptions on KITTI / SemanticKITTI / nuScenes / Waymo val, with a standardized corruption-error and relative-robustness summary.</li>
+                <li><strong>MultiCorrupt</strong> and similar &mdash; specifically misaligned / missing multi-sensor inputs for fusion models.</li>
+                <li><strong>Report the clean&ndash;corrupt gap</strong>, the per-corruption breakdown, and a relative-robustness score &mdash; not just the mean corrupted number, which a big model can carry by brute force.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১০</span>Robustness ও corruption benchmark</h2>
+              <p>Clean-set accuracy deployment আচরণ অনুমান করে না। স্ট্যান্ডার্ড টুল:</p>
+              <ul>
+                <li><strong>3D detection-এর জন্য common-corruptions</strong> <a class="ref-link" href="#ref-12">[12]</a> &mdash; LiDAR ও camera-জুড়ে ~২৭ ধরনের corruption; প্রধান ফলাফল হলো motion-level corruption প্রাধান্য নেয়, LiDAR&ndash;camera fusion গড়ে সাহায্য করে কিন্তু বাঁচায় না, এবং "cross-sensor" ও "snow" দুটি সবচেয়ে খারাপ ক্ষেত্র।</li>
+                <li><strong>Robo3D</strong> <a class="ref-link" href="#ref-13">[13]</a> &mdash; KITTI / SemanticKITTI / nuScenes / Waymo val-এ physically-principled corruption, একটি standardized corruption-error ও relative-robustness সারাংশ সহ।</li>
+                <li><strong>MultiCorrupt</strong> ও সদৃশ &mdash; বিশেষভাবে fusion মডেলের জন্য misaligned / missing multi-sensor input।</li>
+                <li><strong>clean&ndash;corrupt gap</strong>, per-corruption breakdown, ও একটি relative-robustness score রিপোর্ট করুন &mdash; কেবল mean corrupted সংখ্যা নয়, যা একটি বড় মডেল জোর করে টেনে নিতে পারে।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="stats">
+            <div data-lang="en">
+              <h2><span class="s-num">11</span>Statistical rigor</h2>
+              <ul>
+                <li><strong>Seeds and variance.</strong> 3D detectors have non-trivial run-to-run spread &mdash; often several tenths of an NDS point, more for rare classes. A 0.3-NDS "improvement" from a single run each is not a result. Report mean &plusmn; std over &ge;3 seeds, or a bootstrap confidence interval over the eval set.</li>
+                <li><strong>Compute-matched comparison.</strong> Plot accuracy against GFLOPs, latency, and parameters. A gain that costs 2&times; compute belongs on a Pareto curve, not in a bold table cell.</li>
+                <li><strong>Significance.</strong> When margins are within a couple of standard deviations, say so. Do not bold it.</li>
+                <li><strong>Report cost.</strong> Training GPU-hours, inference latency on named hardware, peak memory, and &mdash; increasingly expected &mdash; energy. These are part of the result.</li>
+                <li><strong>Ablate one thing at a time</strong>, from a fixed reference config, and give each ablation its own seeds.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১১</span>পরিসংখ্যানগত কড়াকড়ি</h2>
+              <ul>
+                <li><strong>Seed ও variance।</strong> 3D detector-এর run-to-run বিস্তার তুচ্ছ নয় &mdash; প্রায়ই NDS point-এর কয়েক দশমাংশ, বিরল class-এ আরও বেশি। প্রতিটির একটিমাত্র run থেকে ০.৩-NDS "উন্নতি" কোনো ফলাফল নয়। &ge;৩টি seed-এর উপর mean &plusmn; std, অথবা eval set-এর উপর একটি bootstrap confidence interval রিপোর্ট করুন।</li>
+                <li><strong>Compute-matched তুলনা।</strong> GFLOP, latency ও parameter-এর সাপেক্ষে accuracy plot করুন। ২&times; compute খরচ করা লাভের জায়গা একটি Pareto curve-এ, bold টেবিল-cell-এ নয়।</li>
+                <li><strong>Significance।</strong> ব্যবধান যখন কয়েকটি standard deviation-এর মধ্যে, তা বলুন। bold করবেন না।</li>
+                <li><strong>খরচ রিপোর্ট করুন।</strong> Training GPU-ঘণ্টা, নামসহ hardware-এ inference latency, peak memory, এবং &mdash; ক্রমশ প্রত্যাশিত &mdash; energy। এগুলো ফলাফলের অংশ।</li>
+                <li><strong>একবারে একটি জিনিস ablate করুন</strong>, একটি স্থির reference config থেকে, এবং প্রতিটি ablation-কে তার নিজস্ব seed দিন।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="infra">
+            <div data-lang="en">
+              <h2><span class="s-num">12</span>Reproducibility infrastructure</h2>
+              <ul>
+                <li><strong>One codebase.</strong> Build on a maintained framework (MMDetection3D <a class="ref-link" href="#ref-18">[18]</a>, OpenPCDet) so baselines and your method share data loading, augmentation, and eval code. Re-implementing baselines yourself is the most common source of unfair comparison.</li>
+                <li><strong>Pinned configs + container.</strong> Exact config files, a dependency lockfile, and a Docker image. Sparse-convolution and voxel-pooling kernels are version-sensitive and a frequent cause of "cannot reproduce".</li>
+                <li><strong>Determinism, honestly.</strong> Some sparse ops are non-deterministic on GPU; state this rather than pretending a fixed seed gives bit-exact runs.</li>
+                <li><strong>Dataset versioning.</strong> Note the dataset version and devkit commit; annotation fixes have changed scores historically (the 2019 KITTI 40-point change <a class="ref-link" href="#ref-2">[2]</a> is the canonical example).</li>
+                <li><strong>Release predictions.</strong> Publish the raw prediction files for val, so others can re-score under new metrics without retraining, and respect the test-server submission limits &mdash; the hidden test set only works if people do not probe it.</li>
+                <li><strong>Model card.</strong> Intended use, training data, known failure modes, compute, and the full knob table from &sect;9.</li>
+                <li><strong>Leaderboards vs. papers.</strong> A number on a public leaderboard with TTA and a giant backbone is not the same claim as an architecture ablation. Keep the two separate in your own tables.</li>
+                <li><strong>Licensing.</strong> Some datasets forbid redistributing derived labels or training on the test images; check before releasing pseudo-labels or pretrained weights.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১২</span>Reproducibility অবকাঠামো</h2>
+              <ul>
+                <li><strong>এক codebase।</strong> একটি রক্ষণাবেক্ষণ-করা framework-এর উপর গড়ুন (MMDetection3D <a class="ref-link" href="#ref-18">[18]</a>, OpenPCDet) যাতে baseline ও আপনার পদ্ধতি data loading, augmentation ও eval code ভাগ করে। নিজে baseline পুনরায় বাস্তবায়ন করাই অসম তুলনার সবচেয়ে সাধারণ উৎস।</li>
+                <li><strong>Pinned config + container।</strong> হুবহু config ফাইল, একটি dependency lockfile, এবং একটি Docker image। Sparse-convolution ও voxel-pooling kernel version-সংবেদনশীল এবং "reproduce করা যায় না"-র ঘন ঘন কারণ।</li>
+                <li><strong>Determinism, সৎভাবে।</strong> কিছু sparse op GPU-তে non-deterministic; একটি স্থির seed bit-exact run দেয় ভান না করে এটা বলুন।</li>
+                <li><strong>Dataset versioning।</strong> dataset version ও devkit commit উল্লেখ করুন; annotation সংশোধন ঐতিহাসিকভাবে score বদলেছে (২০১৯-এর KITTI 40-point পরিবর্তন <a class="ref-link" href="#ref-2">[2]</a> প্রধান উদাহরণ)।</li>
+                <li><strong>Prediction প্রকাশ করুন।</strong> val-এর raw prediction ফাইল প্রকাশ করুন, যাতে অন্যরা retrain না করেই নতুন metric-এ re-score করতে পারে, এবং test-server submission সীমা মানুন &mdash; লুকানো test set তখনই কাজ করে যখন লোকে সেটি probe না করে।</li>
+                <li><strong>Model card।</strong> উদ্দিষ্ট ব্যবহার, training data, জানা failure mode, compute, এবং &sect;৯-এর পূর্ণ knob টেবিল।</li>
+                <li><strong>Leaderboard বনাম paper।</strong> TTA ও বিশাল backbone সহ একটি public leaderboard-এর সংখ্যা একটি architecture ablation-এর মতো একই দাবি নয়। নিজের টেবিলে দুটো আলাদা রাখুন।</li>
+                <li><strong>Licensing।</strong> কিছু dataset derived label পুনর্বণ্টন বা test image-এ training নিষিদ্ধ করে; pseudo-label বা pretrained weight প্রকাশের আগে দেখুন।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="checklist">
+            <div data-lang="en">
+              <h2><span class="s-num">13</span>The checklist</h2>
+              <div class="w-note">
+                <b>Reproducible AV-perception benchmark checklist</b>
+                <p><strong>Metric.</strong> Match function chosen and justified &middot; orthogonal errors reported separately &middot; stratified by distance, occlusion, class &middot; temporal-stability / tracking metric &middot; a safety- or planning-aware summary &middot; calibration diagnostic &middot; metric frozen before results.</p>
+                <p><strong>Split.</strong> Scene-level disjoint &middot; geographic / temporal holdout where possible &middot; no sweep leakage &middot; sim town + weather holdout &middot; at least one cross-dataset result &middot; foundation-model pretraining data disclosed.</p>
+                <p><strong>Controls.</strong> Backbone, pretraining, resolution, voxel / BEV size, sweeps, epochs, CBGS, EMA, TTA, GT-paste, eval code held fixed across compared methods and tabulated.</p>
+                <p><strong>Statistics.</strong> &ge;3 seeds with mean &plusmn; std or bootstrap CI &middot; accuracy-vs-compute Pareto &middot; significance stated &middot; training cost, latency (named hardware), memory, energy reported.</p>
+                <p><strong>Robustness.</strong> Corruption benchmark run &middot; clean&ndash;corrupt gap and per-corruption breakdown &middot; missing-modality behavior (for fusion).</p>
+                <p><strong>Artifacts.</strong> One shared codebase &middot; pinned configs + container &middot; released val predictions &middot; model card &middot; dataset + devkit version noted &middot; licensing checked.</p>
+              </div>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৩</span>চেকলিস্ট</h2>
+              <div class="w-note">
+                <b>Reproducible AV-perception benchmark চেকলিস্ট</b>
+                <p><strong>Metric।</strong> Match function বাছাই ও যুক্তিসহ &middot; orthogonal error আলাদাভাবে রিপোর্ট &middot; দূরত্ব, occlusion, class অনুযায়ী stratified &middot; temporal-stability / tracking metric &middot; একটি safety- বা planning-aware সারাংশ &middot; calibration diagnostic &middot; ফলাফলের আগে metric frozen।</p>
+                <p><strong>Split।</strong> Scene-স্তরে disjoint &middot; সম্ভব হলে ভৌগোলিক / সময়ভিত্তিক holdout &middot; sweep leakage নেই &middot; sim town + weather holdout &middot; অন্তত একটি cross-dataset ফলাফল &middot; foundation-model pretraining data প্রকাশিত।</p>
+                <p><strong>Controls।</strong> Backbone, pretraining, resolution, voxel / BEV size, sweep, epoch, CBGS, EMA, TTA, GT-paste, eval code তুলনা-করা পদ্ধতিজুড়ে স্থির ও টেবিলভুক্ত।</p>
+                <p><strong>Statistics।</strong> mean &plusmn; std বা bootstrap CI সহ &ge;৩ seed &middot; accuracy-vs-compute Pareto &middot; significance বলা &middot; training খরচ, latency (নামসহ hardware), memory, energy রিপোর্ট।</p>
+                <p><strong>Robustness।</strong> Corruption benchmark চালানো &middot; clean&ndash;corrupt gap ও per-corruption breakdown &middot; missing-modality আচরণ (fusion-এর জন্য)।</p>
+                <p><strong>Artifacts।</strong> এক shared codebase &middot; pinned config + container &middot; প্রকাশিত val prediction &middot; model card &middot; dataset + devkit version উল্লিখিত &middot; licensing যাচাই।</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="closedloop">
+            <div data-lang="en">
+              <h2><span class="s-num">14</span>Toward closed-loop evaluation</h2>
+              <p>The field is moving toward evaluation that closes the loop &mdash; nuPlan <a class="ref-link" href="#ref-14">[14]</a> for closed-loop planning on real logs, NAVSIM <a class="ref-link" href="#ref-15">[15]</a> for non-reactive simulation with a driving-quality score that correlates better with closed-loop than open-loop L2 does, and CARLA-based suites such as Bench2Drive for reactive scenarios. Perception benchmarks will not be replaced by these, but they set the target: a perception improvement that does not move a planning or closed-loop number is, at best, unproven. Design your evaluation so that link is visible.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৪</span>closed-loop মূল্যায়নের দিকে</h2>
+              <p>ক্ষেত্রটি এমন মূল্যায়নের দিকে যাচ্ছে যা loop বন্ধ করে &mdash; বাস্তব log-এ closed-loop planning-এর জন্য nuPlan <a class="ref-link" href="#ref-14">[14]</a>, একটি driving-quality score সহ non-reactive simulation-এর জন্য NAVSIM <a class="ref-link" href="#ref-15">[15]</a> যা open-loop L2-র চেয়ে closed-loop-এর সঙ্গে ভালো correlate করে, এবং reactive দৃশ্যের জন্য Bench2Drive-এর মতো CARLA-ভিত্তিক suite। Perception benchmark এগুলো দিয়ে প্রতিস্থাপিত হবে না, কিন্তু এগুলো লক্ষ্য ঠিক করে দেয়: যে perception উন্নতি একটি planning বা closed-loop সংখ্যা নাড়ায় না, তা বড়জোর অপ্রমাণিত। আপনার মূল্যায়ন এমনভাবে ডিজ়াইন করুন যাতে সেই সংযোগ দৃশ্যমান।</p>
+            </div>
+          </section>
+
+          <div class="w-key" data-lang="en">
+            <h2>Key takeaways</h2>
+            <ul>
+              <li>Most non-reproducible 3D-perception gains come from unreported knobs &mdash; backbone, sweeps, schedule, TTA, eval code &mdash; not architecture. Fix and tabulate them.</li>
+              <li>Scores are not comparable across datasets: nuScenes matches on center distance, Waymo APH weights heading and LET loosens depth, KITTI uses strict IoU with a metric that changed in 2019.</li>
+              <li>Stratify every metric by distance, occlusion, and class; add tracking / stability and planning-aware summaries.</li>
+              <li>Split at the scene level, hold out geography / time / sim towns, and report at least one cross-dataset number.</li>
+              <li>Report &ge;3 seeds, an accuracy-vs-compute Pareto, robustness under corruption, and release val predictions with a model card.</li>
+              <li>Aim your evaluation at the closed-loop target: a detection gain that does not survive contact with a planner is unproven.</li>
+            </ul>
+          </div>
+          <div class="w-key" data-lang="bn" lang="bn">
+            <h2>মূল কথা</h2>
+            <ul>
+              <li>বেশিরভাগ non-reproducible 3D-perception লাভ আসে রিপোর্ট-না-করা knob থেকে &mdash; backbone, sweep, schedule, TTA, eval code &mdash; architecture থেকে নয়। এগুলো স্থির করুন ও টেবিলভুক্ত করুন।</li>
+              <li>Dataset-জুড়ে score তুলনীয় নয়: nuScenes center distance-এ match করে, Waymo APH heading-কে weight করে ও LET depth শিথিল করে, KITTI strict IoU ব্যবহার করে এমন একটি metric সহ যা ২০১৯-এ বদলেছে।</li>
+              <li>প্রতিটি metric দূরত্ব, occlusion ও class অনুযায়ী stratify করুন; tracking / stability ও planning-aware সারাংশ যোগ করুন।</li>
+              <li>Scene স্তরে split করুন, ভূগোল / সময় / sim town সরিয়ে রাখুন, এবং অন্তত একটি cross-dataset সংখ্যা রিপোর্ট করুন।</li>
+              <li>&ge;৩ seed, একটি accuracy-vs-compute Pareto, corruption-এর অধীন robustness রিপোর্ট করুন, এবং একটি model card সহ val prediction প্রকাশ করুন।</li>
+              <li>আপনার মূল্যায়ন closed-loop লক্ষ্যে তাক করুন: যে detection লাভ planner-এর সংস্পর্শে টেকে না তা অপ্রমাণিত।</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <section class="w-refs" id="refs">
+          <h2><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></h2>
+          <ol>
+            <li id="ref-1">Geiger, A. et al. &ldquo;Are we ready for Autonomous Driving? The KITTI Vision Benchmark Suite.&rdquo; CVPR 2012.</li>
+            <li id="ref-2">Simonelli, A. et al. &ldquo;Disentangling Monocular 3D Object Detection.&rdquo; ICCV 2019. (Introduces the 40-point recall AP for KITTI.) <a href="https://arxiv.org/abs/1905.12365">arXiv:1905.12365</a></li>
+            <li id="ref-3">Caesar, H. et al. &ldquo;nuScenes: A Multimodal Dataset for Autonomous Driving.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1903.11027">arXiv:1903.11027</a></li>
+            <li id="ref-4">Sun, P. et al. &ldquo;Scalability in Perception for Autonomous Driving: Waymo Open Dataset.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1912.04838">arXiv:1912.04838</a></li>
+            <li id="ref-5">Hung, W.-C. et al. &ldquo;LET-3D-AP: Longitudinal Error Tolerant 3D Average Precision for Camera-Only 3D Detection.&rdquo; 2022. <a href="https://arxiv.org/abs/2206.07705">arXiv:2206.07705</a></li>
+            <li id="ref-6">Wilson, B. et al. &ldquo;Argoverse 2: Next Generation Datasets for Self-Driving Perception and Forecasting.&rdquo; NeurIPS 2021 Datasets &amp; Benchmarks. <a href="https://arxiv.org/abs/2301.00493">arXiv:2301.00493</a></li>
+            <li id="ref-7">Mao, J. et al. &ldquo;One Million Scenes for Autonomous Driving: ONCE Dataset.&rdquo; NeurIPS 2021 Datasets &amp; Benchmarks. <a href="https://arxiv.org/abs/2106.11037">arXiv:2106.11037</a></li>
+            <li id="ref-8">Tian, X. et al. &ldquo;Occ3D: A Large-Scale 3D Occupancy Prediction Benchmark for Autonomous Driving.&rdquo; NeurIPS 2023. <a href="https://arxiv.org/abs/2304.14365">arXiv:2304.14365</a></li>
+            <li id="ref-9">Liu, H. et al. &ldquo;Fully Sparse 3D Occupancy Prediction (SparseOcc); introduces RayIoU.&rdquo; ECCV 2024. <a href="https://arxiv.org/abs/2312.17118">arXiv:2312.17118</a></li>
+            <li id="ref-10">Philion, J. et al. &ldquo;Learning to Evaluate Perception Models Using Planner-Centric Metrics (PKL).&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/2004.08745">arXiv:2004.08745</a></li>
+            <li id="ref-11">Li, H. et al. &ldquo;Delving into the Devils of Bird's-eye-view Perception: A Review, Evaluation and Recipe.&rdquo; IEEE TPAMI 2023. <a href="https://arxiv.org/abs/2209.05324">arXiv:2209.05324</a></li>
+            <li id="ref-12">Dong, Y. et al. &ldquo;Benchmarking Robustness of 3D Object Detection to Common Corruptions in Autonomous Driving.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2303.11040">arXiv:2303.11040</a></li>
+            <li id="ref-13">Kong, L. et al. &ldquo;Robo3D: Towards Robust and Reliable 3D Perception against Corruptions.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2303.17597">arXiv:2303.17597</a></li>
+            <li id="ref-14">Caesar, H. et al. &ldquo;nuPlan: A closed-loop ML-based planning benchmark for autonomous vehicles.&rdquo; CVPR 2021 Workshop on Autonomous Driving. <a href="https://arxiv.org/abs/2106.11810">arXiv:2106.11810</a></li>
+            <li id="ref-15">Dauner, D. et al. &ldquo;NAVSIM: Data-Driven Non-Reactive Autonomous Vehicle Simulation and Benchmarking.&rdquo; NeurIPS 2024 Datasets &amp; Benchmarks. <a href="https://arxiv.org/abs/2406.15349">arXiv:2406.15349</a></li>
+            <li id="ref-16">Weng, X. et al. &ldquo;3D Multi-Object Tracking: A Baseline and New Evaluation Metrics (AMOTA / AMOTP).&rdquo; IROS 2020. <a href="https://arxiv.org/abs/1907.03961">arXiv:1907.03961</a></li>
+            <li id="ref-17">Luiten, J. et al. &ldquo;HOTA: A Higher Order Metric for Evaluating Multi-Object Tracking.&rdquo; IJCV 2021. <a href="https://arxiv.org/abs/2009.07736">arXiv:2009.07736</a></li>
+            <li id="ref-18">Contributors. &ldquo;MMDetection3D: OpenMMLab next-generation platform for general 3D object detection.&rdquo; 2020. <a href="https://github.com/open-mmlab/mmdetection3d">github.com/open-mmlab/mmdetection3d</a></li>
+          </ol>
+        </section>
+
+        <nav class="w-prevnext" aria-label="More writeups">
+          <a class="p" href="vision-language-vehicle-detection.html">
+            <span class="dir"><span data-lang="en">&#8592; Previous</span><span data-lang="bn" lang="bn">&#8592; পূর্ববর্তী</span></span>
+            <span class="ttl"><span data-lang="en">Vision&ndash;Language Approaches for Vehicle Detection in Complex Scenarios</span><span data-lang="bn" lang="bn">জটিল দৃশ্যে যানবাহন শনাক্তকরণে Vision&ndash;Language পদ্ধতি</span></span>
+          </a>
+          <a class="n only" href="/writeups/">
+            <span class="dir"><span data-lang="en">Index &#8594;</span><span data-lang="bn" lang="bn">সূচি &#8594;</span></span>
+            <span class="ttl"><span data-lang="en">All technical writeups</span><span data-lang="bn" lang="bn">সব টেকনিক্যাল রাইটআপ</span></span>
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/"><span data-lang="en">Back to portfolio &#8599;</span><span data-lang="bn" lang="bn">পোর্টফোলিওতে ফিরুন &#8599;</span></a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

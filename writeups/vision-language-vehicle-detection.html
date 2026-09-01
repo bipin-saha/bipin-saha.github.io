@@ -1,20 +1,566 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="An applied perspective on using vision-language models for vehicle detection in complex and ambiguous scenarios.">
-  <title>Vision-Language Vehicle Detection | Bipin Saha</title>
+  <meta name="description" content="A field-wide comparison of CNN, transformer, region-text-alignment, grounded-pretraining, and multimodal-LLM detector families on hard vehicle-detection cases - region-specific vehicle types, dense occlusion, adverse weather, distribution shift - with the open-vocabulary alignment and grounding mechanisms, an evaluation protocol, region-adaptation methods, and a discovery-then-distillation deployment pipeline.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="Vision-Language Approaches for Vehicle Detection in Complex Scenarios">
+  <meta property="og:description" content="Closed-set detectors fail on the long tail. A field-wide comparison of CNN, transformer, and vision-language detector families, the mechanisms behind them, and how to ship the result.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Vision-Language Approaches for Vehicle Detection in Complex Scenarios">
+  <meta name="twitter:description" content="CNN vs transformer vs vision-language detectors on hard vehicle-detection cases.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>Vision-Language Approaches for Vehicle Detection in Complex Scenarios | Bipin Saha</title>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Vision-Language Approaches for Vehicle Detection in Complex Scenarios",
+      "description": "A field-wide comparison of CNN, transformer, and vision-language detector families on hard vehicle-detection cases, with mechanisms and a deployment pipeline.",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "publisher": { "@type": "Person", "name": "Bipin Saha" },
+      "datePublished": "2026-03-16",
+      "dateModified": "2026-08-31",
+      "mainEntityOfPage": "https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html",
+      "about": ["Open-vocabulary object detection", "Vision-language models", "Vehicle detection", "Domain shift", "Autonomous driving"],
+      "keywords": "open-vocabulary detection, GLIP, Grounding DINO, YOLO-World, CLIP, region-text alignment, vehicle detection, distillation, adverse weather",
+      "inLanguage": ["en", "bn"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" },
+        { "@type": "ListItem", "position": 3, "name": "Vision-Language Approaches for Vehicle Detection", "item": "https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+
+  <!-- Apply the English/Bangla choice before first paint (no flash). A ?lang=bn
+       or ?lang=en query param wins and is remembered; otherwise localStorage. -->
+  <script>
+    (function () {
+      try {
+        var q = (location.search.match(/[?&]lang=(bn|en)\b/) || [])[1];
+        var l = q || localStorage.getItem('writeup-lang');
+        if (l === 'bn' || l === 'en') {
+          document.documentElement.setAttribute('lang', l);
+          if (q) localStorage.setItem('writeup-lang', q);
+        }
+      } catch (e) { /* private mode - fall back to lang="en" */ }
+    })();
+  </script>
 </head>
+
 <body>
-  <p><a href="index.html">Back to writeups</a></p>
-  <h1>Vision-Language Approaches for Vehicle Detection in Complex Scenarios</h1>
-  <p>This writeup covers how VLM-guided detection complements CNN and Transformer approaches in long-tail driving scenes.</p>
-  <h2>Problem</h2>
-  <p>Conventional detectors struggle with rare classes, unusual occlusions, and weak context in difficult environments.</p>
-  <h2>Method</h2>
-  <p>Integrate text-guided priors and prompt-conditioned reasoning with visual backbones to improve contextual understanding.</p>
-  <h2>Results</h2>
-  <p>VLM-enhanced workflows can improve recall on challenging categories while maintaining interpretable prompts and outputs.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/"><span data-lang="en">Home</span><span data-lang="bn" lang="bn">হোম</span></a><span>/</span><a href="/writeups/"><span data-lang="en">Writeups</span><span data-lang="bn" lang="bn">রাইটআপ</span></a><span>/</span><span class="here">Vision&ndash;Language Vehicle Detection</span>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language / ভাষা">
+        <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-set="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="w-layout">
+
+      <aside class="w-toc" aria-label="Contents">
+        <p class="w-toc-label"><span data-lang="en">Contents</span><span data-lang="bn" lang="bn">বিষয়সূচি</span></p>
+        <ul>
+          <li><a href="#complex"><span data-lang="en">1 &middot; What "complex" breaks</span><span data-lang="bn" lang="bn">১ &middot; "জটিল" যা ভাঙে</span></a></li>
+          <li><a href="#families"><span data-lang="en">2 &middot; Three families</span><span data-lang="bn" lang="bn">২ &middot; তিনটি পরিবার</span></a></li>
+          <li><a href="#closedset"><span data-lang="en">3 &middot; CNN &amp; transformer</span><span data-lang="bn" lang="bn">৩ &middot; CNN ও transformer</span></a></li>
+          <li><a href="#alignment"><span data-lang="en">4 &middot; Region&ndash;text alignment</span><span data-lang="bn" lang="bn">৪ &middot; Region&ndash;text alignment</span></a></li>
+          <li><a href="#grounded"><span data-lang="en">5 &middot; Grounded pretraining</span><span data-lang="bn" lang="bn">৫ &middot; Grounded pretraining</span></a></li>
+          <li><a href="#mllm"><span data-lang="en">6 &middot; MLLM detectors</span><span data-lang="bn" lang="bn">৬ &middot; MLLM detector</span></a></li>
+          <li><a href="#howvlm"><span data-lang="en">7 &middot; How language helps</span><span data-lang="bn" lang="bn">৭ &middot; ভাষা কীভাবে সাহায্য করে</span></a></li>
+          <li><a href="#tradeoffs"><span data-lang="en">8 &middot; The trade-offs</span><span data-lang="bn" lang="bn">৮ &middot; আপসগুলো</span></a></li>
+          <li><a href="#bench"><span data-lang="en">9 &middot; Benchmarks &amp; metrics</span><span data-lang="bn" lang="bn">৯ &middot; Benchmark ও metric</span></a></li>
+          <li><a href="#adapt"><span data-lang="en">10 &middot; Adapting to a region</span><span data-lang="bn" lang="bn">১০ &middot; একটি অঞ্চলে খাপ খাওয়ানো</span></a></li>
+          <li><a href="#pipeline"><span data-lang="en">11 &middot; A deployment pipeline</span><span data-lang="bn" lang="bn">১১ &middot; একটি deployment pipeline</span></a></li>
+          <li><a href="#threed"><span data-lang="en">12 &middot; Open-vocabulary in 3D</span><span data-lang="bn" lang="bn">১২ &middot; 3D-তে open-vocabulary</span></a></li>
+          <li><a href="#xai"><span data-lang="en">13 &middot; Explainability</span><span data-lang="bn" lang="bn">১৩ &middot; ব্যাখ্যাযোগ্যতা</span></a></li>
+          <li><a href="#open"><span data-lang="en">14 &middot; Open problems</span><span data-lang="bn" lang="bn">১৪ &middot; অমীমাংসিত সমস্যা</span></a></li>
+          <li><a href="#refs"><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></a></li>
+        </ul>
+      </aside>
+
+      <main class="warticle" id="content">
+        <p class="w-eyebrow" data-lang="en">Technical Writeup</p>
+        <p class="w-eyebrow" data-lang="bn" lang="bn">টেকনিক্যাল রাইটআপ</p>
+        <h1 data-lang="en">Vision&ndash;Language Approaches for Vehicle Detection in Complex Scenarios</h1>
+        <h1 data-lang="bn" lang="bn">জটিল দৃশ্যে যানবাহন শনাক্তকরণে Vision&ndash;Language পদ্ধতি</h1>
+        <p class="w-lede" data-lang="en">A detector trained on a fixed taxonomy of clean, common vehicles degrades exactly where it matters: dense occlusion, adverse weather, and the region-specific vehicle types &mdash; auto-rickshaws, CNGs, overloaded three-wheelers &mdash; that never appeared in its label set. Vision&ndash;language detectors trade some localization precision and a lot of latency for open-set coverage. This is how the families compare, the mechanisms behind them, and how to deploy the useful parts.</p>
+        <p class="w-lede" data-lang="bn" lang="bn">পরিষ্কার, সাধারণ যানবাহনের একটি নির্দিষ্ট taxonomy-তে train করা detector ঠিক সেখানেই খারাপ করে যেখানে ব্যাপারটা গুরুত্বপূর্ণ: ঘন occlusion, বৈরী আবহাওয়া, এবং যেসব অঞ্চল-নির্দিষ্ট যানবাহনের ধরন &mdash; অটোরিকশা, সিএনজি, ওভারলোডেড থ্রি-হুইলার &mdash; তার label set-এ কখনো আসেনি। Vision&ndash;language detector open-set কভারেজের বিনিময়ে কিছুটা localization নির্ভুলতা ও অনেকটা latency ছেড়ে দেয়। এই লেখায় &mdash; পরিবারগুলো কীভাবে তুলনীয়, তাদের পেছনের কার্যপদ্ধতি, এবং উপযোগী অংশগুলো কীভাবে deploy করবেন।</p>
+        <div class="w-meta" data-lang="en">
+          <span>Published 16&nbsp;Mar&nbsp;2026</span>
+          <span>Updated 31&nbsp;Aug&nbsp;2026</span>
+          <span>~26&nbsp;min read</span>
+        </div>
+        <div class="w-meta" data-lang="bn" lang="bn">
+          <span>প্রকাশ ১৬&nbsp;মার্চ&nbsp;২০২৬</span>
+          <span>হালনাগাদ ৩১&nbsp;আগস্ট&nbsp;২০২৬</span>
+          <span>~২৬&nbsp;মিনিট পাঠ</span>
+        </div>
+        <ul class="w-tags" data-lang="en">
+          <li>Open-vocabulary detection</li>
+          <li>Vision&ndash;language models</li>
+          <li>Domain shift</li>
+          <li>Distillation</li>
+          <li>Explainable AI</li>
+        </ul>
+        <ul class="w-tags" data-lang="bn" lang="bn">
+          <li>Open-vocabulary detection</li>
+          <li>Vision&ndash;language model</li>
+          <li>Domain shift</li>
+          <li>Distillation</li>
+          <li>Explainable AI</li>
+        </ul>
+
+        <div class="prose">
+
+          <section id="complex">
+            <div data-lang="en">
+              <h2><span class="s-num">1</span>What "complex scenarios" actually break</h2>
+              <p>"Complex" is doing a lot of work in the vehicle-detection literature. Concretely it bundles several distinct distribution shifts, each of which stresses a different part of a detector:</p>
+              <ul>
+                <li><strong>Taxonomic shift.</strong> The deployment region has vehicle classes the training set never named &mdash; three-wheeled auto-rickshaws, motorized vans, CNG cabs, animal-drawn carts. A closed-set head has no output neuron for them; at best it mislabels, at worst it suppresses them as background. This is the motivation behind region-specific datasets such as BNVD <a class="ref-link" href="#ref-1">[1]</a>.</li>
+                <li><strong>Density and occlusion.</strong> Heavy inter-object overlap defeats anchor assignment and non-maximum suppression; a single confidence threshold cannot separate a truck behind a bus from a false positive.</li>
+                <li><strong>Photometric shift.</strong> Rain, fog, night, glare, motion blur &mdash; the appearance statistics the backbone learned no longer hold. Ensemble and explainability methods for adverse weather target exactly this regime <a class="ref-link" href="#ref-2">[2]</a>.</li>
+                <li><strong>Scale and viewpoint.</strong> Small, distant, or unusually-posed vehicles (a flipped car, a tilted trailer) fall outside the training scale/pose distribution; small-object recall is the first thing to collapse.</li>
+                <li><strong>Class imbalance.</strong> Even within the known taxonomy, buses and rickshaws may be 100&times; rarer than cars, so the head is undertrained on them.</li>
+                <li><strong>Geographic / sensor domain gap.</strong> A model trained on one city's cameras, road furniture, and traffic mix transfers poorly to another's.</li>
+              </ul>
+              <p>A closed-set CNN or transformer detector can be pushed through any <em>one</em> of these with enough matched data. The problem is that the tail is long and non-stationary &mdash; you cannot pre-collect labels for every region and condition &mdash; and that is the structural argument for bringing language into the loop: text is a zero-shot interface to categories you have no boxes for.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১</span>"জটিল দৃশ্য" আসলে কী ভাঙে</h2>
+              <p>"জটিল" শব্দটা vehicle-detection সাহিত্যে অনেক ভার বইছে। সুনির্দিষ্টভাবে এটি কয়েকটি স্বতন্ত্র distribution shift একসঙ্গে বাঁধে, প্রতিটি detector-এর আলাদা অংশে চাপ দেয়:</p>
+              <ul>
+                <li><strong>Taxonomic shift।</strong> deployment অঞ্চলে এমন vehicle class আছে যাদের training set কখনো নাম দেয়নি &mdash; থ্রি-হুইলড অটোরিকশা, motorized ভ্যান, সিএনজি ক্যাব, পশু-টানা গাড়ি। একটি closed-set head-এর তাদের জন্য কোনো output neuron নেই; ভালো হলে ভুল label দেয়, খারাপ হলে background হিসেবে দমন করে। BNVD <a class="ref-link" href="#ref-1">[1]</a>-এর মতো অঞ্চল-নির্দিষ্ট dataset-এর পেছনে এটাই প্রেরণা।</li>
+                <li><strong>Density ও occlusion।</strong> object-এর মধ্যে ভারী ওভারল্যাপ anchor assignment ও non-maximum suppression-কে হারিয়ে দেয়; একটিমাত্র confidence threshold একটি বাসের পিছনের ট্রাককে একটি false positive থেকে আলাদা করতে পারে না।</li>
+                <li><strong>Photometric shift।</strong> বৃষ্টি, কুয়াশা, রাত, glare, motion blur &mdash; backbone যে appearance statistics শিখেছিল তা আর খাটে না। বৈরী আবহাওয়ার জন্য ensemble ও explainability পদ্ধতি ঠিক এই ক্ষেত্রটাই লক্ষ্য করে <a class="ref-link" href="#ref-2">[2]</a>।</li>
+                <li><strong>Scale ও viewpoint।</strong> ছোট, দূরের, বা অস্বাভাবিক-ভঙ্গির যানবাহন (উল্টে যাওয়া গাড়ি, কাত হওয়া ট্রেলার) training scale/pose distribution-এর বাইরে পড়ে; small-object recall-ই প্রথমে ভেঙে পড়ে।</li>
+                <li><strong>Class imbalance।</strong> জানা taxonomy-র মধ্যেও বাস ও রিকশা গাড়ির চেয়ে 100&times; বিরল হতে পারে, তাই head সেগুলোতে undertrained।</li>
+                <li><strong>Geographic / sensor domain gap।</strong> একটি শহরের camera, road furniture ও traffic মিশ্রণে train করা মডেল আরেকটি শহরে খারাপভাবে transfer করে।</li>
+              </ul>
+              <p>যথেষ্ট matched data থাকলে একটি closed-set CNN বা transformer detector-কে এদের যেকোনো <em>একটির</em> মধ্য দিয়ে ঠেলে নেওয়া যায়। সমস্যা হলো tail দীর্ঘ ও non-stationary &mdash; প্রতিটি অঞ্চল ও পরিস্থিতির জন্য আগেভাগে label সংগ্রহ করা যায় না &mdash; আর এটাই ভাষাকে loop-এ আনার গঠনগত যুক্তি: text হলো যেসব category-র জন্য আপনার কোনো box নেই, তাদের একটি zero-shot ইন্টারফেস।</p>
+            </div>
+          </section>
+
+          <section id="families">
+            <div data-lang="en">
+              <h2><span class="s-num">2</span>Three families of detector</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Detector families for vehicle detection, by supervision paradigm. "OV" = open-vocabulary.</caption>
+                  <thead><tr><th>Family</th><th>Examples</th><th>Query</th><th>On complex scenes</th></tr></thead>
+                  <tbody>
+                    <tr><td>CNN, closed-set</td><td>YOLOv8&ndash;v12, RT-DETR <a class="ref-link" href="#ref-3">[3]</a></td><td>Fixed class list</td><td>Fast, tight boxes, easy to fine-tune; brittle to taxonomic and photometric shift</td></tr>
+                    <tr><td>Transformer, closed-set</td><td>DINO, Co-DETR, Deformable DETR <a class="ref-link" href="#ref-4">[4]</a></td><td>Fixed class list</td><td>Set prediction handles crowding / occlusion better; data-hungry, slower</td></tr>
+                    <tr><td>OV, region&ndash;text alignment</td><td>ViLD, RegionCLIP, F-VLM, OWL-ViT / OWLv2 <a class="ref-link" href="#ref-5">[5]</a><a class="ref-link" href="#ref-6">[6]</a></td><td>Class names &#8594; CLIP space</td><td>Zero-shot to new class names; weaker localization, prompt-sensitive</td></tr>
+                    <tr><td>OV, grounded pretraining</td><td>GLIP, Grounding DINO (+1.5), YOLO-World, T-Rex2, DINO-X <a class="ref-link" href="#ref-7">[7]</a><a class="ref-link" href="#ref-8">[8]</a><a class="ref-link" href="#ref-9">[9]</a><a class="ref-link" href="#ref-10">[10]</a><a class="ref-link" href="#ref-14">[14]</a></td><td>Free-text phrases</td><td>Strong zero-shot detection; GLIP / GroundingDINO heavy, YOLO-World real-time</td></tr>
+                    <tr><td>MLLM detectors</td><td>Florence-2, Qwen2-VL grounding, Griffon <a class="ref-link" href="#ref-11">[11]</a><a class="ref-link" href="#ref-12">[12]</a></td><td>Instructions</td><td>Compositional / attribute queries; slowest, prone to hallucinated boxes</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>The Bipin Saha QPAIN&nbsp;2026 study benchmarks exactly this axis &mdash; CNN, transformer, and vision-language detectors on complex-scene vehicle detection <a class="ref-link" href="#ref-13">[13]</a>. The rest of this writeup unpacks the mechanisms that make the families behave differently.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">২</span>detector-এর তিনটি পরিবার</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>supervision paradigm অনুযায়ী vehicle detection-এর detector পরিবার। "OV" = open-vocabulary।</caption>
+                  <thead><tr><th>পরিবার</th><th>উদাহরণ</th><th>Query</th><th>জটিল দৃশ্যে</th></tr></thead>
+                  <tbody>
+                    <tr><td>CNN, closed-set</td><td>YOLOv8&ndash;v12, RT-DETR <a class="ref-link" href="#ref-3">[3]</a></td><td>নির্দিষ্ট class তালিকা</td><td>দ্রুত, আঁটসাঁট box, fine-tune সহজ; taxonomic ও photometric shift-এ ভঙ্গুর</td></tr>
+                    <tr><td>Transformer, closed-set</td><td>DINO, Co-DETR, Deformable DETR <a class="ref-link" href="#ref-4">[4]</a></td><td>নির্দিষ্ট class তালিকা</td><td>Set prediction crowding / occlusion ভালো সামলায়; data-hungry, ধীর</td></tr>
+                    <tr><td>OV, region&ndash;text alignment</td><td>ViLD, RegionCLIP, F-VLM, OWL-ViT / OWLv2 <a class="ref-link" href="#ref-5">[5]</a><a class="ref-link" href="#ref-6">[6]</a></td><td>class নাম &#8594; CLIP space</td><td>নতুন class নামে zero-shot; দুর্বল localization, prompt-সংবেদনশীল</td></tr>
+                    <tr><td>OV, grounded pretraining</td><td>GLIP, Grounding DINO (+1.5), YOLO-World, T-Rex2, DINO-X <a class="ref-link" href="#ref-7">[7]</a><a class="ref-link" href="#ref-8">[8]</a><a class="ref-link" href="#ref-9">[9]</a><a class="ref-link" href="#ref-10">[10]</a><a class="ref-link" href="#ref-14">[14]</a></td><td>মুক্ত-text phrase</td><td>শক্তিশালী zero-shot detection; GLIP / GroundingDINO ভারী, YOLO-World real-time</td></tr>
+                    <tr><td>MLLM detector</td><td>Florence-2, Qwen2-VL grounding, Griffon <a class="ref-link" href="#ref-11">[11]</a><a class="ref-link" href="#ref-12">[12]</a></td><td>নির্দেশনা</td><td>Compositional / attribute query; সবচেয়ে ধীর, hallucinated box-এর প্রবণতা</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Bipin Saha-র QPAIN&nbsp;2026 গবেষণা ঠিক এই axis-টাই benchmark করে &mdash; জটিল-দৃশ্যে vehicle detection-এ CNN, transformer ও vision-language detector <a class="ref-link" href="#ref-13">[13]</a>। এই লেখার বাকিটা সেই কার্যপদ্ধতিগুলো খুলে দেখায় যা পরিবারগুলোকে ভিন্নভাবে আচরণ করায়।</p>
+            </div>
+          </section>
+
+          <section id="closedset">
+            <div data-lang="en">
+              <h2><span class="s-num">3</span>Closed-set detectors: CNN and transformer</h2>
+              <p><strong>CNN one-stage detectors</strong> (the YOLO line, RT-DETR <a class="ref-link" href="#ref-3">[3]</a>) predict a fixed grid of boxes with a fixed class vector, trained with a matching loss and pruned by NMS. They are the right default when the taxonomy is known and stable: real-time, tight boxes, cheap to fine-tune on a few thousand regional labels. Their structural limits on complex scenes: (a) the class vector is fixed at train time; (b) NMS collapses genuinely overlapping instances; (c) anchor / grid priors encode a scale distribution that distant or oversized vehicles violate.</p>
+              <p><strong>Transformer detectors</strong> (DETR and descendants &mdash; Deformable DETR, DINO, Co-DETR <a class="ref-link" href="#ref-4">[4]</a>) replace the grid + NMS with a set of learned object queries and bipartite matching, so crowded and occluded scenes &mdash; where NMS is the failure &mdash; are handled more gracefully, and global self-attention gives scene context. The cost is data hunger (DETR-family models need long schedules or heavy augmentation) and higher latency. Neither family escapes the closed-set ceiling: both need labelled examples of every category they will ever emit.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৩</span>Closed-set detector: CNN ও transformer</h2>
+              <p><strong>CNN one-stage detector</strong> (YOLO ধারা, RT-DETR <a class="ref-link" href="#ref-3">[3]</a>) একটি নির্দিষ্ট class vector সহ box-এর একটি নির্দিষ্ট grid predict করে, একটি matching loss দিয়ে train ও NMS দিয়ে ছাঁটাই। taxonomy জানা ও স্থিতিশীল হলে এটাই সঠিক ডিফল্ট: real-time, আঁটসাঁট box, কয়েক হাজার regional label-এ fine-tune সস্তা। জটিল দৃশ্যে এদের গঠনগত সীমা: (ক) class vector train-এর সময়ই স্থির; (খ) NMS সত্যিকারের ওভারল্যাপিং instance মিলিয়ে দেয়; (গ) anchor / grid prior এমন একটি scale distribution encode করে যা দূরের বা বড় যানবাহন লঙ্ঘন করে।</p>
+              <p><strong>Transformer detector</strong> (DETR ও উত্তরসূরি &mdash; Deformable DETR, DINO, Co-DETR <a class="ref-link" href="#ref-4">[4]</a>) grid + NMS-এর জায়গায় learned object query-র একটি set ও bipartite matching বসায়, তাই ভিড় ও occluded দৃশ্য &mdash; যেখানে NMS-ই ব্যর্থতা &mdash; বেশি সাবলীলভাবে সামলানো হয়, এবং global self-attention scene প্রসঙ্গ দেয়। খরচ হলো data-ক্ষুধা (DETR-পরিবারের মডেলের দীর্ঘ schedule বা ভারী augmentation লাগে) ও বেশি latency। কোনো পরিবারই closed-set সিলিং এড়াতে পারে না: দুটোরই যত category কখনো emit করবে, প্রতিটির labelled উদাহরণ দরকার।</p>
+            </div>
+          </section>
+
+          <section id="alignment">
+            <div data-lang="en">
+              <h2><span class="s-num">4</span>Open-vocabulary by region&ndash;text alignment</h2>
+              <p>The first open-vocabulary route reuses <strong>CLIP</strong> <a class="ref-link" href="#ref-16">[16]</a>. A class-agnostic region proposer produces boxes; each region is encoded to a vector <span class="eq">v</span>; each candidate class name is turned into a text embedding <span class="eq">t<sub>c</sub></span> via a prompt template ("a photo of a {class}"); the region is scored against class <span class="eq">c</span> by</p>
+              <div class="eq-block">
+                p(c | region) = softmax<sub>c</sub> ( cos(v, t<sub>c</sub>) / &#964; ),
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>with temperature <span class="eq">&#964;</span>. Because <span class="eq">t<sub>c</sub></span> can be <em>any</em> phrase, the detector is not restricted to a training taxonomy.</p>
+              <ul>
+                <li><strong>ViLD</strong> <a class="ref-link" href="#ref-5">[5]</a> distils CLIP image-embeddings into the detector's region features so the alignment survives without running CLIP at inference.</li>
+                <li><strong>RegionCLIP</strong> pretrains region&ndash;text alignment on pseudo-labelled region&ndash;caption pairs, fixing CLIP's image-level bias.</li>
+                <li><strong>F-VLM</strong> shows a frozen VLM backbone plus a lightweight detection head is a strong, simple baseline.</li>
+                <li><strong>OWL-ViT / OWLv2</strong> <a class="ref-link" href="#ref-6">[6]</a> attach detection heads to a contrastively pretrained ViT and, in OWLv2, scale via self-training on web image&ndash;text data.</li>
+              </ul>
+              <p>Strengths: genuine zero-shot to new class names, minimal architecture change. Weaknesses: CLIP embeddings are image-level, so <em>localization</em> is loose &mdash; boxes are baggier and small objects suffer &mdash; and scores swing with prompt wording. This family is best as a <em>recognition</em> layer on top of a good proposer, not as a precise localizer.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৪</span>region&ndash;text alignment দিয়ে open-vocabulary</h2>
+              <p>প্রথম open-vocabulary পথটি <strong>CLIP</strong> <a class="ref-link" href="#ref-16">[16]</a> পুনর্ব্যবহার করে। একটি class-নিরপেক্ষ region proposer box তৈরি করে; প্রতিটি region একটি vector <span class="eq">v</span>-তে encode হয়; প্রতিটি candidate class নাম একটি prompt template ("a photo of a {class}") দিয়ে একটি text embedding <span class="eq">t<sub>c</sub></span>-তে রূপ নেয়; region-কে class <span class="eq">c</span>-এর সাপেক্ষে score দেওয়া হয়</p>
+              <div class="eq-block">
+                p(c | region) = softmax<sub>c</sub> ( cos(v, t<sub>c</sub>) / &#964; ),
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>temperature <span class="eq">&#964;</span> সহ। যেহেতু <span class="eq">t<sub>c</sub></span> <em>যেকোনো</em> phrase হতে পারে, detector একটি training taxonomy-তে সীমাবদ্ধ নয়।</p>
+              <ul>
+                <li><strong>ViLD</strong> <a class="ref-link" href="#ref-5">[5]</a> CLIP image-embedding-কে detector-এর region feature-এ distil করে যাতে inference-এ CLIP না চালিয়েও alignment টেকে।</li>
+                <li><strong>RegionCLIP</strong> pseudo-labelled region&ndash;caption জোড়ায় region&ndash;text alignment pretrain করে, CLIP-এর image-level bias ঠিক করে।</li>
+                <li><strong>F-VLM</strong> দেখায় একটি frozen VLM backbone প্লাস একটি হালকা detection head একটি শক্তিশালী, সরল baseline।</li>
+                <li><strong>OWL-ViT / OWLv2</strong> <a class="ref-link" href="#ref-6">[6]</a> একটি contrastively pretrained ViT-তে detection head জুড়ে দেয় এবং OWLv2-তে web image&ndash;text data-তে self-training দিয়ে scale করে।</li>
+              </ul>
+              <p>শক্তি: নতুন class নামে সত্যিকারের zero-shot, ন্যূনতম architecture পরিবর্তন। দুর্বলতা: CLIP embedding image-level, তাই <em>localization</em> ঢিলে &mdash; box ঢলঢলে এবং ছোট object ভোগে &mdash; আর score prompt-এর শব্দচয়নে ওঠানামা করে। এই পরিবার সবচেয়ে ভালো একটি ভালো proposer-এর উপর একটি <em>recognition</em> স্তর হিসেবে, একটি নির্ভুল localizer হিসেবে নয়।</p>
+            </div>
+          </section>
+
+          <section id="grounded">
+            <div data-lang="en">
+              <h2><span class="s-num">5</span>Open-vocabulary by grounded pretraining</h2>
+              <p><strong>GLIP</strong> <a class="ref-link" href="#ref-7">[7]</a> reformulates detection as <em>phrase grounding</em>: instead of classifying a region into one of <span class="eq">C</span> classes, align each region to tokens of a text prompt. Detection and grounding data become one training signal. The core objective is a region&ndash;word alignment loss over the similarity matrix between region features and prompt token features, with the target matrix given by ground-truth box&ndash;phrase correspondences; GLIP also deep-fuses the two modalities in the backbone so the vision features are language-aware. This trains far better boxes than CLIP-alignment because localization is supervised end-to-end.</p>
+              <ul>
+                <li><strong>Grounding DINO</strong> <a class="ref-link" href="#ref-8">[8]</a> plugs grounded pretraining into a DINO detector (query selection, cross-modality decoder); <strong>Grounding DINO 1.5</strong> pushes an "Edge" real-time variant and a "Pro" high-accuracy one.</li>
+                <li><strong>YOLO-World</strong> <a class="ref-link" href="#ref-9">[9]</a> brings grounded OV detection into a CNN detector with a re-parameterizable vision&ndash;language path, reported ~20&times; faster than GroundingDINO at comparable zero-shot accuracy &mdash; currently the only real-time OV option.</li>
+                <li><strong>T-Rex2</strong> <a class="ref-link" href="#ref-10">[10]</a> accepts <em>visual</em> prompts (example crops) alongside text, so a handful of exemplars of a local vehicle type specializes the detector with no training.</li>
+                <li><strong>DINO-X</strong> <a class="ref-link" href="#ref-14">[14]</a> unifies text, visual, and "anything" prompts with detection, segmentation, and captioning heads.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৫</span>grounded pretraining দিয়ে open-vocabulary</h2>
+              <p><strong>GLIP</strong> <a class="ref-link" href="#ref-7">[7]</a> detection-কে <em>phrase grounding</em> হিসেবে নতুন করে সাজায়: একটি region-কে <span class="eq">C</span>-টি class-এর একটিতে শ্রেণিবদ্ধ করার বদলে, প্রতিটি region-কে একটি text prompt-এর token-এর সঙ্গে align করা। Detection ও grounding data একটিমাত্র training signal হয়ে ওঠে। মূল objective হলো region feature ও prompt token feature-এর মধ্যে similarity matrix-এর উপর একটি region&ndash;word alignment loss, target matrix দেওয়া হয় ground-truth box&ndash;phrase correspondence দিয়ে; GLIP backbone-এ দুই modality deep-fuse-ও করে যাতে vision feature language-aware হয়। এটি CLIP-alignment-এর চেয়ে অনেক ভালো box train করে, কারণ localization end-to-end supervised।</p>
+              <ul>
+                <li><strong>Grounding DINO</strong> <a class="ref-link" href="#ref-8">[8]</a> grounded pretraining-কে একটি DINO detector-এ যুক্ত করে (query selection, cross-modality decoder); <strong>Grounding DINO 1.5</strong> একটি "Edge" real-time variant ও একটি "Pro" high-accuracy variant আনে।</li>
+                <li><strong>YOLO-World</strong> <a class="ref-link" href="#ref-9">[9]</a> একটি re-parameterizable vision&ndash;language path সহ একটি CNN detector-এ grounded OV detection আনে, তুলনীয় zero-shot accuracy-তে GroundingDINO-র চেয়ে ~20&times; দ্রুত বলে রিপোর্ট করা হয় &mdash; এখন একমাত্র real-time OV বিকল্প।</li>
+                <li><strong>T-Rex2</strong> <a class="ref-link" href="#ref-10">[10]</a> text-এর পাশাপাশি <em>visual</em> prompt (উদাহরণ crop) গ্রহণ করে, তাই একটি স্থানীয় vehicle ধরনের কয়েকটি exemplar কোনো training ছাড়াই detector-কে বিশেষায়িত করে।</li>
+                <li><strong>DINO-X</strong> <a class="ref-link" href="#ref-14">[14]</a> text, visual ও "anything" prompt-কে detection, segmentation ও captioning head-এর সঙ্গে একীভূত করে।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="mllm">
+            <div data-lang="en">
+              <h2><span class="s-num">6</span>MLLM detectors</h2>
+              <p>Multimodal large language models can emit boxes by <strong>tokenizing coordinates</strong> &mdash; quantizing <span class="eq">(x, y, w, h)</span> into a fixed vocabulary of location tokens the model generates like any other text. <strong>Florence-2</strong> <a class="ref-link" href="#ref-11">[11]</a> trains one prompt-conditioned model for detection, grounding, segmentation, and captioning; <strong>Qwen2-VL</strong> <a class="ref-link" href="#ref-12">[12]</a> and Griffon add grounding to a general instruction-tuned VLM. The payoff is <em>compositional</em> queries &mdash; "a truck partially occluded by a bus", "a vehicle with its hazard lights on" &mdash; that no closed-set head can express. The costs: the slowest option by far, weaker precise localization than grounded detectors, and a distinctive failure mode &mdash; confidently generating boxes for objects that are not there, which worsens under distribution shift.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৬</span>MLLM detector</h2>
+              <p>Multimodal large language model <strong>স্থানাঙ্ক tokenize</strong> করে box emit করতে পারে &mdash; <span class="eq">(x, y, w, h)</span>-কে location token-এর একটি নির্দিষ্ট vocabulary-তে quantize করা, যা মডেল অন্য যেকোনো text-এর মতো তৈরি করে। <strong>Florence-2</strong> <a class="ref-link" href="#ref-11">[11]</a> detection, grounding, segmentation ও captioning-এর জন্য একটি prompt-conditioned মডেল train করে; <strong>Qwen2-VL</strong> <a class="ref-link" href="#ref-12">[12]</a> ও Griffon একটি সাধারণ instruction-tuned VLM-এ grounding যোগ করে। প্রতিদান হলো <em>compositional</em> query &mdash; "একটি বাসের দ্বারা আংশিক occluded ট্রাক", "হ্যাজার্ড লাইট জ্বালানো একটি যানবাহন" &mdash; যা কোনো closed-set head প্রকাশ করতে পারে না। খরচ: বহু ব্যবধানে সবচেয়ে ধীর বিকল্প, grounded detector-এর চেয়ে দুর্বল নির্ভুল localization, এবং একটি স্বতন্ত্র failure mode &mdash; যেসব object নেই তাদের জন্য আত্মবিশ্বাসের সঙ্গে box তৈরি করা, যা distribution shift-এ আরও খারাপ হয়।</p>
+            </div>
+          </section>
+
+          <section id="howvlm">
+            <div data-lang="en">
+              <h2><span class="s-num">7</span>How language actually helps on complex scenes</h2>
+              <ul>
+                <li><strong>Naming the tail without labels.</strong> A text prompt &mdash; <code>"three-wheeled auto rickshaw"</code>, <code>"cycle van carrying goods"</code> &mdash; instantiates a detector for a class you have zero boxes for, drawing on web-scale pretraining where such vehicles do appear.</li>
+                <li><strong>Compositional and attribute queries.</strong> Grounded and MLLM detectors localize predicates a closed-set head cannot represent.</li>
+                <li><strong>Open-set rejection.</strong> With a background / "other object" phrase and a calibrated similarity threshold, an OV detector can flag <em>unknown</em> objects rather than force-fit them to a known class &mdash; a safety net and a mining signal.</li>
+                <li><strong>Prompt ensembling.</strong> Averaging several paraphrases of a class ("rickshaw", "auto rickshaw", "three-wheeler", "tuk-tuk") measurably stabilizes recall, mirroring CLIP prompt-ensembling.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৭</span>জটিল দৃশ্যে ভাষা আসলে কীভাবে সাহায্য করে</h2>
+              <ul>
+                <li><strong>label ছাড়াই tail-এর নামকরণ।</strong> একটি text prompt &mdash; <code>"three-wheeled auto rickshaw"</code>, <code>"cycle van carrying goods"</code> &mdash; এমন একটি class-এর জন্য detector তৈরি করে যার আপনার কাছে শূন্যটা box, web-scale pretraining থেকে টেনে যেখানে এমন যানবাহন সত্যিই থাকে।</li>
+                <li><strong>Compositional ও attribute query।</strong> Grounded ও MLLM detector এমন predicate localize করে যা একটি closed-set head প্রকাশ করতে পারে না।</li>
+                <li><strong>Open-set rejection।</strong> একটি background / "other object" phrase ও একটি calibrated similarity threshold দিয়ে, একটি OV detector <em>অজানা</em> object-কে একটি জানা class-এ জোর করে বসানোর বদলে চিহ্নিত করতে পারে &mdash; একটি safety net ও একটি mining signal।</li>
+                <li><strong>Prompt ensembling।</strong> একটি class-এর কয়েকটি paraphrase ("rickshaw", "auto rickshaw", "three-wheeler", "tuk-tuk") গড় করলে recall পরিমাপযোগ্যভাবে স্থিতিশীল হয়, CLIP prompt-ensembling-এর মতো।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="tradeoffs">
+            <div data-lang="en">
+              <h2><span class="s-num">8</span>The trade-offs, stated plainly</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Rough operating points. Latency is order-of-magnitude on a single modern GPU at typical detection resolution; treat as relative, not absolute.</caption>
+                  <thead><tr><th>Model class</th><th>Throughput</th><th>Localization</th><th>Vocabulary</th></tr></thead>
+                  <tbody>
+                    <tr><td>YOLO-class (closed-set)</td><td class="num">real-time (100+ FPS)</td><td>Tight</td><td>Fixed</td></tr>
+                    <tr><td>YOLO-World (OV)</td><td class="num">real-time (tens of FPS)</td><td>Good</td><td>Open (phrases)</td></tr>
+                    <tr><td>Grounding DINO / GLIP</td><td class="num">~1&ndash;10 FPS</td><td>Good</td><td>Open (phrases)</td></tr>
+                    <tr><td>Florence-2 / MLLM</td><td class="num">sub-FPS to few FPS</td><td>Loose&ndash;moderate</td><td>Open (instructions)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ul>
+                <li><strong>Latency.</strong> GLIP / Grounding DINO / Florence-2 are too slow for on-vehicle real-time use. YOLO-World and distilled students are the only OV options in a real-time budget today.</li>
+                <li><strong>Localization precision.</strong> OV detectors, especially CLIP-alignment ones, produce looser boxes and lose more on small objects. If your metric is AP at high IoU, closed-set still wins on covered classes.</li>
+                <li><strong>Prompt sensitivity.</strong> Zero-shot scores swing with wording, articles, singular/plural. Tune the prompt set on a val split and report it, or the numbers are not reproducible.</li>
+                <li><strong>Calibration.</strong> Similarity scores are not probabilities and drift across prompts; per-class threshold calibration is mandatory before fusion or thresholding.</li>
+                <li><strong>MLLM hallucination.</strong> Instruction-tuned detectors emit confident phantom boxes under shift &mdash; the opposite failure from a closed-set miss.</li>
+                <li><strong>Evaluation difficulty.</strong> Open-vocabulary metrics need care: base vs. novel AP, and a fixed prompt set announced in advance.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৮</span>আপসগুলো, সোজাসাপ্টা</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>আনুমানিক operating point। Latency একটি আধুনিক GPU-তে সাধারণ detection resolution-এ order-of-magnitude; আপেক্ষিক ধরুন, পরম নয়।</caption>
+                  <thead><tr><th>মডেল শ্রেণি</th><th>Throughput</th><th>Localization</th><th>Vocabulary</th></tr></thead>
+                  <tbody>
+                    <tr><td>YOLO-শ্রেণি (closed-set)</td><td class="num">real-time (100+ FPS)</td><td>আঁটসাঁট</td><td>নির্দিষ্ট</td></tr>
+                    <tr><td>YOLO-World (OV)</td><td class="num">real-time (কয়েক দশ FPS)</td><td>ভালো</td><td>মুক্ত (phrase)</td></tr>
+                    <tr><td>Grounding DINO / GLIP</td><td class="num">~1&ndash;10 FPS</td><td>ভালো</td><td>মুক্ত (phrase)</td></tr>
+                    <tr><td>Florence-2 / MLLM</td><td class="num">sub-FPS থেকে কয়েক FPS</td><td>ঢিলে&ndash;মাঝারি</td><td>মুক্ত (নির্দেশনা)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ul>
+                <li><strong>Latency।</strong> GLIP / Grounding DINO / Florence-2 on-vehicle real-time ব্যবহারের জন্য বড্ড ধীর। YOLO-World ও distilled student-ই আজ একটি real-time বাজেটে একমাত্র OV বিকল্প।</li>
+                <li><strong>Localization নির্ভুলতা।</strong> OV detector, বিশেষত CLIP-alignment-এরগুলো, ঢিলে box তৈরি করে এবং ছোট object-এ বেশি হারায়। আপনার metric যদি high IoU-তে AP হয়, cover-করা class-এ closed-set এখনও জেতে।</li>
+                <li><strong>Prompt সংবেদনশীলতা।</strong> Zero-shot score শব্দচয়ন, article, একবচন/বহুবচনে ওঠানামা করে। একটি val split-এ prompt set টিউন করুন ও তা রিপোর্ট করুন, নয়তো সংখ্যাগুলো reproducible নয়।</li>
+                <li><strong>Calibration।</strong> Similarity score probability নয় এবং prompt-জুড়ে drift করে; fusion বা thresholding-এর আগে per-class threshold calibration বাধ্যতামূলক।</li>
+                <li><strong>MLLM hallucination।</strong> Instruction-tuned detector shift-এ আত্মবিশ্বাসী phantom box emit করে &mdash; একটি closed-set miss-এর বিপরীত failure।</li>
+                <li><strong>মূল্যায়নের কাঠিন্য।</strong> Open-vocabulary metric-এ যত্ন লাগে: base বনাম novel AP, এবং আগেভাগে ঘোষিত একটি নির্দিষ্ট prompt set।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="bench">
+            <div data-lang="en">
+              <h2><span class="s-num">9</span>Benchmarks and metrics</h2>
+              <p>General OV detection is measured under a <em>generalized</em> setting &mdash; detect base and novel categories simultaneously:</p>
+              <ul>
+                <li><strong>OV-COCO</strong> <a class="ref-link" href="#ref-17">[17]</a> &mdash; 48 base / 17 novel COCO categories; headline metric is novel-class box AP<sub>50</sub>.</li>
+                <li><strong>OV-LVIS</strong> &mdash; 866 common+frequent base / 337 rare novel; headline metric is rare-class AP (AP<sub>r</sub>).</li>
+                <li><strong>ODinW</strong> ("Object Detection in the Wild") <a class="ref-link" href="#ref-7">[7]</a> &mdash; 35 diverse datasets, average AP; the standard transfer-breadth test.</li>
+                <li><strong>Roboflow-100</strong> &mdash; 100 small real-world datasets across domains.</li>
+              </ul>
+              <p>For vehicle detection specifically, add <strong>nuImages</strong> and <strong>BDD100K</strong> <a class="ref-link" href="#ref-15">[15]</a> for scale, weather, and time-of-day diversity; <strong>region-specific sets</strong> such as BNVD <a class="ref-link" href="#ref-1">[1]</a> for the tail classes and the actual deployment domain; and <strong>adverse-weather splits</strong> with the clean&ndash;degraded AP gap reported, not just the degraded number. What to report: base-class AP and novel-class AP separately; the exact prompt set; AP at multiple IoU thresholds (OV methods look better at loose IoU); latency and parameter count; and a per-condition breakdown. A single mAP hides everything that matters here.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৯</span>Benchmark ও metric</h2>
+              <p>সাধারণ OV detection একটি <em>generalized</em> setting-এ মাপা হয় &mdash; base ও novel category একসঙ্গে detect:</p>
+              <ul>
+                <li><strong>OV-COCO</strong> <a class="ref-link" href="#ref-17">[17]</a> &mdash; ৪৮ base / ১৭ novel COCO category; প্রধান metric হলো novel-class box AP<sub>50</sub>।</li>
+                <li><strong>OV-LVIS</strong> &mdash; ৮৬৬ common+frequent base / ৩৩৭ rare novel; প্রধান metric হলো rare-class AP (AP<sub>r</sub>)।</li>
+                <li><strong>ODinW</strong> ("Object Detection in the Wild") <a class="ref-link" href="#ref-7">[7]</a> &mdash; ৩৫টি বৈচিত্র্যময় dataset, গড় AP; স্ট্যান্ডার্ড transfer-breadth পরীক্ষা।</li>
+                <li><strong>Roboflow-100</strong> &mdash; বিভিন্ন domain-জুড়ে ১০০টি ছোট বাস্তব-জগতের dataset।</li>
+              </ul>
+              <p>বিশেষভাবে vehicle detection-এর জন্য, scale, weather ও time-of-day বৈচিত্র্যের জন্য <strong>nuImages</strong> ও <strong>BDD100K</strong> <a class="ref-link" href="#ref-15">[15]</a> যোগ করুন; tail class ও প্রকৃত deployment domain-এর জন্য BNVD <a class="ref-link" href="#ref-1">[1]</a>-এর মতো <strong>অঞ্চল-নির্দিষ্ট set</strong>; এবং <strong>adverse-weather split</strong>, কেবল degraded সংখ্যা নয় &mdash; clean&ndash;degraded AP gap সহ রিপোর্ট। কী রিপোর্ট করবেন: base-class AP ও novel-class AP আলাদাভাবে; হুবহু prompt set; একাধিক IoU threshold-এ AP (OV পদ্ধতি ঢিলে IoU-তে ভালো দেখায়); latency ও parameter সংখ্যা; এবং একটি per-condition breakdown। একটিমাত্র mAP এখানে যা কিছু গুরুত্বপূর্ণ সব আড়াল করে।</p>
+            </div>
+          </section>
+
+          <section id="adapt">
+            <div data-lang="en">
+              <h2><span class="s-num">10</span>Adapting an open-vocabulary detector to a region</h2>
+              <p>Zero-shot is the starting point, not the destination. Ways to close the gap to a target domain, cheapest first:</p>
+              <ul>
+                <li><strong>Prompt engineering and ensembling</strong> on a small labeled val set &mdash; often several AP points for no training.</li>
+                <li><strong>Visual prompting / few-shot.</strong> T-Rex2 <a class="ref-link" href="#ref-10">[10]</a> takes example crops, so a handful of exemplars of a local vehicle type specializes the detector without gradient updates.</li>
+                <li><strong>Prompt / adapter tuning.</strong> Freeze the backbone; learn continuous prompt embeddings or lightweight adapters on the few labels you have. Avoids the catastrophic forgetting that full CLIP fine-tuning causes.</li>
+                <li><strong>Pseudo-label distillation.</strong> Run the heavy OV detector as a teacher over unlabeled regional footage, filter, and train an efficient closed-set student &mdash; see &sect;11.</li>
+                <li><strong>Weighted ensembling with explainability.</strong> Combine a fine-tuned closed-set detector with an OV detector via confidence-weighted box fusion, using saliency / attribution to diagnose which member fails under which condition &mdash; the approach behind the weighted-YOLO-ensemble + XAI work for adverse-weather detection <a class="ref-link" href="#ref-2">[2]</a>.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১০</span>একটি open-vocabulary detector-কে একটি অঞ্চলে খাপ খাওয়ানো</h2>
+              <p>Zero-shot শুরু বিন্দু, গন্তব্য নয়। একটি target domain-এর সঙ্গে ব্যবধান মেটানোর উপায়, সস্তা আগে:</p>
+              <ul>
+                <li><strong>Prompt engineering ও ensembling</strong> একটি ছোট labelled val set-এ &mdash; প্রায়ই কোনো training ছাড়াই কয়েক AP point।</li>
+                <li><strong>Visual prompting / few-shot।</strong> T-Rex2 <a class="ref-link" href="#ref-10">[10]</a> উদাহরণ crop নেয়, তাই একটি স্থানীয় vehicle ধরনের কয়েকটি exemplar gradient update ছাড়াই detector-কে বিশেষায়িত করে।</li>
+                <li><strong>Prompt / adapter tuning।</strong> backbone freeze করুন; হাতে থাকা কয়েকটি label-এ continuous prompt embedding বা হালকা adapter শিখুন। full CLIP fine-tuning যে catastrophic forgetting ঘটায় তা এড়ায়।</li>
+                <li><strong>Pseudo-label distillation।</strong> unlabeled regional ফুটেজের উপর ভারী OV detector-কে teacher হিসেবে চালান, filter করুন, এবং একটি efficient closed-set student train করুন &mdash; &sect;১১ দেখুন।</li>
+                <li><strong>Explainability সহ weighted ensembling।</strong> একটি fine-tuned closed-set detector-কে একটি OV detector-এর সঙ্গে confidence-weighted box fusion দিয়ে মেলান, কোন member কোন পরিস্থিতিতে ব্যর্থ হয় তা নির্ণয়ে saliency / attribution ব্যবহার করে &mdash; adverse-weather detection-এর জন্য weighted-YOLO-ensemble + XAI কাজের পেছনের পদ্ধতি <a class="ref-link" href="#ref-2">[2]</a>।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="pipeline">
+            <div data-lang="en">
+              <h2><span class="s-num">11</span>A deployment pipeline that uses the useful parts</h2>
+              <p>The pattern that works in practice is <strong>discovery then distillation</strong>:</p>
+              <ol>
+                <li><strong>Discover.</strong> Run a strong, slow grounded OV detector (Grounding DINO 1.5 / DINO-X class) offline over unlabeled regional video with a curated prompt list covering the local vehicle taxonomy.</li>
+                <li><strong>Filter.</strong> Keep a detection only if its score exceeds a threshold <em>and</em> it is consistent across prompt paraphrases &mdash; e.g. keep box <span class="eq">b</span> when <span class="eq">min<sub>k</sub> s<sub>k</sub>(b) &ge; &#964;<sub>1</sub></span> and <span class="eq">mean<sub>k</sub> s<sub>k</sub>(b) &ge; &#964;<sub>2</sub></span> over paraphrase set <span class="eq">{prompt<sub>k</sub>}</span>. Optionally verify low-agreement classes with an MLLM or a human spot-check.</li>
+                <li><strong>Distill.</strong> Train an efficient closed-set student (YOLO-class or RT-DETR) on the union of your real labels and the filtered pseudo-labels, with pseudo-label loss down-weighted.</li>
+                <li><strong>Ensemble at the edge, if budget allows.</strong> Deploy the student plus a real-time OV head (YOLO-World) with weighted box fusion, so genuinely novel objects still surface.</li>
+                <li><strong>Close the loop.</strong> Route low-confidence and open-set-flagged frames back to step&nbsp;1.</li>
+              </ol>
+              <p>The heavy VLM never runs on the vehicle; it is an auto-labeling and monitoring tool. The deployed model is small, fast, and closed-set &mdash; but its label set was built by language.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১১</span>একটি deployment pipeline যা উপযোগী অংশগুলো ব্যবহার করে</h2>
+              <p>বাস্তবে যে প্যাটার্ন কাজ করে তা হলো <strong>আবিষ্কার তারপর distillation</strong>:</p>
+              <ol>
+                <li><strong>আবিষ্কার।</strong> স্থানীয় vehicle taxonomy কভার করা একটি সাজানো prompt তালিকা সহ, unlabeled regional video-র উপর offline একটি শক্তিশালী, ধীর grounded OV detector (Grounding DINO 1.5 / DINO-X শ্রেণি) চালান।</li>
+                <li><strong>Filter।</strong> একটি detection তখনই রাখুন যখন তার score একটি threshold ছাড়ায় <em>এবং</em> তা prompt paraphrase-জুড়ে সঙ্গতিপূর্ণ &mdash; যেমন, paraphrase set <span class="eq">{prompt<sub>k</sub>}</span>-এর উপর <span class="eq">min<sub>k</sub> s<sub>k</sub>(b) &ge; &#964;<sub>1</sub></span> এবং <span class="eq">mean<sub>k</sub> s<sub>k</sub>(b) &ge; &#964;<sub>2</sub></span> হলে box <span class="eq">b</span> রাখুন। ঐচ্ছিকভাবে low-agreement class একটি MLLM বা একটি মানব spot-check দিয়ে যাচাই করুন।</li>
+                <li><strong>Distill।</strong> আপনার আসল label ও filter-করা pseudo-label-এর সমষ্টিতে একটি efficient closed-set student (YOLO-শ্রেণি বা RT-DETR) train করুন, pseudo-label loss down-weighted রেখে।</li>
+                <li><strong>বাজেট থাকলে edge-এ ensemble করুন।</strong> student-এর সঙ্গে একটি real-time OV head (YOLO-World) weighted box fusion সহ deploy করুন, যাতে সত্যিকারের novel object তবু উঠে আসে।</li>
+                <li><strong>loop বন্ধ করুন।</strong> low-confidence ও open-set-চিহ্নিত frame আবার ধাপ&nbsp;১-এ পাঠান।</li>
+              </ol>
+              <p>ভারী VLM কখনো গাড়িতে চলে না; এটি একটি auto-labeling ও monitoring টুল। deployed মডেল ছোট, দ্রুত, ও closed-set &mdash; কিন্তু তার label set ভাষা দিয়ে তৈরি।</p>
+            </div>
+          </section>
+
+          <section id="threed">
+            <div data-lang="en">
+              <h2><span class="s-num">12</span>Open-vocabulary detection in 3D and BEV</h2>
+              <p>Almost all of the above is 2D image space. Open-vocabulary <em>3D</em> detection is early: <strong>OV-3DET</strong> <a class="ref-link" href="#ref-18">[18]</a> learns to localize in point clouds with no 3D annotation by transferring boxes from a 2D open-vocabulary detector and aligning point features to CLIP text; follow-ups add better 2D&#8594;3D pseudo-labelling and de-biasing. For a driving stack the pragmatic near-term pattern is 2D open-vocabulary discovery lifted to 3D via LiDAR association &mdash; the 2D detector proposes and names, LiDAR supplies metric extent &mdash; feeding the auto-labeling loop rather than running open-vocabulary in BEV directly.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১২</span>3D ও BEV-তে open-vocabulary detection</h2>
+              <p>উপরের প্রায় সবটাই 2D image space। Open-vocabulary <em>3D</em> detection সবে শুরু: <strong>OV-3DET</strong> <a class="ref-link" href="#ref-18">[18]</a> একটি 2D open-vocabulary detector থেকে box transfer করে এবং point feature-কে CLIP text-এর সঙ্গে align করে কোনো 3D annotation ছাড়াই point cloud-এ localize করতে শেখে; follow-up-গুলো ভালো 2D&#8594;3D pseudo-labelling ও de-biasing যোগ করে। একটি driving stack-এর জন্য বাস্তবসম্মত নিকট-মেয়াদি প্যাটার্ন হলো LiDAR association দিয়ে 3D-তে তোলা 2D open-vocabulary আবিষ্কার &mdash; 2D detector প্রস্তাব করে ও নাম দেয়, LiDAR metric বিস্তার জোগায় &mdash; BEV-তে সরাসরি open-vocabulary চালানোর বদলে auto-labeling loop-কে খাওয়ায়।</p>
+            </div>
+          </section>
+
+          <section id="xai">
+            <div data-lang="en">
+              <h2><span class="s-num">13</span>Explainability as a working tool</h2>
+              <p>Under distribution shift you need to know <em>why</em> a detection failed, not just that it did. Practical instruments: grounding / attention heat-maps for where a phrase attached; gradient- or perturbation-based saliency (Grad-CAM-style, D-RISE) on closed-set members; text-conditioned attribution for OV members; and a maintained failure taxonomy (missed-due-to-occlusion, wrong-class-taxonomic, hallucinated-under-glare) with counts per condition. Attribution also drives the ensemble weights in &sect;10 &mdash; if saliency shows the closed-set member fixating on rain streaks, down-weight it in rain.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৩</span>কর্মক্ষম টুল হিসেবে ব্যাখ্যাযোগ্যতা</h2>
+              <p>Distribution shift-এ আপনাকে জানতে হবে একটি detection <em>কেন</em> ব্যর্থ হলো, শুধু হয়েছে তা নয়। ব্যবহারিক যন্ত্র: একটি phrase কোথায় যুক্ত হলো তার জন্য grounding / attention heat-map; closed-set member-এ gradient- বা perturbation-ভিত্তিক saliency (Grad-CAM-ধাঁচের, D-RISE); OV member-এর জন্য text-conditioned attribution; এবং per-condition গণনা সহ একটি রক্ষণাবেক্ষণ-করা failure taxonomy (occlusion-এর কারণে মিস, ভুল-class-taxonomic, glare-এ hallucinated)। Attribution &sect;১০-এর ensemble weight-ও চালায় &mdash; saliency যদি দেখায় closed-set member বৃষ্টির রেখায় আটকে আছে, বৃষ্টিতে তাকে down-weight করুন।</p>
+            </div>
+          </section>
+
+          <section id="open">
+            <div data-lang="en">
+              <h2><span class="s-num">14</span>Open problems</h2>
+              <ul>
+                <li>Open-vocabulary detection directly in 3D / BEV, at driving quality &mdash; OV-3DET <a class="ref-link" href="#ref-18">[18]</a> and successors are early.</li>
+                <li>Real-time grounded detection with GLIP-level accuracy &mdash; YOLO-World narrowed the gap but did not close it.</li>
+                <li>Calibrated open-set rejection with a bounded false-alarm rate, suitable for a safety case.</li>
+                <li>Temporal grounding &mdash; consistent open-vocabulary detection across a video, not per-frame.</li>
+                <li>Standard adverse-weather OV benchmarks with agreed prompts and simulation fidelity.</li>
+                <li>Prompt robustness &mdash; performance that does not depend on getting the wording right.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৪</span>অমীমাংসিত সমস্যা</h2>
+              <ul>
+                <li>সরাসরি 3D / BEV-তে driving মানের open-vocabulary detection &mdash; OV-3DET <a class="ref-link" href="#ref-18">[18]</a> ও উত্তরসূরিরা সবে শুরু।</li>
+                <li>GLIP-স্তরের accuracy সহ real-time grounded detection &mdash; YOLO-World ব্যবধান কমিয়েছে কিন্তু মেটায়নি।</li>
+                <li>একটি safety case-এর উপযোগী, সীমাবদ্ধ false-alarm হার সহ calibrated open-set rejection।</li>
+                <li>Temporal grounding &mdash; per-frame নয়, একটি video-জুড়ে সঙ্গতিপূর্ণ open-vocabulary detection।</li>
+                <li>সম্মত prompt ও simulation বিশ্বস্ততা সহ স্ট্যান্ডার্ড adverse-weather OV benchmark।</li>
+                <li>Prompt robustness &mdash; এমন পারফরম্যান্স যা শব্দচয়ন ঠিক করার উপর নির্ভর করে না।</li>
+              </ul>
+            </div>
+          </section>
+
+          <div class="w-key" data-lang="en">
+            <h2>Key takeaways</h2>
+            <ul>
+              <li>"Complex" bundles taxonomic, density, photometric, scale, imbalance, and domain shift &mdash; closed-set detectors can be fixed for any one but not for the whole non-stationary tail.</li>
+              <li>Region&ndash;text alignment (CLIP-based) gives zero-shot recognition but loose boxes; grounded pretraining (GLIP onward) supervises localization end-to-end and localizes far better.</li>
+              <li>YOLO-World is the only real-time OV option today; GLIP / Grounding DINO / MLLMs are offline tools.</li>
+              <li>OV trade-offs are real: looser boxes, prompt sensitivity, uncalibrated scores, MLLM hallucination.</li>
+              <li>Deploy via discovery-then-distillation: heavy VLM auto-labels regional footage with confidence + paraphrase-agreement filtering; a small closed-set student ships.</li>
+              <li>Report base vs. novel AP, the exact prompts, multi-IoU AP, and per-condition breakdowns &mdash; never a single mAP.</li>
+            </ul>
+          </div>
+          <div class="w-key" data-lang="bn" lang="bn">
+            <h2>মূল কথা</h2>
+            <ul>
+              <li>"জটিল" taxonomic, density, photometric, scale, imbalance ও domain shift একসঙ্গে বাঁধে &mdash; closed-set detector-কে যেকোনো একটির জন্য ঠিক করা যায়, কিন্তু পুরো non-stationary tail-এর জন্য নয়।</li>
+              <li>Region&ndash;text alignment (CLIP-ভিত্তিক) zero-shot recognition দেয় কিন্তু ঢিলে box; grounded pretraining (GLIP থেকে) localization end-to-end supervise করে এবং অনেক ভালো localize করে।</li>
+              <li>YOLO-World আজ একমাত্র real-time OV বিকল্প; GLIP / Grounding DINO / MLLM offline টুল।</li>
+              <li>OV আপসগুলো সত্যি: ঢিলে box, prompt সংবেদনশীলতা, uncalibrated score, MLLM hallucination।</li>
+              <li>আবিষ্কার-তারপর-distillation দিয়ে deploy করুন: ভারী VLM confidence + paraphrase-সম্মতি filtering সহ regional ফুটেজ auto-label করে; একটি ছোট closed-set student ship হয়।</li>
+              <li>base বনাম novel AP, হুবহু prompt, multi-IoU AP, ও per-condition breakdown রিপোর্ট করুন &mdash; কখনো একটিমাত্র mAP নয়।</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <section class="w-refs" id="refs">
+          <h2><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></h2>
+          <ol>
+            <li id="ref-1">Saha, B. et al. &ldquo;Bangladeshi Native Vehicle Detection in the Wild (BNVD).&rdquo; 2024. <a href="https://arxiv.org/abs/2405.12150">arXiv:2405.12150</a></li>
+            <li id="ref-2">Saha, B. et al. &ldquo;Enhancing Vehicle Detection in Adverse Weather with a Weighted YOLO Ensemble Approach and Explainable AI.&rdquo; IEEE QPAIN 2025. <a href="https://doi.org/10.1109/QPAIN66474.2025.11172268">DOI:10.1109/QPAIN66474.2025.11172268</a></li>
+            <li id="ref-3">Zhao, Y. et al. &ldquo;DETRs Beat YOLOs on Real-time Object Detection (RT-DETR).&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2304.08069">arXiv:2304.08069</a></li>
+            <li id="ref-4">Zhang, H. et al. &ldquo;DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection.&rdquo; ICLR 2023. <a href="https://arxiv.org/abs/2203.03605">arXiv:2203.03605</a></li>
+            <li id="ref-5">Gu, X. et al. &ldquo;Open-vocabulary Object Detection via Vision and Language Knowledge Distillation (ViLD).&rdquo; ICLR 2022. <a href="https://arxiv.org/abs/2104.13921">arXiv:2104.13921</a></li>
+            <li id="ref-6">Minderer, M. et al. &ldquo;Simple Open-Vocabulary Object Detection with Vision Transformers (OWL-ViT).&rdquo; ECCV 2022; &ldquo;Scaling Open-Vocabulary Object Detection (OWLv2).&rdquo; NeurIPS 2023. <a href="https://arxiv.org/abs/2205.06230">arXiv:2205.06230</a></li>
+            <li id="ref-7">Li, L. H. et al. &ldquo;Grounded Language-Image Pre-training (GLIP).&rdquo; CVPR 2022. <a href="https://arxiv.org/abs/2112.03857">arXiv:2112.03857</a></li>
+            <li id="ref-8">Liu, S. et al. &ldquo;Grounding DINO: Marrying DINO with Grounded Pre-Training for Open-Set Object Detection.&rdquo; ECCV 2024; &ldquo;Grounding DINO 1.5.&rdquo; 2024. <a href="https://arxiv.org/abs/2303.05499">arXiv:2303.05499</a> / <a href="https://arxiv.org/abs/2405.10300">arXiv:2405.10300</a></li>
+            <li id="ref-9">Cheng, T. et al. &ldquo;YOLO-World: Real-Time Open-Vocabulary Object Detection.&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2401.17270">arXiv:2401.17270</a></li>
+            <li id="ref-10">Jiang, Q. et al. &ldquo;T-Rex2: Towards Generic Object Detection via Text-Visual Prompt Synergy.&rdquo; ECCV 2024. <a href="https://arxiv.org/abs/2403.14610">arXiv:2403.14610</a></li>
+            <li id="ref-11">Xiao, B. et al. &ldquo;Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks.&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2311.06242">arXiv:2311.06242</a></li>
+            <li id="ref-12">Wang, P. et al. &ldquo;Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution.&rdquo; 2024. <a href="https://arxiv.org/abs/2409.12191">arXiv:2409.12191</a></li>
+            <li id="ref-13">Saha, B. &ldquo;Comparative Evaluation of CNN, Transformer, and Vision-Language Approaches for Vehicle Detection in Complex Scenarios.&rdquo; IEEE QPAIN 2026 (accepted).</li>
+            <li id="ref-14">Ren, T. et al. &ldquo;DINO-X: A Unified Vision Model for Open-World Object Detection and Understanding.&rdquo; 2024. <a href="https://arxiv.org/abs/2411.14347">arXiv:2411.14347</a></li>
+            <li id="ref-15">Yu, F. et al. &ldquo;BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1805.04687">arXiv:1805.04687</a></li>
+            <li id="ref-16">Radford, A. et al. &ldquo;Learning Transferable Visual Models From Natural Language Supervision (CLIP).&rdquo; ICML 2021. <a href="https://arxiv.org/abs/2103.00020">arXiv:2103.00020</a></li>
+            <li id="ref-17">Zareian, A. et al. &ldquo;Open-Vocabulary Object Detection Using Captions (OV-COCO setup).&rdquo; CVPR 2021. <a href="https://arxiv.org/abs/2011.10678">arXiv:2011.10678</a></li>
+            <li id="ref-18">Lu, Y. et al. &ldquo;Open-Vocabulary Point-Cloud Object Detection without 3D Annotation (OV-3DET).&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2304.00788">arXiv:2304.00788</a></li>
+          </ol>
+        </section>
+
+        <nav class="w-prevnext" aria-label="More writeups">
+          <a class="p" href="self-supervised-perception.html">
+            <span class="dir"><span data-lang="en">&#8592; Previous</span><span data-lang="bn" lang="bn">&#8592; পূর্ববর্তী</span></span>
+            <span class="ttl"><span data-lang="en">Self-Supervised Perception for Autonomous Driving: A Practical Overview</span><span data-lang="bn" lang="bn">স্বয়ংক্রিয় ড্রাইভিংয়ের জন্য Self-Supervised Perception: একটি ব্যবহারিক পরিচিতি</span></span>
+          </a>
+          <a class="n" href="perception-benchmarks.html">
+            <span class="dir"><span data-lang="en">Next &#8594;</span><span data-lang="bn" lang="bn">পরবর্তী &#8594;</span></span>
+            <span class="ttl"><span data-lang="en">How to Build Reproducible Perception Benchmarks for AV Research</span><span data-lang="bn" lang="bn">AV গবেষণার জন্য reproducible Perception Benchmark কীভাবে বানাবেন</span></span>
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/"><span data-lang="en">Back to portfolio &#8599;</span><span data-lang="bn" lang="bn">পোর্টফোলিওতে ফিরুন &#8599;</span></a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

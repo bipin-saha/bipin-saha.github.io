@@ -1,20 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A practical implementation roadmap from 2D perception pipelines to BEV fusion systems for autonomous driving.">
-  <title>2D to BEV Fusion Roadmap | Bipin Saha</title>
+  <meta name="description" content="A staged engineering roadmap from a 2D object detector to a camera-LiDAR bird's-eye-view fusion stack: monocular 3D, push vs pull view transforms, the Lift-Splat lift, LiDAR BEV backbones, fusion modules, training recipes, and deployment pitfalls.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/bevfusion-roadmap.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="From 2D Perception to BEV Fusion: An Implementation Roadmap">
+  <meta property="og:description" content="A staged path from a working 2D detector to a multi-sensor bird's-eye-view fusion stack, with the coordinate-frame, training, and deployment pitfalls at each step.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/bevfusion-roadmap.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="From 2D Perception to BEV Fusion: An Implementation Roadmap">
+  <meta name="twitter:description" content="A staged engineering path to a camera-LiDAR BEV fusion stack.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>From 2D Perception to BEV Fusion: An Implementation Roadmap | Bipin Saha</title>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "From 2D Perception to BEV Fusion: An Implementation Roadmap",
+      "description": "A staged engineering roadmap from a 2D object detector to a camera-LiDAR bird's-eye-view fusion stack.",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "publisher": { "@type": "Person", "name": "Bipin Saha" },
+      "datePublished": "2025-11-10",
+      "dateModified": "2026-08-31",
+      "mainEntityOfPage": "https://bipin-saha.github.io/writeups/bevfusion-roadmap.html",
+      "about": ["Bird's-eye-view perception", "Camera-LiDAR fusion", "3D object detection", "Autonomous driving"],
+      "keywords": "BEV, Lift-Splat-Shoot, BEVFusion, BEVFormer, CenterPoint, nuScenes, view transform",
+      "inLanguage": ["en", "bn"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" },
+        { "@type": "ListItem", "position": 3, "name": "From 2D Perception to BEV Fusion", "item": "https://bipin-saha.github.io/writeups/bevfusion-roadmap.html" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+
+  <!-- Apply the English/Bangla choice before first paint (no flash). A ?lang=bn
+       or ?lang=en query param wins and is remembered; otherwise localStorage. -->
+  <script>
+    (function () {
+      try {
+        var q = (location.search.match(/[?&]lang=(bn|en)\b/) || [])[1];
+        var l = q || localStorage.getItem('writeup-lang');
+        if (l === 'bn' || l === 'en') {
+          document.documentElement.setAttribute('lang', l);
+          if (q) localStorage.setItem('writeup-lang', q);
+        }
+      } catch (e) { /* private mode - fall back to lang="en" */ }
+    })();
+  </script>
 </head>
+
 <body>
-  <p><a href="index.html">Back to writeups</a></p>
-  <h1>From 2D Perception to BEV Fusion: Implementation Roadmap</h1>
-  <p>A staged roadmap for teams moving from single-camera models to multi-sensor bird's-eye-view fusion systems.</p>
-  <h2>Problem</h2>
-  <p>Many teams have strong 2D detectors but no structured migration plan to BEV-centric perception.</p>
-  <h2>Method</h2>
-  <p>Progress through calibration hardening, synchronized data pipelines, BEV supervision design, and iterative ablations.</p>
-  <h2>Results</h2>
-  <p>A staged migration minimizes regression risk and improves spatial consistency for downstream planning modules.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/"><span data-lang="en">Home</span><span data-lang="bn" lang="bn">হোম</span></a><span>/</span><a href="/writeups/"><span data-lang="en">Writeups</span><span data-lang="bn" lang="bn">রাইটআপ</span></a><span>/</span><span class="here">BEV Fusion Roadmap</span>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language / ভাষা">
+        <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-set="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="w-layout">
+
+      <aside class="w-toc" aria-label="Contents">
+        <p class="w-toc-label"><span data-lang="en">Contents</span><span data-lang="bn" lang="bn">বিষয়সূচি</span></p>
+        <ul>
+          <li><a href="#ladder"><span data-lang="en">1 &middot; The ladder</span><span data-lang="bn" lang="bn">১ &middot; সিঁড়ি</span></a></li>
+          <li><a href="#camera"><span data-lang="en">2 &middot; Camera 3D: push vs pull</span><span data-lang="bn" lang="bn">২ &middot; Camera 3D: push বনাম pull</span></a></li>
+          <li><a href="#lift"><span data-lang="en">3 &middot; The view transform</span><span data-lang="bn" lang="bn">৩ &middot; View transform</span></a></li>
+          <li><a href="#lidar"><span data-lang="en">4 &middot; LiDAR BEV backbone</span><span data-lang="bn" lang="bn">৪ &middot; LiDAR BEV backbone</span></a></li>
+          <li><a href="#fusion"><span data-lang="en">5 &middot; Fusion in BEV</span><span data-lang="bn" lang="bn">৫ &middot; BEV-তে fusion</span></a></li>
+          <li><a href="#blueprint"><span data-lang="en">6 &middot; Reference blueprint</span><span data-lang="bn" lang="bn">৬ &middot; রেফারেন্স ব্লুপ্রিন্ট</span></a></li>
+          <li><a href="#data"><span data-lang="en">7 &middot; Data &amp; frames</span><span data-lang="bn" lang="bn">৭ &middot; ডেটা ও frame</span></a></li>
+          <li><a href="#training"><span data-lang="en">8 &middot; Training recipe</span><span data-lang="bn" lang="bn">৮ &middot; Training recipe</span></a></li>
+          <li><a href="#deploy"><span data-lang="en">9 &middot; Deployment</span><span data-lang="bn" lang="bn">৯ &middot; Deployment</span></a></li>
+          <li><a href="#milestones"><span data-lang="en">10 &middot; Milestones</span><span data-lang="bn" lang="bn">১০ &middot; মাইলফলক</span></a></li>
+          <li><a href="#bugs"><span data-lang="en">11 &middot; Common bugs</span><span data-lang="bn" lang="bn">১১ &middot; সাধারণ বাগ</span></a></li>
+          <li><a href="#refs"><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></a></li>
+        </ul>
+      </aside>
+
+      <main class="warticle" id="content">
+        <p class="w-eyebrow" data-lang="en">Technical Writeup</p>
+        <p class="w-eyebrow" data-lang="bn" lang="bn">টেকনিক্যাল রাইটআপ</p>
+        <h1 data-lang="en">From 2D Perception to BEV Fusion: An Implementation Roadmap</h1>
+        <h1 data-lang="bn" lang="bn">2D Perception থেকে BEV Fusion: একটি বাস্তবায়ন রোডম্যাপ</h1>
+        <p class="w-lede" data-lang="en">Most teams arrive at 3D perception with a working 2D detector and a pile of sensor logs. The jump to a camera&ndash;LiDAR bird's-eye-view stack is less a single model than a sequence of representational commitments, each with its own failure surface. This is the path I recommend, and the pitfalls that cost weeks at each rung.</p>
+        <p class="w-lede" data-lang="bn" lang="bn">বেশিরভাগ টিম 3D perception-এ আসে একটি চালু 2D detector আর একগাদা sensor log নিয়ে। camera&ndash;LiDAR bird's-eye-view stack-এ লাফটা আসলে একটিমাত্র মডেল নয়, বরং পরপর কতগুলো representational সিদ্ধান্ত, প্রতিটির নিজস্ব failure surface সহ। এই লেখায় আমার সুপারিশ-করা পথ, এবং প্রতিটি ধাপে যেসব ভুল সপ্তাহ খেয়ে ফেলে।</p>
+        <div class="w-meta" data-lang="en">
+          <span>Published 10&nbsp;Nov&nbsp;2025</span>
+          <span>Updated 31&nbsp;Aug&nbsp;2026</span>
+          <span>~22&nbsp;min read</span>
+        </div>
+        <div class="w-meta" data-lang="bn" lang="bn">
+          <span>প্রকাশ ১০&nbsp;নভে&nbsp;২০২৫</span>
+          <span>হালনাগাদ ৩১&nbsp;আগস্ট&nbsp;২০২৬</span>
+          <span>~২২&nbsp;মিনিট পাঠ</span>
+        </div>
+        <ul class="w-tags" data-lang="en">
+          <li>BEV perception</li>
+          <li>Lift-Splat-Shoot</li>
+          <li>Camera&ndash;LiDAR fusion</li>
+          <li>nuScenes</li>
+          <li>Deployment</li>
+        </ul>
+        <ul class="w-tags" data-lang="bn" lang="bn">
+          <li>BEV perception</li>
+          <li>Lift-Splat-Shoot</li>
+          <li>Camera&ndash;LiDAR fusion</li>
+          <li>nuScenes</li>
+          <li>Deployment</li>
+        </ul>
+
+        <div class="prose">
+
+          <section id="ladder">
+            <div data-lang="en">
+              <h2><span class="s-num">1</span>The ladder, and why order matters</h2>
+              <p>Bird's-eye view (BEV) has become the default intermediate representation for driving perception because it is the frame in which the downstream consumers &mdash; prediction, mapping, planning &mdash; actually operate. A metric top-down grid is sensor-agnostic, trivially fuses multiple cameras and LiDAR, composes across time by ego-motion, and turns "where is that car going" into a translation on a raster. The research arc from <em>Lift, Splat, Shoot</em> <a class="ref-link" href="#ref-1">[1]</a> through BEVFusion <a class="ref-link" href="#ref-15">[15]</a> is, in hindsight, a steady migration of every perception task into this one space.</p>
+              <p>The mistake I see teams make is to target the final fusion model directly. BEV fusion has a large number of moving parts &mdash; two backbones, a view transform, a BEV encoder, a fusion module, a 3D head, a multi-frame buffer, calibration ingestion &mdash; and when the first end-to-end training run lands at a disappointing score, there is no way to localize the fault. Build the ladder instead. Each rung is independently checkpointable, has a published baseline you can match, and de-risks exactly one representational decision.</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>The ladder. Each stage is a shippable checkpoint with a literature baseline to match before proceeding.</caption>
+                  <thead>
+                    <tr><th>Stage</th><th>Representation</th><th>Canonical methods</th><th>De-risks</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>0</td><td>2D boxes + depth prior</td><td>Your detector + IPM / mono-depth</td><td>Calibration, data plumbing</td></tr>
+                    <tr><td>1</td><td>Monocular / multi-view 3D</td><td>FCOS3D, PGD, DETR3D <a class="ref-link" href="#ref-10">[10]</a><a class="ref-link" href="#ref-6">[6]</a></td><td>3D head, loss, coordinate frames</td></tr>
+                    <tr><td>2</td><td>Camera BEV (single frame)</td><td>LSS, BEVDet, BEVDepth, BEVFormer <a class="ref-link" href="#ref-1">[1]</a><a class="ref-link" href="#ref-3">[3]</a><a class="ref-link" href="#ref-4">[4]</a></td><td>View transform, BEV grid choices</td></tr>
+                    <tr><td>3</td><td>Camera BEV + temporal</td><td>BEVDet4D, SOLOFusion, StreamPETR <a class="ref-link" href="#ref-7">[7]</a><a class="ref-link" href="#ref-8">[8]</a></td><td>Ego-motion warp, velocity</td></tr>
+                    <tr><td>4</td><td>LiDAR BEV</td><td>PointPillars, CenterPoint, VoxelNeXt <a class="ref-link" href="#ref-11">[11]</a><a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a></td><td>Sparse conv, voxelization, CBGS</td></tr>
+                    <tr><td>5</td><td>Camera&ndash;LiDAR BEV fusion</td><td>BEVFusion &times;2, TransFusion, CMT <a class="ref-link" href="#ref-15">[15]</a><a class="ref-link" href="#ref-16">[16]</a><a class="ref-link" href="#ref-17">[17]</a><a class="ref-link" href="#ref-18">[18]</a></td><td>Alignment, modality balance</td></tr>
+                    <tr><td>6</td><td>Multi-task / end-to-end BEV</td><td>UniAD, VAD <a class="ref-link" href="#ref-22">[22]</a></td><td>Task interference, planning metrics</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>You do not have to climb every rung to production &mdash; many deployed stacks stop at Stage&nbsp;4 (LiDAR-primary) with camera as a secondary head &mdash; but you should <em>build</em> them in order so that each new failure has exactly one plausible cause.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১</span>সিঁড়ি, এবং কেন ক্রম গুরুত্বপূর্ণ</h2>
+              <p>Bird's-eye view (BEV) এখন driving perception-এর ডিফল্ট intermediate representation, কারণ এটাই সেই frame যেখানে downstream consumer-রা &mdash; prediction, mapping, planning &mdash; আসলে কাজ করে। একটি metric top-down grid sensor-নিরপেক্ষ, একাধিক camera ও LiDAR-কে অনায়াসে fuse করে, ego-motion দিয়ে সময়জুড়ে জোড়ে, এবং "ওই গাড়িটা কোথায় যাচ্ছে" প্রশ্নটিকে একটি raster-এর উপর translation-এ পরিণত করে। <em>Lift, Splat, Shoot</em> <a class="ref-link" href="#ref-1">[1]</a> থেকে BEVFusion <a class="ref-link" href="#ref-15">[15]</a> পর্যন্ত গবেষণার ধারা, পিছন ফিরে দেখলে, প্রতিটি perception task-কে ধীরে ধীরে এই একটি space-এ সরিয়ে আনার গল্প।</p>
+              <p>টিমগুলোকে যে ভুলটা করতে দেখি তা হলো সরাসরি চূড়ান্ত fusion মডেল লক্ষ্য করা। BEV fusion-এ অনেকগুলো চলমান অংশ &mdash; দুটি backbone, একটি view transform, একটি BEV encoder, একটি fusion module, একটি 3D head, একটি multi-frame buffer, calibration ingestion &mdash; এবং প্রথম end-to-end training run যখন হতাশাজনক score-এ পৌঁছায়, তখন ত্রুটি কোথায় তা আলাদা করে বের করার উপায় থাকে না। বরং সিঁড়িটা গড়ুন। প্রতিটি ধাপ আলাদাভাবে checkpoint করা যায়, মেলানোর মতো একটি প্রকাশিত baseline আছে, এবং ঠিক একটি representational সিদ্ধান্তের ঝুঁকি কমায়।</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>সিঁড়ি। প্রতিটি stage একটি ship-যোগ্য checkpoint, এগোনোর আগে মেলানোর মতো একটি literature baseline সহ।</caption>
+                  <thead>
+                    <tr><th>Stage</th><th>Representation</th><th>Canonical পদ্ধতি</th><th>যে ঝুঁকি কমায়</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>০</td><td>2D box + depth prior</td><td>আপনার detector + IPM / mono-depth</td><td>Calibration, data plumbing</td></tr>
+                    <tr><td>১</td><td>Monocular / multi-view 3D</td><td>FCOS3D, PGD, DETR3D <a class="ref-link" href="#ref-10">[10]</a><a class="ref-link" href="#ref-6">[6]</a></td><td>3D head, loss, coordinate frame</td></tr>
+                    <tr><td>২</td><td>Camera BEV (single frame)</td><td>LSS, BEVDet, BEVDepth, BEVFormer <a class="ref-link" href="#ref-1">[1]</a><a class="ref-link" href="#ref-3">[3]</a><a class="ref-link" href="#ref-4">[4]</a></td><td>View transform, BEV grid পছন্দ</td></tr>
+                    <tr><td>৩</td><td>Camera BEV + temporal</td><td>BEVDet4D, SOLOFusion, StreamPETR <a class="ref-link" href="#ref-7">[7]</a><a class="ref-link" href="#ref-8">[8]</a></td><td>Ego-motion warp, velocity</td></tr>
+                    <tr><td>৪</td><td>LiDAR BEV</td><td>PointPillars, CenterPoint, VoxelNeXt <a class="ref-link" href="#ref-11">[11]</a><a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a></td><td>Sparse conv, voxelization, CBGS</td></tr>
+                    <tr><td>৫</td><td>Camera&ndash;LiDAR BEV fusion</td><td>BEVFusion &times;2, TransFusion, CMT <a class="ref-link" href="#ref-15">[15]</a><a class="ref-link" href="#ref-16">[16]</a><a class="ref-link" href="#ref-17">[17]</a><a class="ref-link" href="#ref-18">[18]</a></td><td>Alignment, modality balance</td></tr>
+                    <tr><td>৬</td><td>Multi-task / end-to-end BEV</td><td>UniAD, VAD <a class="ref-link" href="#ref-22">[22]</a></td><td>Task interference, planning metric</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Production-এ যেতে প্রতিটি ধাপ বেয়ে ওঠা লাগবে না &mdash; অনেক deployed stack Stage&nbsp;4-এ (LiDAR-primary) থেমে যায়, camera থাকে একটি secondary head হিসেবে &mdash; কিন্তু এগুলো ক্রমানুসারে <em>গড়া</em> উচিত যাতে প্রতিটি নতুন failure-এর ঠিক একটি সম্ভাব্য কারণ থাকে।</p>
+            </div>
+          </section>
+
+          <section id="camera">
+            <div data-lang="en">
+              <h2><span class="s-num">2</span>Camera 3D: the push / pull split</h2>
+              <p>Once you have a monocular 3D head working (Stage&nbsp;1: predict a 3D box per 2D detection, supervise with a disentangled L1 on translation / size / yaw plus a depth term), the first real fork is <strong>how camera features reach the BEV grid</strong>. Two families:</p>
+              <ul>
+                <li><strong>Push (forward projection).</strong> Predict a per-pixel depth distribution, lift each pixel into a 3D frustum, and scatter ("splat") those features into BEV voxels. LSS <a class="ref-link" href="#ref-1">[1]</a>, BEVDet <a class="ref-link" href="#ref-2">[2]</a>, and BEVDepth <a class="ref-link" href="#ref-3">[3]</a> are this lineage. The transform is explicit and geometry-faithful, but its quality is capped by the depth prediction.</li>
+                <li><strong>Pull (backward projection).</strong> Seed BEV queries at fixed grid locations, project each query into every camera, and gather image features by attention. BEVFormer <a class="ref-link" href="#ref-4">[4]</a> uses deformable spatial cross-attention; the PETR family <a class="ref-link" href="#ref-5">[5]</a> and DETR3D <a class="ref-link" href="#ref-6">[6]</a> fold 3D position into the key/value encoding so the "grid" is implicit in the queries. No explicit depth is required, but every query pays attention over all views.</li>
+              </ul>
+              <p>Practical guidance: if you will fuse with LiDAR, start with <strong>push</strong>. The splatted camera BEV feature map lands in the same tensor layout as a LiDAR BEV feature map, so Stage&nbsp;5 fusion is a concatenation-plus-conv rather than a redesign &mdash; this is precisely the design that made BEVFusion "simple" <a class="ref-link" href="#ref-15">[15]</a><a class="ref-link" href="#ref-16">[16]</a>. If you are camera-only and latency-bound, the query-based pull methods with object-centric temporal propagation (StreamPETR <a class="ref-link" href="#ref-8">[8]</a>) are currently the stronger camera-only performers, with reported nuScenes NDS in the low-60s using large backbones, versus the low-to-mid-50s for early BEVFormer configurations <a class="ref-link" href="#ref-4">[4]</a>. Treat those numbers as backbone-and-schedule dependent, not architectural constants.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">২</span>Camera 3D: push / pull বিভাজন</h2>
+              <p>একবার একটি monocular 3D head চালু হয়ে গেলে (Stage&nbsp;১: প্রতি 2D detection-এ একটি 3D box predict করুন, translation / size / yaw-এর উপর disentangled L1 এবং একটি depth term দিয়ে supervise করুন), প্রথম আসল বিভাজন হলো <strong>camera feature কীভাবে BEV grid-এ পৌঁছায়</strong>। দুটি পরিবার:</p>
+              <ul>
+                <li><strong>Push (forward projection)।</strong> per-pixel depth distribution predict করুন, প্রতিটি pixel-কে একটি 3D frustum-এ lift করুন, এবং সেই feature-গুলো BEV voxel-এ scatter ("splat") করুন। LSS <a class="ref-link" href="#ref-1">[1]</a>, BEVDet <a class="ref-link" href="#ref-2">[2]</a>, ও BEVDepth <a class="ref-link" href="#ref-3">[3]</a> এই ধারার। transform-টি explicit ও geometry-বিশ্বস্ত, কিন্তু এর মান depth prediction দিয়ে সীমাবদ্ধ।</li>
+                <li><strong>Pull (backward projection)।</strong> নির্দিষ্ট grid অবস্থানে BEV query বসান, প্রতিটি query-কে প্রতিটি camera-তে project করুন, এবং attention দিয়ে image feature সংগ্রহ করুন। BEVFormer <a class="ref-link" href="#ref-4">[4]</a> deformable spatial cross-attention ব্যবহার করে; PETR পরিবার <a class="ref-link" href="#ref-5">[5]</a> ও DETR3D <a class="ref-link" href="#ref-6">[6]</a> 3D position-কে key/value encoding-এ ভাঁজ করে দেয়, ফলে "grid" query-র মধ্যেই অন্তর্নিহিত। explicit depth লাগে না, কিন্তু প্রতিটি query সব view-এর উপর attention দেয়।</li>
+              </ul>
+              <p>ব্যবহারিক পরামর্শ: LiDAR-এর সঙ্গে fuse করবেন বলে ঠিক থাকলে <strong>push</strong> দিয়ে শুরু করুন। splat-করা camera BEV feature map ঠিক একই tensor layout-এ আসে যেমন LiDAR BEV feature map, তাই Stage&nbsp;৫ fusion একটা redesign নয়, বরং concatenation-plus-conv &mdash; ঠিক এই ডিজ়াইনই BEVFusion-কে "simple" করে তুলেছিল <a class="ref-link" href="#ref-15">[15]</a><a class="ref-link" href="#ref-16">[16]</a>। camera-only এবং latency-বাধ্য হলে, object-centric temporal propagation সহ query-ভিত্তিক pull পদ্ধতি (StreamPETR <a class="ref-link" href="#ref-8">[8]</a>) এখন শক্তিশালী camera-only performer, বড় backbone-এ রিপোর্ট-করা nuScenes NDS low-60s-এ, যেখানে প্রথম দিকের BEVFormer configuration low-to-mid-50s-এ <a class="ref-link" href="#ref-4">[4]</a>। এই সংখ্যাগুলোকে backbone-ও-schedule নির্ভর ধরুন, architectural ধ্রুবক নয়।</p>
+            </div>
+          </section>
+
+          <section id="lift">
+            <div data-lang="en">
+              <h2><span class="s-num">3</span>The view transform is the crux &mdash; and the bottleneck</h2>
+              <p>The push transform deserves its own section because it is where most of the compute, most of the memory, and a surprising fraction of the bugs live. Concretely: an image backbone produces a feature map <span class="eq">F &isin; &#8477;<sup>H&times;W&times;C</sup></span>. For each pixel <span class="eq">p</span> the model also predicts a categorical depth distribution <span class="eq">&alpha;(p) &isin; &#8477;<sup>|D|</sup></span> over a set of discrete depth bins <span class="eq">D</span> (e.g. 1&ndash;60&nbsp;m in 0.5&nbsp;m steps). The lifted frustum feature at pixel <span class="eq">p</span> and depth bin <span class="eq">d</span> is the outer product</p>
+              <div class="eq-block">
+                G(p, d) = &alpha;<sub>d</sub>(p) &middot; F(p) &nbsp;&isin;&nbsp; &#8477;<sup>C</sup>,
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>so the full frustum tensor is <span class="eq">N&times;|D|&times;H&times;W&times;C</span> for <span class="eq">N</span> cameras. Each frustum cell has a known 3D position from the camera intrinsics <span class="eq">K</span> and the camera&#8594;ego extrinsics <span class="eq">[R | t]</span>; you bin those positions into the BEV grid and sum-pool the features that fall in each cell. That pooling step, done naively, materializes the giant 5D tensor and is the throughput killer. <strong>BEVPool / BEVPoolv2</strong> <a class="ref-link" href="#ref-9">[9]</a> replaces it with a precomputed, sorted index and a custom cumulative-sum kernel, cutting the view transform from tens of milliseconds to about one, and removing the need to store <span class="eq">G</span> explicitly. Use it from the start; do not hand-roll voxel pooling in Python.</p>
+              <div class="w-note">
+                <b>Depth supervision</b>
+                <p>BEVDepth's core finding <a class="ref-link" href="#ref-3">[3]</a> is that the implicitly-learned depth in vanilla LSS is poor &mdash; the network minimizes detection loss without ever getting geometry right &mdash; and that projecting LiDAR points into the image to supervise <span class="eq">&alpha;(p)</span> directly is worth several NDS points. If you have LiDAR at training time (you do, if you are heading for fusion), add this auxiliary loss even for the camera-only rung. Watch for the classic bug: image augmentations (resize, crop, flip) must be applied to the LiDAR-derived depth map and reflected in the intrinsics, or the supervision is spatially wrong.</p>
+              </div>
+              <h3>BEV grid choices you are committing to</h3>
+              <p>Range, resolution, and z-handling are hard to change later because the head, the losses, and the fusion module all bake in the grid. On nuScenes, a <span class="eq">[-51.2, 51.2]</span>&nbsp;m grid at 0.8&nbsp;m (128&times;128) or 0.4&nbsp;m (256&times;256) resolution is standard; 0.4&nbsp;m roughly doubles BEV-encoder cost for a modest recall gain on small objects. Most stacks collapse height into channels (a 2D BEV map) rather than keeping a full 3D voxel grid; keep 3D only if you also want occupancy. Decide once, write it in a config, and never let it drift between the camera and LiDAR branches &mdash; a grid mismatch there produces a model that trains to a mediocre plateau with no error.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৩</span>View transform-ই মূল বিষয় &mdash; এবং bottleneck</h2>
+              <p>push transform-এর জন্য আলাদা section প্রাপ্য, কারণ এখানেই বেশিরভাগ compute, বেশিরভাগ memory, এবং অবাক করা পরিমাণ bug থাকে। সুনির্দিষ্টভাবে: একটি image backbone একটি feature map <span class="eq">F &isin; &#8477;<sup>H&times;W&times;C</sup></span> তৈরি করে। প্রতিটি pixel <span class="eq">p</span>-এর জন্য মডেল একগুচ্ছ discrete depth bin <span class="eq">D</span>-এর (যেমন ১&ndash;৬০&nbsp;মি, ০.৫&nbsp;মি ধাপে) উপর একটি categorical depth distribution <span class="eq">&alpha;(p) &isin; &#8477;<sup>|D|</sup></span>-ও predict করে। pixel <span class="eq">p</span> ও depth bin <span class="eq">d</span>-তে lift-করা frustum feature হলো outer product</p>
+              <div class="eq-block">
+                G(p, d) = &alpha;<sub>d</sub>(p) &middot; F(p) &nbsp;&isin;&nbsp; &#8477;<sup>C</sup>,
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>ফলে <span class="eq">N</span> camera-র জন্য পূর্ণ frustum tensor হয় <span class="eq">N&times;|D|&times;H&times;W&times;C</span>। প্রতিটি frustum cell-এর একটি জানা 3D position আছে camera intrinsics <span class="eq">K</span> ও camera&#8594;ego extrinsics <span class="eq">[R | t]</span> থেকে; ওই position-গুলোকে BEV grid-এ bin করে প্রতিটি cell-এ পড়া feature sum-pool করুন। সেই pooling ধাপ naively করলে বিশাল 5D tensor বানিয়ে ফেলে এবং throughput-এর ঘাতক। <strong>BEVPool / BEVPoolv2</strong> <a class="ref-link" href="#ref-9">[9]</a> এটিকে একটি precomputed, sorted index ও একটি custom cumulative-sum kernel দিয়ে বদলে দেয়, view transform-কে কয়েক দশ মিলিসেকেন্ড থেকে প্রায় এক-এ নামিয়ে আনে, এবং <span class="eq">G</span>-কে explicitly রাখার দরকার মিটিয়ে দেয়। শুরু থেকেই এটি ব্যবহার করুন; Python-এ হাতে voxel pooling লিখবেন না।</p>
+              <div class="w-note">
+                <b>Depth supervision</b>
+                <p>BEVDepth-এর মূল আবিষ্কার <a class="ref-link" href="#ref-3">[3]</a> হলো vanilla LSS-এ implicitly-শেখা depth দুর্বল &mdash; network geometry ঠিক না করেই detection loss কমায় &mdash; এবং <span class="eq">&alpha;(p)</span>-কে সরাসরি supervise করতে image-এ LiDAR point project করা কয়েক NDS point-এর সমান মূল্যবান। training-এর সময় LiDAR থাকলে (fusion-এর দিকে গেলে থাকবেই), camera-only ধাপেও এই auxiliary loss যোগ করুন। ক্লাসিক bug-টা খেয়াল রাখুন: image augmentation (resize, crop, flip) LiDAR-derived depth map-এও প্রয়োগ করতে হবে এবং intrinsics-এ প্রতিফলিত হতে হবে, নয়তো supervision স্থানিকভাবে ভুল।</p>
+              </div>
+              <h3>যেসব BEV grid পছন্দে আপনি আবদ্ধ হচ্ছেন</h3>
+              <p>Range, resolution, ও z-handling পরে বদলানো কঠিন, কারণ head, loss, ও fusion module সবই grid-কে ভেতরে গেঁথে নেয়। nuScenes-এ <span class="eq">[-51.2, 51.2]</span>&nbsp;মি grid, 0.8&nbsp;মি (128&times;128) বা 0.4&nbsp;মি (256&times;256) resolution-এ, স্ট্যান্ডার্ড; 0.4&nbsp;মি ছোট object-এ সামান্য recall লাভের জন্য BEV-encoder খরচ মোটামুটি দ্বিগুণ করে। বেশিরভাগ stack পূর্ণ 3D voxel grid না রেখে height-কে channel-এ মিশিয়ে দেয় (একটি 2D BEV map); occupancy-ও চাইলে তবেই 3D রাখুন। একবার ঠিক করুন, একটি config-এ লিখুন, এবং camera ও LiDAR branch-এর মধ্যে কখনো drift করতে দেবেন না &mdash; সেখানে grid mismatch এমন একটি মডেল দেয় যা কোনো error ছাড়াই একটি মাঝারি plateau-তে train করে।</p>
+            </div>
+          </section>
+
+          <section id="lidar">
+            <div data-lang="en">
+              <h2><span class="s-num">4</span>The LiDAR BEV backbone</h2>
+              <p>This rung is the most standardized and the least likely to surprise you. The pipeline is: voxelize the point cloud (or pillarize it), run a sparse 3D convolutional backbone (SECOND-style <a class="ref-link" href="#ref-12">[12]</a>), flatten the last stage to BEV, run a 2D BEV encoder, and attach a center-based head (CenterPoint <a class="ref-link" href="#ref-13">[13]</a>). PointPillars <a class="ref-link" href="#ref-11">[11]</a> trades a little accuracy for a pure-2D-conv backbone that exports cleanly. VoxelNeXt <a class="ref-link" href="#ref-14">[14]</a> drops the dense BEV stage entirely for a fully sparse head, which matters for long-range grids.</p>
+              <p>Three things to get right here:</p>
+              <ul>
+                <li><strong>Sweep aggregation.</strong> nuScenes convention is to accumulate ~10 past LiDAR sweeps into the current keyframe, each transformed by relative ego pose and tagged with a time-delta channel. Get the pose chain wrong &mdash; wrong reference frame, or forgetting that sweeps and samples have different timestamps &mdash; and moving objects smear into comet tails that the network learns to ignore.</li>
+                <li><strong>Class-balanced sampling (CBGS).</strong> nuScenes is dominated by cars; without CBGS <a class="ref-link" href="#ref-20">[20]</a> the rare classes (bicycle, construction vehicle) barely train. CBGS resamples the dataset to flatten the class histogram. It roughly doubles epoch length and can mildly hurt car AP, so report both with and without it.</li>
+                <li><strong>GT-paste augmentation.</strong> Copy ground-truth object point clusters from other frames into the current one. Essential for LiDAR, but see the fusion section &mdash; it becomes a liability the moment cameras enter.</li>
+              </ul>
+              <p>A CenterPoint-style LiDAR-only model on nuScenes <a class="ref-link" href="#ref-21">[21]</a> should reach roughly the mid-60s NDS on val. If yours is well below that, the bug is upstream of anything clever &mdash; check voxel ranges, sweep poses, and that the eval is using the same class map as training.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৪</span>LiDAR BEV backbone</h2>
+              <p>এই ধাপ সবচেয়ে standardized এবং আপনাকে অবাক করার সম্ভাবনা সবচেয়ে কম। pipeline হলো: point cloud voxelize করুন (বা pillarize করুন), একটি sparse 3D convolutional backbone চালান (SECOND-ধাঁচের <a class="ref-link" href="#ref-12">[12]</a>), শেষ stage-কে BEV-তে flatten করুন, একটি 2D BEV encoder চালান, এবং একটি center-based head লাগান (CenterPoint <a class="ref-link" href="#ref-13">[13]</a>)। PointPillars <a class="ref-link" href="#ref-11">[11]</a> সামান্য accuracy ছেড়ে দিয়ে একটি pure-2D-conv backbone দেয় যা পরিষ্কারভাবে export হয়। VoxelNeXt <a class="ref-link" href="#ref-14">[14]</a> dense BEV stage পুরোপুরি বাদ দিয়ে একটি fully sparse head নেয়, যা long-range grid-এ গুরুত্বপূর্ণ।</p>
+              <p>এখানে তিনটি জিনিস ঠিক করতে হবে:</p>
+              <ul>
+                <li><strong>Sweep aggregation।</strong> nuScenes প্রথা হলো বর্তমান keyframe-এ ~১০টি অতীত LiDAR sweep জমা করা, প্রতিটি relative ego pose দিয়ে transform করা এবং একটি time-delta channel দিয়ে ট্যাগ করা। pose chain ভুল করুন &mdash; ভুল reference frame, বা sweep ও sample-এর timestamp আলাদা তা ভুলে যাওয়া &mdash; আর চলমান object ধূমকেতুর লেজের মতো ছড়িয়ে যায়, যা network উপেক্ষা করতে শেখে।</li>
+                <li><strong>Class-balanced sampling (CBGS)।</strong> nuScenes-এ গাড়ির আধিপত্য; CBGS <a class="ref-link" href="#ref-20">[20]</a> ছাড়া বিরল class (bicycle, construction vehicle) কার্যত train-ই হয় না। CBGS dataset-কে resample করে class histogram সমান করে। এটি epoch দৈর্ঘ্য মোটামুটি দ্বিগুণ করে এবং car AP সামান্য কমাতে পারে, তাই সহ ও ছাড়া &mdash; দুটোই রিপোর্ট করুন।</li>
+                <li><strong>GT-paste augmentation।</strong> অন্য frame থেকে ground-truth object point cluster বর্তমান frame-এ কপি করুন। LiDAR-এর জন্য অপরিহার্য, কিন্তু fusion section দেখুন &mdash; camera ঢোকার সঙ্গে সঙ্গেই এটি দায় হয়ে দাঁড়ায়।</li>
+              </ul>
+              <p>nuScenes-এ <a class="ref-link" href="#ref-21">[21]</a> একটি CenterPoint-ধাঁচের LiDAR-only মডেলের val-এ মোটামুটি mid-60s NDS পাওয়া উচিত। আপনারটা এর অনেক নিচে হলে bug-টা যেকোনো চালাকির আগেই &mdash; voxel range, sweep pose, এবং eval training-এর মতো একই class map ব্যবহার করছে কিনা তা দেখুন।</p>
+            </div>
+          </section>
+
+          <section id="fusion">
+            <div data-lang="en">
+              <h2><span class="s-num">5</span>Fusion in BEV</h2>
+              <p>With a camera BEV feature map and a LiDAR BEV feature map on the same grid, the simplest fusion &mdash; concatenate along channels, run a few conv layers, attach one shared head &mdash; already works and is essentially the MIT BEVFusion recipe <a class="ref-link" href="#ref-15">[15]</a>. Reported fusion numbers on nuScenes cluster in the low-70s NDS on the test benchmark, versus the mid-60s for the LiDAR-only baseline; the camera contribution is largest on orientation, on small or distant objects, and on classes LiDAR under-resolves. The parallel NeurIPS&nbsp;2022 BEVFusion <a class="ref-link" href="#ref-16">[16]</a> emphasizes robustness: because the two streams are independent until the BEV join, the model degrades gracefully when one sensor drops out.</p>
+              <p>Beyond simple concatenation:</p>
+              <ul>
+                <li><strong>Query-level fusion.</strong> TransFusion <a class="ref-link" href="#ref-17">[17]</a> runs a LiDAR-based transformer decoder to propose boxes, then a second decoder layer that <em>softly</em> attends from each object query to image features. The soft association is deliberately robust to calibration error &mdash; there is no hard point-to-pixel projection that a few centimeters of extrinsic drift can break.</li>
+                <li><strong>Unified tokens.</strong> CMT <a class="ref-link" href="#ref-18">[18]</a> encodes 3D position into both image and point tokens and lets object queries attend over the concatenated set, with no explicit view transform at all. Reported test NDS in the low-to-mid-70s.</li>
+                <li><strong>Bidirectional interaction.</strong> DeepInteraction <a class="ref-link" href="#ref-19">[19]</a> keeps both a BEV and an image representation to the end and exchanges information between them in both directions, on the argument that flattening to BEV discards image detail that a per-view branch retains.</li>
+              </ul>
+              <div class="w-note">
+                <b>The multimodal GT-paste trap</b>
+                <p>LiDAR GT-paste inserts point clusters with no corresponding image pixels. Train a fusion model with naive GT-paste and the camera branch learns that "points with no image evidence are still objects" &mdash; it discounts the image. Fixes: paste consistently into both modalities (render or copy the matching image patch), or disable GT-paste for pasted instances in the camera branch, or use it only in a LiDAR pre-training phase and turn it off during joint fine-tuning. Several fusion papers quietly depend on getting this right.</p>
+              </div>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৫</span>BEV-তে fusion</h2>
+              <p>একই grid-এ একটি camera BEV feature map ও একটি LiDAR BEV feature map থাকলে, সরলতম fusion &mdash; channel-জুড়ে concatenate, কয়েকটি conv layer, একটি shared head &mdash; এমনিতেই কাজ করে এবং মূলত MIT BEVFusion recipe <a class="ref-link" href="#ref-15">[15]</a>। nuScenes-এ রিপোর্ট-করা fusion সংখ্যা test benchmark-এ low-70s NDS-এ জড়ো, যেখানে LiDAR-only baseline mid-60s-এ; camera-র অবদান সবচেয়ে বেশি orientation-এ, ছোট বা দূরের object-এ, এবং যেসব class LiDAR ভালোভাবে resolve করে না তাতে। সমান্তরাল NeurIPS&nbsp;2022 BEVFusion <a class="ref-link" href="#ref-16">[16]</a> robustness-এ জোর দেয়: যেহেতু BEV-তে মেলার আগ পর্যন্ত দুটি stream স্বাধীন, একটি sensor বাদ পড়লে মডেল gracefully দুর্বল হয়।</p>
+              <p>সরল concatenation-এর বাইরে:</p>
+              <ul>
+                <li><strong>Query-level fusion।</strong> TransFusion <a class="ref-link" href="#ref-17">[17]</a> box প্রস্তাব করতে একটি LiDAR-ভিত্তিক transformer decoder চালায়, তারপর একটি দ্বিতীয় decoder layer যা প্রতিটি object query থেকে image feature-এ <em>softly</em> attend করে। soft association ইচ্ছাকৃতভাবে calibration ত্রুটির প্রতি robust &mdash; কয়েক সেন্টিমিটার extrinsic drift ভাঙতে পারে এমন কোনো hard point-to-pixel projection নেই।</li>
+                <li><strong>Unified token।</strong> CMT <a class="ref-link" href="#ref-18">[18]</a> image ও point দুই ধরনের token-এই 3D position encode করে এবং object query-কে concatenated set-এর উপর attend করতে দেয়, কোনো explicit view transform ছাড়াই। রিপোর্ট-করা test NDS low-to-mid-70s-এ।</li>
+                <li><strong>Bidirectional interaction।</strong> DeepInteraction <a class="ref-link" href="#ref-19">[19]</a> শেষ পর্যন্ত BEV ও image দুটি representation-ই রাখে এবং দুই দিকেই তাদের মধ্যে তথ্য বিনিময় করে, এই যুক্তিতে যে BEV-তে flatten করলে এমন image detail হারায় যা একটি per-view branch ধরে রাখে।</li>
+              </ul>
+              <div class="w-note">
+                <b>Multimodal GT-paste ফাঁদ</b>
+                <p>LiDAR GT-paste এমন point cluster ঢোকায় যার সঙ্গে মেলানো image pixel নেই। naive GT-paste দিয়ে fusion মডেল train করুন, camera branch শেখে যে "image প্রমাণহীন point-ও object" &mdash; এটি image-কে কম গুরুত্ব দেয়। সমাধান: দুই modality-তেই সঙ্গতভাবে paste করুন (মেলানো image patch render বা copy করুন), অথবা camera branch-এ paste-করা instance-এর জন্য GT-paste নিষ্ক্রিয় করুন, অথবা কেবল একটি LiDAR pre-training পর্বে ব্যবহার করে joint fine-tuning-এ বন্ধ করে দিন। বেশ কয়েকটি fusion paper নীরবে এটা ঠিক করার উপর নির্ভর করে।</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="blueprint">
+            <div data-lang="en">
+              <h2><span class="s-num">6</span>A reference architecture blueprint</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>A concrete, known-good configuration to target for a nuScenes camera&ndash;LiDAR fusion baseline. Swap components once the baseline reproduces.</caption>
+                  <thead><tr><th>Block</th><th>Choice</th><th>Notes</th></tr></thead>
+                  <tbody>
+                    <tr><td>Image backbone</td><td>ResNet-50 / Swin-T</td><td>Input 256&times;704; FPN neck; init from a 2D-detection checkpoint</td></tr>
+                    <tr><td>View transform</td><td>LSS + BEVPoolv2</td><td>Depth bins 1&ndash;60&nbsp;m &times;0.5&nbsp;m; LiDAR depth supervision on</td></tr>
+                    <tr><td>LiDAR backbone</td><td>VoxelNet / SECOND sparse conv</td><td>Voxel 0.075&nbsp;m; ~10 sweeps; range &plusmn;54&nbsp;m</td></tr>
+                    <tr><td>BEV grid</td><td>&plusmn;51.2&nbsp;m @ 0.4&nbsp;m (256&sup2;)</td><td>Identical for both branches</td></tr>
+                    <tr><td>Fusion</td><td>Concat + 3&times; conv block</td><td>Upgrade to query fusion after baseline matches</td></tr>
+                    <tr><td>BEV encoder</td><td>2&times; ResNet BEV blocks</td><td>Shared post-fusion</td></tr>
+                    <tr><td>Head</td><td>CenterPoint (center + regression + IoU)</td><td>Or transformer decoder head</td></tr>
+                    <tr><td>Temporal</td><td>Deferred to Stage&nbsp;3</td><td>Add BEV warp + concat of previous BEV</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৬</span>একটি রেফারেন্স architecture ব্লুপ্রিন্ট</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>একটি nuScenes camera&ndash;LiDAR fusion baseline-এর জন্য লক্ষ্য করার মতো একটি সুনির্দিষ্ট, পরিচিত-ভালো configuration। baseline reproduce হলে তবেই component বদলান।</caption>
+                  <thead><tr><th>Block</th><th>পছন্দ</th><th>নোট</th></tr></thead>
+                  <tbody>
+                    <tr><td>Image backbone</td><td>ResNet-50 / Swin-T</td><td>Input 256&times;704; FPN neck; একটি 2D-detection checkpoint থেকে init</td></tr>
+                    <tr><td>View transform</td><td>LSS + BEVPoolv2</td><td>Depth bin 1&ndash;60&nbsp;মি &times;0.5&nbsp;মি; LiDAR depth supervision চালু</td></tr>
+                    <tr><td>LiDAR backbone</td><td>VoxelNet / SECOND sparse conv</td><td>Voxel 0.075&nbsp;মি; ~10 sweep; range &plusmn;54&nbsp;মি</td></tr>
+                    <tr><td>BEV grid</td><td>&plusmn;51.2&nbsp;মি @ 0.4&nbsp;মি (256&sup2;)</td><td>দুই branch-এ অভিন্ন</td></tr>
+                    <tr><td>Fusion</td><td>Concat + 3&times; conv block</td><td>baseline মিললে query fusion-এ upgrade</td></tr>
+                    <tr><td>BEV encoder</td><td>2&times; ResNet BEV block</td><td>fusion-পরবর্তী shared</td></tr>
+                    <tr><td>Head</td><td>CenterPoint (center + regression + IoU)</td><td>অথবা transformer decoder head</td></tr>
+                    <tr><td>Temporal</td><td>Stage&nbsp;3-এ স্থগিত</td><td>BEV warp + আগের BEV-র concat যোগ করুন</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="data">
+            <div data-lang="en">
+              <h2><span class="s-num">7</span>Data pipeline and coordinate frames</h2>
+              <p>More BEV bugs are coordinate-frame bugs than architecture bugs. Enumerate the frames explicitly and pick one canonical target:</p>
+              <ul>
+                <li><strong>Sensor frames</strong> &mdash; one per camera, one per LiDAR, each with calibrated intrinsics and a sensor&#8594;ego transform.</li>
+                <li><strong>Ego frame</strong> at the sample timestamp &mdash; the usual canonical frame for the BEV grid.</li>
+                <li><strong>Global frame</strong> &mdash; needed to compose sweeps and past frames via ego pose.</li>
+              </ul>
+              <p>The nuScenes devkit distinguishes <em>samples</em> (annotated keyframes at 2&nbsp;Hz) from <em>sweeps</em> (unannotated intermediate sensor data). Every sweep-to-keyframe transform is the chain <span class="eq">T<sub>ego&#8592;sensor</sub></span> then <span class="eq">T<sub>global&#8592;ego(sweep)</sub></span> then <span class="eq">T<sub>ego(key)&#8592;global</sub></span>. Write one tested utility for this chain and route every transform through it. Cross-check by projecting an accumulated point cloud back into a camera and overlaying it on the image &mdash; static structure should be pixel-tight; if it lags on moving cars only, your time handling is off; if everything is offset, your extrinsics or reference frame is off.</p>
+              <p>Also: whatever image augmentation you apply (random resize, crop, flip, rotate) must be recorded as a 3&times;3 transform and composed into <span class="eq">K</span> so the view transform stays consistent. This single omission silently caps camera-branch quality and is the most common "my BEVDet is 4 NDS low" cause.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৭</span>Data pipeline ও coordinate frame</h2>
+              <p>architecture bug-এর চেয়ে coordinate-frame bug-ই BEV-তে বেশি। frame-গুলো স্পষ্টভাবে তালিকাভুক্ত করুন এবং একটি canonical target বেছে নিন:</p>
+              <ul>
+                <li><strong>Sensor frame</strong> &mdash; প্রতি camera-য় একটি, প্রতি LiDAR-এ একটি, প্রতিটির calibrated intrinsics ও একটি sensor&#8594;ego transform সহ।</li>
+                <li><strong>Ego frame</strong> sample timestamp-এ &mdash; BEV grid-এর জন্য সাধারণ canonical frame।</li>
+                <li><strong>Global frame</strong> &mdash; ego pose দিয়ে sweep ও অতীত frame জোড়ার জন্য দরকার।</li>
+              </ul>
+              <p>nuScenes devkit <em>samples</em> (২&nbsp;Hz-এ annotated keyframe) আর <em>sweeps</em> (unannotated মধ্যবর্তী sensor data) আলাদা করে। প্রতিটি sweep-to-keyframe transform হলো চেইন <span class="eq">T<sub>ego&#8592;sensor</sub></span> তারপর <span class="eq">T<sub>global&#8592;ego(sweep)</sub></span> তারপর <span class="eq">T<sub>ego(key)&#8592;global</sub></span>। এই চেইনের জন্য একটি পরীক্ষিত utility লিখুন এবং প্রতিটি transform সেটির মধ্য দিয়ে চালান। একটি জমা-করা point cloud আবার একটি camera-তে project করে image-এর উপর overlay করে ক্রস-চেক করুন &mdash; static structure pixel-টাইট হওয়া উচিত; কেবল চলমান গাড়িতে পিছিয়ে থাকলে আপনার time handling ভুল; সব কিছু offset হলে আপনার extrinsics বা reference frame ভুল।</p>
+              <p>এছাড়া: যে image augmentation-ই প্রয়োগ করুন (random resize, crop, flip, rotate) তা একটি 3&times;3 transform হিসেবে রেকর্ড করে <span class="eq">K</span>-এর সঙ্গে compose করতে হবে যাতে view transform সঙ্গতিপূর্ণ থাকে। এই একটিমাত্র বাদ পড়া নীরবে camera-branch-এর মান সীমিত করে এবং "আমার BEVDet ৪ NDS কম" &mdash; এর সবচেয়ে সাধারণ কারণ।</p>
+            </div>
+          </section>
+
+          <section id="training">
+            <div data-lang="en">
+              <h2><span class="s-num">8</span>Training recipe</h2>
+              <ul>
+                <li><strong>Staged, not joint from scratch.</strong> Pre-train the LiDAR branch to convergence. Add and train the camera branch + view transform with the LiDAR branch frozen or low-LR. Then unfreeze for a short joint fine-tune. Training everything jointly from random init usually underperforms and always debugs worse.</li>
+                <li><strong>Augmentation, per branch.</strong> BEV-space augmentation (global rotate / scale / translate / flip) applied consistently to points, boxes, <em>and</em> the camera-to-BEV geometry; image-space augmentation composed into intrinsics as above; GT-paste with the multimodal caveat from &sect;5.</li>
+                <li><strong>Schedule.</strong> ~20 epochs with CBGS is a common nuScenes setting; AdamW, one-cycle LR ~2e-4, weight decay 0.01, grad clip. EMA of weights is worth ~0.5&ndash;1 NDS and is nearly free.</li>
+                <li><strong>Losses.</strong> Gaussian focal loss on the center heatmap, L1 on box regression, optional IoU-aware term, plus the depth cross-entropy. Keep loss weights in the config; a mis-scaled depth loss quietly dominates or vanishes.</li>
+                <li><strong>Precision and memory.</strong> FP16 everywhere except voxelization and the pooling kernel; gradient checkpointing on the image backbone; the frustum tensor is the memory spike if BEVPool is not doing its job.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৮</span>Training recipe</h2>
+              <ul>
+                <li><strong>Staged, scratch থেকে joint নয়।</strong> LiDAR branch-কে convergence পর্যন্ত pre-train করুন। LiDAR branch frozen বা low-LR রেখে camera branch + view transform যোগ করে train করুন। তারপর একটি সংক্ষিপ্ত joint fine-tune-এর জন্য unfreeze করুন। random init থেকে সব কিছু একসঙ্গে train করলে সাধারণত খারাপ ফল দেয় এবং সবসময় debug করা কঠিন।</li>
+                <li><strong>Augmentation, branch-ভিত্তিক।</strong> BEV-space augmentation (global rotate / scale / translate / flip) point, box, <em>এবং</em> camera-to-BEV geometry-তে সঙ্গতভাবে প্রয়োগ; image-space augmentation উপরের মতো intrinsics-এ compose করা; &sect;৫-এর multimodal সতর্কতা সহ GT-paste।</li>
+                <li><strong>Schedule.</strong> CBGS সহ ~২০ epoch একটি সাধারণ nuScenes setting; AdamW, one-cycle LR ~2e-4, weight decay 0.01, grad clip। weight-এর EMA ~০.৫&ndash;১ NDS-এর সমান মূল্যবান এবং প্রায় বিনামূল্যে।</li>
+                <li><strong>Loss.</strong> center heatmap-এ Gaussian focal loss, box regression-এ L1, ঐচ্ছিক IoU-aware term, সঙ্গে depth cross-entropy। loss weight config-এ রাখুন; ভুল-scale করা depth loss নীরবে হয় প্রাধান্য নেয় নয় মিলিয়ে যায়।</li>
+                <li><strong>Precision ও memory.</strong> voxelization ও pooling kernel বাদে সর্বত্র FP16; image backbone-এ gradient checkpointing; BEVPool ঠিকমতো কাজ না করলে frustum tensor-ই memory spike।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="deploy">
+            <div data-lang="en">
+              <h2><span class="s-num">9</span>Deployment and the latency budget</h2>
+              <p>The two components that do not export cleanly to TensorRT/ONNX are <strong>sparse convolution</strong> (custom ops, layout-sensitive, version-fragile) and <strong>voxel pooling</strong> (the BEVPool scatter/cumsum). Both have plugin implementations, but plan for a week of integration and numerical-parity checking against the PyTorch reference. Budget the pipeline roughly as: image backbone 30&ndash;45%, view transform 5&ndash;10% (with BEVPoolv2; 40%+ without), LiDAR backbone 15&ndash;25%, BEV encoder + fusion 15%, head + NMS 5&ndash;10%. If you are over budget, the image backbone and input resolution are the first knobs; halving BEV resolution is the second; the view transform is <em>not</em> the place to cut once BEVPoolv2 is in.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৯</span>Deployment ও latency budget</h2>
+              <p>যে দুটি component TensorRT/ONNX-এ পরিষ্কারভাবে export হয় না সেগুলো হলো <strong>sparse convolution</strong> (custom op, layout-সংবেদনশীল, version-ভঙ্গুর) এবং <strong>voxel pooling</strong> (BEVPool scatter/cumsum)। দুটোরই plugin implementation আছে, কিন্তু PyTorch reference-এর সঙ্গে integration ও numerical-parity যাচাইয়ের জন্য এক সপ্তাহ ধরে রাখুন। pipeline মোটামুটি এভাবে ভাগ করুন: image backbone ৩০&ndash;৪৫%, view transform ৫&ndash;১০% (BEVPoolv2 সহ; ছাড়া ৪০%+), LiDAR backbone ১৫&ndash;২৫%, BEV encoder + fusion ১৫%, head + NMS ৫&ndash;১০%। budget ছাড়িয়ে গেলে image backbone ও input resolution প্রথম knob; BEV resolution অর্ধেক করা দ্বিতীয়; BEVPoolv2 বসে গেলে view transform কাটার জায়গা <em>নয়</em>।</p>
+            </div>
+          </section>
+
+          <section id="milestones">
+            <div data-lang="en">
+              <h2><span class="s-num">10</span>Milestones and sanity checks</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Rough nuScenes val NDS you should see at each rung with a ResNet-50-class image backbone and standard schedule. Numbers are orientation, not targets &mdash; exact values depend heavily on backbone, resolution, sweeps, and TTA. See the benchmarking writeup for why.</caption>
+                  <thead><tr><th>Rung</th><th>Model</th><th class="num">val NDS (approx.)</th><th>If far below, check</th></tr></thead>
+                  <tbody>
+                    <tr><td>1</td><td>Monocular / multi-view 3D</td><td class="num">0.37&ndash;0.42</td><td>Box loss disentanglement, yaw convention</td></tr>
+                    <tr><td>2</td><td>Camera BEV, single frame</td><td class="num">0.40&ndash;0.45</td><td>Intrinsics after aug, depth supervision</td></tr>
+                    <tr><td>3</td><td>Camera BEV + temporal</td><td class="num">0.47&ndash;0.55</td><td>BEV warp direction, velocity sign</td></tr>
+                    <tr><td>4</td><td>LiDAR-only (CenterPoint-class)</td><td class="num">0.64&ndash;0.67</td><td>Sweep poses, voxel range, CBGS class map</td></tr>
+                    <tr><td>5</td><td>Camera&ndash;LiDAR fusion (concat)</td><td class="num">0.69&ndash;0.72</td><td>Grid match, multimodal GT-paste</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Sanity checks that catch most silent failures: (a) overfit a single scene to near-zero loss before any full run; (b) confirm the eval class map equals the train class map; (c) visualize predictions in BEV <em>and</em> reprojected into the image; (d) drop each modality at inference and confirm the score changes in the expected direction and magnitude &mdash; if removing the camera barely moves the score, the camera branch is dead weight and something in &sect;3 or &sect;5 is wrong.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১০</span>মাইলফলক ও sanity check</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>একটি ResNet-50-শ্রেণির image backbone ও স্ট্যান্ডার্ড schedule দিয়ে প্রতিটি ধাপে যে আনুমানিক nuScenes val NDS দেখা উচিত। সংখ্যাগুলো দিকনির্দেশ, target নয় &mdash; সঠিক মান অনেকটাই backbone, resolution, sweep, ও TTA-র উপর নির্ভর করে। কেন &mdash; benchmarking রাইটআপ দেখুন।</caption>
+                  <thead><tr><th>ধাপ</th><th>মডেল</th><th class="num">val NDS (আনু.)</th><th>অনেক নিচে হলে দেখুন</th></tr></thead>
+                  <tbody>
+                    <tr><td>১</td><td>Monocular / multi-view 3D</td><td class="num">0.37&ndash;0.42</td><td>Box loss disentanglement, yaw convention</td></tr>
+                    <tr><td>২</td><td>Camera BEV, single frame</td><td class="num">0.40&ndash;0.45</td><td>aug-পরবর্তী intrinsics, depth supervision</td></tr>
+                    <tr><td>৩</td><td>Camera BEV + temporal</td><td class="num">0.47&ndash;0.55</td><td>BEV warp দিক, velocity চিহ্ন</td></tr>
+                    <tr><td>৪</td><td>LiDAR-only (CenterPoint-শ্রেণি)</td><td class="num">0.64&ndash;0.67</td><td>Sweep pose, voxel range, CBGS class map</td></tr>
+                    <tr><td>৫</td><td>Camera&ndash;LiDAR fusion (concat)</td><td class="num">0.69&ndash;0.72</td><td>Grid match, multimodal GT-paste</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>বেশিরভাগ নীরব failure ধরার sanity check: (ক) যেকোনো পূর্ণ run-এর আগে একটি single scene-কে near-zero loss পর্যন্ত overfit করুন; (খ) eval class map train class map-এর সমান কিনা নিশ্চিত করুন; (গ) prediction BEV-তে <em>এবং</em> image-এ reproject করে visualize করুন; (ঘ) inference-এ প্রতিটি modality বাদ দিন এবং score প্রত্যাশিত দিক ও মাত্রায় বদলায় কিনা নিশ্চিত করুন &mdash; camera সরালে score প্রায় না নড়লে camera branch অকেজো ভার এবং &sect;৩ বা &sect;৫-এ কিছু ভুল।</p>
+            </div>
+          </section>
+
+          <section id="bugs">
+            <div data-lang="en">
+              <h2><span class="s-num">11</span>The recurring bugs, in one list</h2>
+              <ul>
+                <li>Image augmentation not composed into the camera intrinsics &#8594; camera branch permanently ~3&ndash;5 NDS low.</li>
+                <li>BEV grid range/resolution mismatched between camera and LiDAR branches &#8594; trains to a plateau, no error.</li>
+                <li>Sweep-to-keyframe pose chain wrong &#8594; moving objects smear; velocity estimates biased.</li>
+                <li>Yaw convention mismatch (x-forward vs y-forward, CW vs CCW) between head, loss, and eval &#8594; orientation error near 90&deg; on half the classes.</li>
+                <li>Naive multimodal GT-paste &#8594; camera branch under-weighted; fusion barely beats LiDAR-only.</li>
+                <li>CBGS applied in training but eval done on the resampled set &#8594; inflated, non-comparable score.</li>
+                <li>Depth-supervision target not augmented alongside the image &#8594; depth head learns a warped mapping.</li>
+                <li>Val leakage via scene overlap when making a custom split &#8594; everything looks great until the test server.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১১</span>বারবার আসা bug, এক তালিকায়</h2>
+              <ul>
+                <li>Image augmentation camera intrinsics-এ compose না করা &#8594; camera branch স্থায়ীভাবে ~৩&ndash;৫ NDS কম।</li>
+                <li>camera ও LiDAR branch-এর মধ্যে BEV grid range/resolution অমিল &#8594; plateau-তে train করে, কোনো error নেই।</li>
+                <li>Sweep-to-keyframe pose chain ভুল &#8594; চলমান object ছড়ায়; velocity estimate biased।</li>
+                <li>head, loss, ও eval-এর মধ্যে yaw convention অমিল (x-forward বনাম y-forward, CW বনাম CCW) &#8594; অর্ধেক class-এ ~90&deg; orientation error।</li>
+                <li>Naive multimodal GT-paste &#8594; camera branch under-weighted; fusion কোনোমতে LiDAR-only-কে হারায়।</li>
+                <li>CBGS training-এ প্রয়োগ কিন্তু eval resampled set-এ &#8594; স্ফীত, অতুলনীয় score।</li>
+                <li>Depth-supervision target image-এর সঙ্গে augment না করা &#8594; depth head একটি বিকৃত mapping শেখে।</li>
+                <li>custom split বানানোর সময় scene overlap-এর মাধ্যমে val leakage &#8594; test server-এ যাওয়ার আগ পর্যন্ত সব দারুণ দেখায়।</li>
+              </ul>
+            </div>
+          </section>
+
+          <div class="w-key" data-lang="en">
+            <h2>Key takeaways</h2>
+            <ul>
+              <li>Build the ladder in order. Each rung is a checkpoint with a literature baseline; skipping straight to fusion removes your ability to localize faults.</li>
+              <li>If fusion is the goal, use a <strong>push</strong> (Lift-Splat) camera transform so the camera BEV map matches the LiDAR BEV map and fusion is concatenation, not redesign.</li>
+              <li>The view transform is the compute and bug hotspot: use BEVPoolv2, supervise depth from LiDAR, and compose image augmentations into the intrinsics.</li>
+              <li>Coordinate frames and multimodal GT-paste cause more lost weeks than architecture. Write one tested transform utility; handle GT-paste explicitly.</li>
+              <li>Treat published NDS figures as backbone- and schedule-dependent ranges, not constants.</li>
+            </ul>
+          </div>
+          <div class="w-key" data-lang="bn" lang="bn">
+            <h2>মূল কথা</h2>
+            <ul>
+              <li>সিঁড়িটা ক্রমানুসারে গড়ুন। প্রতিটি ধাপ একটি literature baseline সহ checkpoint; সরাসরি fusion-এ লাফালে ত্রুটি আলাদা করার ক্ষমতা হারান।</li>
+              <li>fusion-ই লক্ষ্য হলে একটি <strong>push</strong> (Lift-Splat) camera transform ব্যবহার করুন যাতে camera BEV map, LiDAR BEV map-এর সঙ্গে মেলে এবং fusion হয় concatenation, redesign নয়।</li>
+              <li>View transform-ই compute ও bug-এর কেন্দ্র: BEVPoolv2 ব্যবহার করুন, LiDAR থেকে depth supervise করুন, এবং image augmentation intrinsics-এ compose করুন।</li>
+              <li>architecture-এর চেয়ে coordinate frame ও multimodal GT-paste বেশি সপ্তাহ নষ্ট করে। একটি পরীক্ষিত transform utility লিখুন; GT-paste স্পষ্টভাবে সামলান।</li>
+              <li>প্রকাশিত NDS সংখ্যাকে backbone- ও schedule-নির্ভর পরিসর ধরুন, ধ্রুবক নয়।</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <section class="w-refs" id="refs">
+          <h2><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></h2>
+          <ol>
+            <li id="ref-1">Philion, J., Fidler, S. &ldquo;Lift, Splat, Shoot: Encoding Images from Arbitrary Camera Rigs by Implicitly Unprojecting to 3D.&rdquo; ECCV 2020. <a href="https://arxiv.org/abs/2008.05711">arXiv:2008.05711</a></li>
+            <li id="ref-2">Huang, J. et al. &ldquo;BEVDet: High-performance Multi-camera 3D Object Detection in Bird-Eye-View.&rdquo; arXiv 2021. <a href="https://arxiv.org/abs/2112.11790">arXiv:2112.11790</a></li>
+            <li id="ref-3">Li, Y. et al. &ldquo;BEVDepth: Acquisition of Reliable Depth for Multi-view 3D Object Detection.&rdquo; AAAI 2023. <a href="https://arxiv.org/abs/2206.10092">arXiv:2206.10092</a></li>
+            <li id="ref-4">Li, Z. et al. &ldquo;BEVFormer: Learning Bird's-Eye-View Representation from Multi-Camera Images via Spatiotemporal Transformers.&rdquo; ECCV 2022. <a href="https://arxiv.org/abs/2203.17270">arXiv:2203.17270</a></li>
+            <li id="ref-5">Liu, Y. et al. &ldquo;PETR: Position Embedding Transformation for Multi-View 3D Object Detection.&rdquo; ECCV 2022. &ldquo;PETRv2,&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2203.05625">arXiv:2203.05625</a></li>
+            <li id="ref-6">Wang, Y. et al. &ldquo;DETR3D: 3D Object Detection from Multi-view Images via 3D-to-2D Queries.&rdquo; CoRL 2021. <a href="https://arxiv.org/abs/2110.06922">arXiv:2110.06922</a></li>
+            <li id="ref-7">Park, J. et al. &ldquo;Time Will Tell: New Outlooks and A Baseline for Temporal Multi-View 3D Object Detection (SOLOFusion).&rdquo; ICLR 2023. <a href="https://arxiv.org/abs/2210.02443">arXiv:2210.02443</a></li>
+            <li id="ref-8">Wang, S. et al. &ldquo;Exploring Object-Centric Temporal Modeling for Efficient Multi-View 3D Object Detection (StreamPETR).&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2303.11926">arXiv:2303.11926</a></li>
+            <li id="ref-9">Huang, J., Huang, G. &ldquo;BEVPoolv2: A Cutting-edge Implementation of BEVDet Toward Deployment.&rdquo; arXiv 2022. <a href="https://arxiv.org/abs/2211.17111">arXiv:2211.17111</a></li>
+            <li id="ref-10">Wang, T. et al. &ldquo;FCOS3D: Fully Convolutional One-Stage Monocular 3D Object Detection.&rdquo; ICCV 2021 Workshops. <a href="https://arxiv.org/abs/2104.10956">arXiv:2104.10956</a></li>
+            <li id="ref-11">Lang, A. et al. &ldquo;PointPillars: Fast Encoders for Object Detection from Point Clouds.&rdquo; CVPR 2019. <a href="https://arxiv.org/abs/1812.05784">arXiv:1812.05784</a></li>
+            <li id="ref-12">Yan, Y. et al. &ldquo;SECOND: Sparsely Embedded Convolutional Detection.&rdquo; Sensors 2018.</li>
+            <li id="ref-13">Yin, T. et al. &ldquo;Center-based 3D Object Detection and Tracking (CenterPoint).&rdquo; CVPR 2021. <a href="https://arxiv.org/abs/2006.11275">arXiv:2006.11275</a></li>
+            <li id="ref-14">Chen, Y. et al. &ldquo;VoxelNeXt: Fully Sparse VoxelNet for 3D Object Detection and Tracking.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2303.11301">arXiv:2303.11301</a></li>
+            <li id="ref-15">Liu, Z. et al. &ldquo;BEVFusion: Multi-Task Multi-Sensor Fusion with Unified Bird's-Eye View Representation.&rdquo; ICRA 2023. <a href="https://arxiv.org/abs/2205.13542">arXiv:2205.13542</a></li>
+            <li id="ref-16">Liang, T. et al. &ldquo;BEVFusion: A Simple and Robust LiDAR-Camera Fusion Framework.&rdquo; NeurIPS 2022. <a href="https://arxiv.org/abs/2205.13790">arXiv:2205.13790</a></li>
+            <li id="ref-17">Bai, X. et al. &ldquo;TransFusion: Robust LiDAR-Camera Fusion for 3D Object Detection with Transformers.&rdquo; CVPR 2022. <a href="https://arxiv.org/abs/2203.11496">arXiv:2203.11496</a></li>
+            <li id="ref-18">Yan, J. et al. &ldquo;Cross Modal Transformer: Towards Fast and Robust 3D Object Detection.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2301.01283">arXiv:2301.01283</a></li>
+            <li id="ref-19">Yang, Z. et al. &ldquo;DeepInteraction: 3D Object Detection via Modality Interaction.&rdquo; NeurIPS 2022. <a href="https://arxiv.org/abs/2208.11112">arXiv:2208.11112</a></li>
+            <li id="ref-20">Zhu, B. et al. &ldquo;Class-balanced Grouping and Sampling for Point Cloud 3D Object Detection (CBGS).&rdquo; arXiv 2019. <a href="https://arxiv.org/abs/1908.09492">arXiv:1908.09492</a></li>
+            <li id="ref-21">Caesar, H. et al. &ldquo;nuScenes: A Multimodal Dataset for Autonomous Driving.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1903.11027">arXiv:1903.11027</a></li>
+            <li id="ref-22">Hu, Y. et al. &ldquo;Planning-oriented Autonomous Driving (UniAD).&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2212.10156">arXiv:2212.10156</a></li>
+          </ol>
+        </section>
+
+        <nav class="w-prevnext" aria-label="More writeups">
+          <a class="p" href="/writeups/">
+            <span class="dir"><span data-lang="en">&#8592; Index</span><span data-lang="bn" lang="bn">&#8592; সূচি</span></span>
+            <span class="ttl"><span data-lang="en">All technical writeups</span><span data-lang="bn" lang="bn">সব টেকনিক্যাল রাইটআপ</span></span>
+          </a>
+          <a class="n" href="camera-lidar-fusion.html">
+            <span class="dir"><span data-lang="en">Next &#8594;</span><span data-lang="bn" lang="bn">পরবর্তী &#8594;</span></span>
+            <span class="ttl"><span data-lang="en">Camera&ndash;LiDAR Fusion in Practice: Failure Modes and Design Patterns</span><span data-lang="bn" lang="bn">বাস্তবে Camera&ndash;LiDAR Fusion: ব্যর্থতার ধরন ও ডিজ়াইন প্যাটার্ন</span></span>
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/"><span data-lang="en">Back to portfolio &#8599;</span><span data-lang="bn" lang="bn">পোর্টফোলিওতে ফিরুন &#8599;</span></a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

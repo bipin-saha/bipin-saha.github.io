@@ -1,20 +1,611 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Practical self-supervised perception strategies for autonomous driving with pretraining, adaptation, and evaluation guidance.">
-  <title>Self-Supervised Perception for Autonomous Driving | Bipin Saha</title>
+  <meta name="description" content="A practical, field-wide survey of self-supervised pretraining for autonomous-driving perception - contrastive, temporal, masked-modeling, occupancy/rendering, cross-modal distillation, and world-model pretext tasks for LiDAR, camera, and multi-sensor data - with evidence on what transfers to 3D detection, segmentation, and occupancy, a training recipe, and an evaluation protocol.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/self-supervised-perception.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="Self-Supervised Perception for Autonomous Driving: A Practical Overview">
+  <meta property="og:description" content="Contrastive, masked-modeling, rendering, cross-modal-distillation, and world-model pretext tasks for LiDAR and multi-sensor data - what transfers, where it does not, and how to evaluate it.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/self-supervised-perception.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Self-Supervised Perception for Autonomous Driving: A Practical Overview">
+  <meta name="twitter:description" content="A field-wide survey of self-supervised pretraining for AV perception.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>Self-Supervised Perception for Autonomous Driving: A Practical Overview | Bipin Saha</title>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Self-Supervised Perception for Autonomous Driving: A Practical Overview",
+      "description": "A field-wide survey of self-supervised pretext tasks for autonomous-driving perception and what transfers to 3D detection, segmentation, and occupancy.",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "publisher": { "@type": "Person", "name": "Bipin Saha" },
+      "datePublished": "2026-02-23",
+      "dateModified": "2026-08-31",
+      "mainEntityOfPage": "https://bipin-saha.github.io/writeups/self-supervised-perception.html",
+      "about": ["Self-supervised learning", "Representation learning", "LiDAR point clouds", "Autonomous driving", "Label efficiency", "World models"],
+      "keywords": "self-supervised learning, contrastive, masked autoencoder, SLidR, UniPAD, TARL, occupancy pretraining, world model pretraining, auto-labeling",
+      "inLanguage": ["en", "bn"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" },
+        { "@type": "ListItem", "position": 3, "name": "Self-Supervised Perception for Autonomous Driving", "item": "https://bipin-saha.github.io/writeups/self-supervised-perception.html" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+
+  <!-- Apply the English/Bangla choice before first paint (no flash). A ?lang=bn
+       or ?lang=en query param wins and is remembered; otherwise localStorage. -->
+  <script>
+    (function () {
+      try {
+        var q = (location.search.match(/[?&]lang=(bn|en)\b/) || [])[1];
+        var l = q || localStorage.getItem('writeup-lang');
+        if (l === 'bn' || l === 'en') {
+          document.documentElement.setAttribute('lang', l);
+          if (q) localStorage.setItem('writeup-lang', q);
+        }
+      } catch (e) { /* private mode - fall back to lang="en" */ }
+    })();
+  </script>
 </head>
+
 <body>
-  <p><a href="index.html">Back to writeups</a></p>
-  <h1>Self-Supervised Perception for Autonomous Driving: A Practical Overview</h1>
-  <p>This note focuses on when and how self-supervised pretraining helps reduce labeled-data dependency in AV perception pipelines.</p>
-  <h2>Problem</h2>
-  <p>Large-scale annotation for diverse road scenes is expensive and slow to scale across regions and weather conditions.</p>
-  <h2>Method</h2>
-  <p>Pretrain visual encoders with contrastive and reconstruction objectives, then fine-tune on targeted downstream tasks.</p>
-  <h2>Results</h2>
-  <p>Self-supervised initialization can improve robustness, especially in low-label regimes and domain-shift scenarios.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/"><span data-lang="en">Home</span><span data-lang="bn" lang="bn">হোম</span></a><span>/</span><a href="/writeups/"><span data-lang="en">Writeups</span><span data-lang="bn" lang="bn">রাইটআপ</span></a><span>/</span><span class="here">Self-Supervised Perception</span>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language / ভাষা">
+        <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-set="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="w-layout">
+
+      <aside class="w-toc" aria-label="Contents">
+        <p class="w-toc-label"><span data-lang="en">Contents</span><span data-lang="bn" lang="bn">বিষয়সূচি</span></p>
+        <ul>
+          <li><a href="#economics"><span data-lang="en">1 &middot; Label economics</span><span data-lang="bn" lang="bn">১ &middot; Label economics</span></a></li>
+          <li><a href="#setup"><span data-lang="en">2 &middot; Problem setup</span><span data-lang="bn" lang="bn">২ &middot; সমস্যার সেটআপ</span></a></li>
+          <li><a href="#contrastive"><span data-lang="en">3 &middot; Contrastive</span><span data-lang="bn" lang="bn">৩ &middot; Contrastive</span></a></li>
+          <li><a href="#temporal"><span data-lang="en">4 &middot; Temporal &amp; 4D</span><span data-lang="bn" lang="bn">৪ &middot; Temporal ও 4D</span></a></li>
+          <li><a href="#masked"><span data-lang="en">5 &middot; Masked modeling</span><span data-lang="bn" lang="bn">৫ &middot; Masked modeling</span></a></li>
+          <li><a href="#render"><span data-lang="en">6 &middot; Occupancy &amp; rendering</span><span data-lang="bn" lang="bn">৬ &middot; Occupancy ও rendering</span></a></li>
+          <li><a href="#distill"><span data-lang="en">7 &middot; Cross-modal distillation</span><span data-lang="bn" lang="bn">৭ &middot; Cross-modal distillation</span></a></li>
+          <li><a href="#camera"><span data-lang="en">8 &middot; Camera &amp; foundation priors</span><span data-lang="bn" lang="bn">৮ &middot; Camera ও foundation prior</span></a></li>
+          <li><a href="#world"><span data-lang="en">9 &middot; World-model pretraining</span><span data-lang="bn" lang="bn">৯ &middot; World-model pretraining</span></a></li>
+          <li><a href="#transfer"><span data-lang="en">10 &middot; What transfers</span><span data-lang="bn" lang="bn">১০ &middot; কী transfer হয়</span></a></li>
+          <li><a href="#recipe"><span data-lang="en">11 &middot; A practical recipe</span><span data-lang="bn" lang="bn">১১ &middot; একটি ব্যবহারিক recipe</span></a></li>
+          <li><a href="#pitfalls"><span data-lang="en">12 &middot; Evaluation pitfalls</span><span data-lang="bn" lang="bn">১২ &middot; মূল্যায়নের ফাঁদ</span></a></li>
+          <li><a href="#offboard"><span data-lang="en">13 &middot; The offboard alternative</span><span data-lang="bn" lang="bn">১৩ &middot; offboard বিকল্প</span></a></li>
+          <li><a href="#open"><span data-lang="en">14 &middot; Open problems</span><span data-lang="bn" lang="bn">১৪ &middot; অমীমাংসিত সমস্যা</span></a></li>
+          <li><a href="#refs"><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></a></li>
+        </ul>
+      </aside>
+
+      <main class="warticle" id="content">
+        <p class="w-eyebrow" data-lang="en">Technical Writeup</p>
+        <p class="w-eyebrow" data-lang="bn" lang="bn">টেকনিক্যাল রাইটআপ</p>
+        <h1 data-lang="en">Self-Supervised Perception for Autonomous Driving: A Practical Overview</h1>
+        <h1 data-lang="bn" lang="bn">স্বয়ংক্রিয় ড্রাইভিংয়ের জন্য Self-Supervised Perception: একটি ব্যবহারিক পরিচিতি</h1>
+        <p class="w-lede" data-lang="en">A fleet records petabytes of synchronized camera, LiDAR, and radar; a labeling team annotates a rounding error of it. Self-supervised pretraining is the standing bet that the unlabeled remainder can be turned into a better initialization. This is a map of the pretext-task landscape &mdash; contrastive, temporal, masked, rendering, distillation, and world-model &mdash; with the transfer evidence and the ways the evaluation misleads.</p>
+        <p class="w-lede" data-lang="bn" lang="bn">একটি fleet পেটাবাইট-পরিমাণ synchronized camera, LiDAR ও radar রেকর্ড করে; একটি labeling দল তার নগণ্য একটা অংশ annotate করে। Self-supervised pretraining হলো এই চলমান বাজি যে unlabeled বাকিটাকে একটি ভালো initialization-এ রূপ দেওয়া যায়। এটি pretext-task-এর মানচিত্র &mdash; contrastive, temporal, masked, rendering, distillation, ও world-model &mdash; সঙ্গে transfer-এর প্রমাণ এবং যেসব উপায়ে মূল্যায়ন বিভ্রান্ত করে।</p>
+        <div class="w-meta" data-lang="en">
+          <span>Published 23&nbsp;Feb&nbsp;2026</span>
+          <span>Updated 31&nbsp;Aug&nbsp;2026</span>
+          <span>~28&nbsp;min read</span>
+        </div>
+        <div class="w-meta" data-lang="bn" lang="bn">
+          <span>প্রকাশ ২৩&nbsp;ফেব্রু&nbsp;২০২৬</span>
+          <span>হালনাগাদ ৩১&nbsp;আগস্ট&nbsp;২০২৬</span>
+          <span>~২৮&nbsp;মিনিট পাঠ</span>
+        </div>
+        <ul class="w-tags" data-lang="en">
+          <li>Self-supervised learning</li>
+          <li>Representation learning</li>
+          <li>LiDAR</li>
+          <li>Label efficiency</li>
+          <li>Pretraining</li>
+          <li>World models</li>
+        </ul>
+        <ul class="w-tags" data-lang="bn" lang="bn">
+          <li>Self-supervised learning</li>
+          <li>Representation learning</li>
+          <li>LiDAR</li>
+          <li>Label efficiency</li>
+          <li>Pretraining</li>
+          <li>World model</li>
+        </ul>
+
+        <div class="prose">
+
+          <section id="economics">
+            <div data-lang="en">
+              <h2><span class="s-num">1</span>The label economics that drive the field</h2>
+              <p>A 3D bounding box, tracked and attribute-tagged across a sequence, is one of the most expensive annotations in machine learning &mdash; multiple minutes of skilled human time per object-track, with quality-control passes on top. Dense LiDAR semantic or occupancy labels are worse: a single Occ3D-style frame is hundreds of thousands of labelled voxels <a class="ref-link" href="#ref-28">[28]</a>. The result is that even the large public datasets label only their keyframes &mdash; nuScenes annotates at 2&nbsp;Hz while the sensors run an order of magnitude faster <a class="ref-link" href="#ref-1">[1]</a> &mdash; and a production fleet's labeled fraction is a small fraction of a percent of what it records.</p>
+              <p>Three levers exist to close that gap: <strong>label less but smarter</strong> (active learning, core-set selection), <strong>label automatically</strong> (offboard auto-labeling, &sect;13), and <strong>pretrain on the unlabeled pile</strong> so the labels you do have go further. This writeup is about the third. Self-supervised learning (SSL) defines a <em>pretext task</em> whose supervision comes for free from the data's own structure, pretrains a backbone on the unlabeled corpus, then fine-tunes on the small labeled set. The promise is a label-efficiency curve shifted left &mdash; matching a from-scratch baseline with fewer annotations, or beating it at the same count. Whether that promise is kept depends on the pretext task, the downstream task, and &mdash; as &sect;12 argues &mdash; on how carefully the comparison is run.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১</span>যে label economics ক্ষেত্রটিকে চালায়</h2>
+              <p>একটি 3D bounding box, একটি sequence-জুড়ে tracked ও attribute-ট্যাগড, machine learning-এর সবচেয়ে ব্যয়বহুল annotation-এর একটি &mdash; প্রতি object-track-এ কয়েক মিনিট দক্ষ মানব-সময়, উপরে quality-control pass। Dense LiDAR semantic বা occupancy label আরও খারাপ: একটি Occ3D-ধাঁচের frame মানে কয়েক লক্ষ labelled voxel <a class="ref-link" href="#ref-28">[28]</a>। ফলে বড় public dataset-ও কেবল তাদের keyframe label করে &mdash; nuScenes ২&nbsp;Hz-এ annotate করে যেখানে sensor এক অর্ডার দ্রুত চলে <a class="ref-link" href="#ref-1">[1]</a> &mdash; আর একটি production fleet-এর labelled অংশ, যা রেকর্ড করে তার শতাংশেরও ভগ্নাংশ।</p>
+              <p>সেই ব্যবধান মেটাতে তিনটি lever আছে: <strong>কম কিন্তু বুদ্ধি করে label করা</strong> (active learning, core-set নির্বাচন), <strong>স্বয়ংক্রিয়ভাবে label করা</strong> (offboard auto-labeling, &sect;১৩), এবং <strong>unlabeled স্তূপে pretrain করা</strong> যাতে হাতে থাকা label বেশি দূর যায়। এই লেখা তৃতীয়টি নিয়ে। Self-supervised learning (SSL) এমন একটি <em>pretext task</em> সংজ্ঞায়িত করে যার supervision ডেটার নিজস্ব গঠন থেকে বিনামূল্যে আসে, unlabeled corpus-এ একটি backbone pretrain করে, তারপর ছোট labelled set-এ fine-tune করে। প্রতিশ্রুতি হলো একটি বাঁ দিকে সরানো label-efficiency curve &mdash; কম annotation দিয়ে একটি from-scratch baseline ছোঁয়া, বা একই সংখ্যায় তাকে হারানো। সেই প্রতিশ্রুতি রক্ষা হয় কিনা তা নির্ভর করে pretext task, downstream task, এবং &mdash; &sect;১২ যেমন বলে &mdash; তুলনাটা কতটা যত্নে চালানো হয়েছে তার উপর।</p>
+            </div>
+          </section>
+
+          <section id="setup">
+            <div data-lang="en">
+              <h2><span class="s-num">2</span>Problem setup and a taxonomy</h2>
+              <p>Formally: given an unlabeled corpus <span class="eq">&#119967;<sub>u</sub></span> of sensor frames, learn an encoder <span class="eq">f<sub>&#952;</sub></span> by minimizing a pretext loss <span class="eq">&#8466;<sub>pre</sub></span> that requires no human labels. Then transfer <span class="eq">&#952;</span> to a downstream task with a small labeled set <span class="eq">&#119967;<sub>&#8467;</sub></span>, either by <strong>linear probing</strong> (freeze <span class="eq">f<sub>&#952;</sub></span>, train only a head) or <strong>full fine-tuning</strong> (update everything). The quantity that matters is not the score at <span class="eq">|&#119967;<sub>&#8467;</sub>| = </span> full, but the whole curve of downstream score versus <span class="eq">|&#119967;<sub>&#8467;</sub>|</span>.</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>Families of self-supervised pretext task for driving-scene sensor data, by the free supervision signal they exploit.</caption>
+                  <thead><tr><th>Family</th><th>Free supervision signal</th><th>Representatives</th><th>&sect;</th></tr></thead>
+                  <tbody>
+                    <tr><td>Contrastive / instance discrimination</td><td>Two augmented views of the same point / region / segment embed together; different ones apart</td><td>PointContrast <a class="ref-link" href="#ref-2">[2]</a>, DepthContrast <a class="ref-link" href="#ref-3">[3]</a>, GCC-3D <a class="ref-link" href="#ref-4">[4]</a>, STRL <a class="ref-link" href="#ref-5">[5]</a>, ProposalContrast <a class="ref-link" href="#ref-6">[6]</a>, SegContrast <a class="ref-link" href="#ref-7">[7]</a></td><td>3</td></tr>
+                    <tr><td>Temporal / 4D</td><td>Segments linked across time by motion are the same object; future geometry is predictable</td><td>TARL <a class="ref-link" href="#ref-8">[8]</a>, STSSL, TREND <a class="ref-link" href="#ref-29">[29]</a></td><td>4</td></tr>
+                    <tr><td>Masked modeling</td><td>Reconstruct masked voxels / points / occupancy from the visible remainder</td><td>Voxel-MAE <a class="ref-link" href="#ref-9">[9]</a>, Occupancy-MAE <a class="ref-link" href="#ref-10">[10]</a>, GD-MAE <a class="ref-link" href="#ref-11">[11]</a>, MV-JAR <a class="ref-link" href="#ref-12">[12]</a>, BEV-MAE <a class="ref-link" href="#ref-13">[13]</a></td><td>5</td></tr>
+                    <tr><td>Occupancy / surface</td><td>Predict whether query points in space are occupied &mdash; implicit-surface reconstruction</td><td>ALSO <a class="ref-link" href="#ref-14">[14]</a></td><td>6</td></tr>
+                    <tr><td>Differentiable rendering</td><td>Render encoded features back to depth / RGB and match the sensor observation</td><td>UniPAD <a class="ref-link" href="#ref-15">[15]</a>, PonderV2 <a class="ref-link" href="#ref-16">[16]</a>, VisionPAD <a class="ref-link" href="#ref-30">[30]</a></td><td>6</td></tr>
+                    <tr><td>Cross-modal distillation</td><td>Transfer a pretrained 2D image encoder's features to a 3D encoder on paired camera&ndash;LiDAR data</td><td>SLidR <a class="ref-link" href="#ref-17">[17]</a>, ST-SLidR <a class="ref-link" href="#ref-18">[18]</a>, Seal <a class="ref-link" href="#ref-19">[19]</a>, SuperFlow <a class="ref-link" href="#ref-20">[20]</a>, HVDistill <a class="ref-link" href="#ref-31">[31]</a></td><td>7</td></tr>
+                    <tr><td>Open-vocabulary distillation</td><td>Distill CLIP text-aligned features into 3D for language-queryable representations</td><td>CLIP2Scene <a class="ref-link" href="#ref-21">[21]</a>, OpenScene <a class="ref-link" href="#ref-22">[22]</a></td><td>8</td></tr>
+                    <tr><td>World-model pretraining</td><td>Forecast future 4D occupancy / point clouds from past observations and ego actions</td><td>UniWorld <a class="ref-link" href="#ref-24">[24]</a>, DriveWorld <a class="ref-link" href="#ref-25">[25]</a>, ViDAR <a class="ref-link" href="#ref-26">[26]</a></td><td>9</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">২</span>সমস্যার সেটআপ ও একটি শ্রেণিবিন্যাস</h2>
+              <p>আনুষ্ঠানিকভাবে: sensor frame-এর একটি unlabeled corpus <span class="eq">&#119967;<sub>u</sub></span> দেওয়া থাকলে, একটি pretext loss <span class="eq">&#8466;<sub>pre</sub></span> কমিয়ে একটি encoder <span class="eq">f<sub>&#952;</sub></span> শিখুন যাতে কোনো মানব-label লাগে না। তারপর একটি ছোট labelled set <span class="eq">&#119967;<sub>&#8467;</sub></span> সহ একটি downstream task-এ <span class="eq">&#952;</span> transfer করুন, হয় <strong>linear probing</strong> দিয়ে (<span class="eq">f<sub>&#952;</sub></span> freeze, কেবল একটি head train) অথবা <strong>full fine-tuning</strong> দিয়ে (সব কিছু update)। যা গুরুত্বপূর্ণ তা <span class="eq">|&#119967;<sub>&#8467;</sub>| = </span> পূর্ণ-তে score নয়, বরং <span class="eq">|&#119967;<sub>&#8467;</sub>|</span>-এর সাপেক্ষে downstream score-এর পুরো curve।</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>driving-scene sensor data-র জন্য self-supervised pretext task-এর পরিবার, যে free supervision signal তারা কাজে লাগায় সেই অনুযায়ী।</caption>
+                  <thead><tr><th>পরিবার</th><th>Free supervision signal</th><th>উদাহরণ</th><th>&sect;</th></tr></thead>
+                  <tbody>
+                    <tr><td>Contrastive / instance discrimination</td><td>একই point / region / segment-এর দুটি augmented view একসঙ্গে embed হয়; ভিন্নগুলো আলাদা</td><td>PointContrast <a class="ref-link" href="#ref-2">[2]</a>, DepthContrast <a class="ref-link" href="#ref-3">[3]</a>, GCC-3D <a class="ref-link" href="#ref-4">[4]</a>, STRL <a class="ref-link" href="#ref-5">[5]</a>, ProposalContrast <a class="ref-link" href="#ref-6">[6]</a>, SegContrast <a class="ref-link" href="#ref-7">[7]</a></td><td>3</td></tr>
+                    <tr><td>Temporal / 4D</td><td>motion দিয়ে সময়জুড়ে যুক্ত segment একই object; ভবিষ্যৎ geometry অনুমেয়</td><td>TARL <a class="ref-link" href="#ref-8">[8]</a>, STSSL, TREND <a class="ref-link" href="#ref-29">[29]</a></td><td>4</td></tr>
+                    <tr><td>Masked modeling</td><td>দৃশ্যমান বাকিটা থেকে masked voxel / point / occupancy পুনর্গঠন</td><td>Voxel-MAE <a class="ref-link" href="#ref-9">[9]</a>, Occupancy-MAE <a class="ref-link" href="#ref-10">[10]</a>, GD-MAE <a class="ref-link" href="#ref-11">[11]</a>, MV-JAR <a class="ref-link" href="#ref-12">[12]</a>, BEV-MAE <a class="ref-link" href="#ref-13">[13]</a></td><td>5</td></tr>
+                    <tr><td>Occupancy / surface</td><td>space-এ query point occupied কিনা predict &mdash; implicit-surface পুনর্গঠন</td><td>ALSO <a class="ref-link" href="#ref-14">[14]</a></td><td>6</td></tr>
+                    <tr><td>Differentiable rendering</td><td>encoded feature-কে depth / RGB-তে render করে ফিরিয়ে sensor observation-এর সঙ্গে মেলানো</td><td>UniPAD <a class="ref-link" href="#ref-15">[15]</a>, PonderV2 <a class="ref-link" href="#ref-16">[16]</a>, VisionPAD <a class="ref-link" href="#ref-30">[30]</a></td><td>6</td></tr>
+                    <tr><td>Cross-modal distillation</td><td>paired camera&ndash;LiDAR data-তে একটি pretrained 2D image encoder-এর feature একটি 3D encoder-এ transfer</td><td>SLidR <a class="ref-link" href="#ref-17">[17]</a>, ST-SLidR <a class="ref-link" href="#ref-18">[18]</a>, Seal <a class="ref-link" href="#ref-19">[19]</a>, SuperFlow <a class="ref-link" href="#ref-20">[20]</a>, HVDistill <a class="ref-link" href="#ref-31">[31]</a></td><td>7</td></tr>
+                    <tr><td>Open-vocabulary distillation</td><td>language-queryable representation-এর জন্য CLIP text-aligned feature 3D-তে distill</td><td>CLIP2Scene <a class="ref-link" href="#ref-21">[21]</a>, OpenScene <a class="ref-link" href="#ref-22">[22]</a></td><td>8</td></tr>
+                    <tr><td>World-model pretraining</td><td>অতীত observation ও ego action থেকে ভবিষ্যৎ 4D occupancy / point cloud forecast</td><td>UniWorld <a class="ref-link" href="#ref-24">[24]</a>, DriveWorld <a class="ref-link" href="#ref-25">[25]</a>, ViDAR <a class="ref-link" href="#ref-26">[26]</a></td><td>9</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="contrastive">
+            <div data-lang="en">
+              <h2><span class="s-num">3</span>Contrastive and instance discrimination</h2>
+              <p>The earliest transfer results for driving point clouds were contrastive. The generic objective is InfoNCE,</p>
+              <div class="eq-block">
+                &#8466; = &minus; log [ exp(q &middot; k<sup>+</sup> / &#964;) / ( exp(q &middot; k<sup>+</sup> / &#964;) + &#931;<sub>i</sub> exp(q &middot; k<sub>i</sub><sup>&minus;</sup> / &#964;) ) ],
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>with temperature <span class="eq">&#964;</span>. Nearly all the design effort goes into defining <span class="eq">k<sup>+</sup></span> (what counts as the same thing) and the negative set <span class="eq">{k<sub>i</sub><sup>&minus;</sup>}</span>. <strong>PointContrast</strong> <a class="ref-link" href="#ref-2">[2]</a> established that point-level correspondence between two camera/LiDAR views of a scan is enough signal to pretrain a useful 3D backbone; <strong>DepthContrast</strong> <a class="ref-link" href="#ref-3">[3]</a> showed a format-agnostic version that works on single point clouds without registered pairs.</p>
+              <p>The driving-specific refinements add structure to the positive/negative sampling, because raw point-level contrast on a street scene creates many false negatives (two different points on the same road surface are pushed apart):</p>
+              <ul>
+                <li><strong>ProposalContrast</strong> <a class="ref-link" href="#ref-6">[6]</a> contrasts region proposals rather than points, which is closer to the detection objective and reduces false negatives.</li>
+                <li><strong>SegContrast</strong> <a class="ref-link" href="#ref-7">[7]</a> contrasts class-agnostic geometric segments (ground-removed clusters), so the invariance is object-shaped.</li>
+                <li><strong>GCC-3D</strong> <a class="ref-link" href="#ref-4">[4]</a> harmonizes contrast with clustering so that semantically similar regions are not forced apart.</li>
+                <li><strong>STRL</strong> <a class="ref-link" href="#ref-5">[5]</a> takes temporally adjacent frames as natural augmentations, a BYOL-style predictor removing the need for explicit negatives.</li>
+              </ul>
+              <p>The consistent empirical picture: contrastive pretraining transfers best to <em>dense</em> downstream tasks (LiDAR semantic segmentation) and to the <em>low-label</em> regime; its advantage on box detection is smaller and needs the proposal-level variants to show up at all.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৩</span>Contrastive ও instance discrimination</h2>
+              <p>driving point cloud-এর জন্য প্রথম দিকের transfer ফলাফল ছিল contrastive। সাধারণ objective হলো InfoNCE,</p>
+              <div class="eq-block">
+                &#8466; = &minus; log [ exp(q &middot; k<sup>+</sup> / &#964;) / ( exp(q &middot; k<sup>+</sup> / &#964;) + &#931;<sub>i</sub> exp(q &middot; k<sub>i</sub><sup>&minus;</sup> / &#964;) ) ],
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>temperature <span class="eq">&#964;</span> সহ। প্রায় সমস্ত ডিজ়াইন-শ্রম যায় <span class="eq">k<sup>+</sup></span> (কোনটাকে একই ধরা হবে) এবং negative set <span class="eq">{k<sub>i</sub><sup>&minus;</sup>}</span> সংজ্ঞায়িত করায়। <strong>PointContrast</strong> <a class="ref-link" href="#ref-2">[2]</a> দেখাল যে একটি scan-এর দুটি camera/LiDAR view-এর মধ্যে point-level correspondence একটি উপযোগী 3D backbone pretrain করার মতো যথেষ্ট signal; <strong>DepthContrast</strong> <a class="ref-link" href="#ref-3">[3]</a> একটি format-নিরপেক্ষ সংস্করণ দেখাল যা registered জোড়া ছাড়াই একক point cloud-এ কাজ করে।</p>
+              <p>driving-নির্দিষ্ট পরিমার্জনগুলো positive/negative sampling-এ গঠন যোগ করে, কারণ একটি street scene-এ raw point-level contrast অনেক false negative তৈরি করে (একই সড়ক-পৃষ্ঠের দুটি ভিন্ন point পরস্পর থেকে ঠেলে দেওয়া হয়):</p>
+              <ul>
+                <li><strong>ProposalContrast</strong> <a class="ref-link" href="#ref-6">[6]</a> point-এর বদলে region proposal contrast করে, যা detection objective-এর কাছাকাছি এবং false negative কমায়।</li>
+                <li><strong>SegContrast</strong> <a class="ref-link" href="#ref-7">[7]</a> class-নিরপেক্ষ geometric segment (ground-সরানো cluster) contrast করে, তাই invariance object-আকৃতির।</li>
+                <li><strong>GCC-3D</strong> <a class="ref-link" href="#ref-4">[4]</a> contrast-কে clustering-এর সঙ্গে সমন্বয় করে যাতে semantically সদৃশ region-গুলো জোর করে আলাদা না হয়।</li>
+                <li><strong>STRL</strong> <a class="ref-link" href="#ref-5">[5]</a> সময়ে সন্নিহিত frame-কে স্বাভাবিক augmentation হিসেবে নেয়, একটি BYOL-ধাঁচের predictor explicit negative-এর দরকার মিটিয়ে দেয়।</li>
+              </ul>
+              <p>সঙ্গতিপূর্ণ empirical ছবি: contrastive pretraining সবচেয়ে ভালো transfer করে <em>dense</em> downstream task-এ (LiDAR semantic segmentation) এবং <em>low-label</em> ক্ষেত্রে; box detection-এ এর সুবিধা কম এবং দেখাতেই হলে proposal-level variant লাগে।</p>
+            </div>
+          </section>
+
+          <section id="temporal">
+            <div data-lang="en">
+              <h2><span class="s-num">4</span>Temporal and 4D self-supervision</h2>
+              <p>A driving log is a video, and time is the richest free signal in it. <strong>TARL</strong> <a class="ref-link" href="#ref-8">[8]</a> uses ego-motion to register consecutive scans, clusters the aggregated cloud into segments, and treats a segment seen across many frames as one positive group &mdash; a car viewed from ten poses becomes a single invariance target, far stronger than single-frame augmentation. This is currently one of the better label-efficient LiDAR-segmentation pretraining signals.</p>
+              <p>Two further temporal ideas:</p>
+              <ul>
+                <li><strong>Motion / scene-flow self-supervision.</strong> Nearest-neighbour and cycle-consistency losses on consecutive clouds learn per-point motion without labels; the learned features transfer to detection and are useful for moving-object segmentation.</li>
+                <li><strong>Forecasting as pretext.</strong> Predicting the <em>next</em> scan (or its BEV / occupancy) from the past forces the encoder to model both geometry and dynamics. TREND <a class="ref-link" href="#ref-29">[29]</a> is an explicit "temporal forecasting" pretraining for LiDAR perception; the world-model methods in &sect;9 are the large-scale version of the same idea.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৪</span>Temporal ও 4D self-supervision</h2>
+              <p>একটি driving log আসলে একটি video, আর সময়ই এতে সবচেয়ে সমৃদ্ধ free signal। <strong>TARL</strong> <a class="ref-link" href="#ref-8">[8]</a> পরপর scan register করতে ego-motion ব্যবহার করে, জমা-করা cloud-কে segment-এ cluster করে, এবং বহু frame-জুড়ে দেখা একটি segment-কে একটি positive group হিসেবে গণ্য করে &mdash; দশটি pose থেকে দেখা একটি গাড়ি একটিমাত্র invariance target হয়ে ওঠে, single-frame augmentation-এর চেয়ে অনেক শক্তিশালী। এটি এখন ভালো label-efficient LiDAR-segmentation pretraining signal-এর একটি।</p>
+              <p>আরও দুটি temporal ধারণা:</p>
+              <ul>
+                <li><strong>Motion / scene-flow self-supervision।</strong> পরপর cloud-এ nearest-neighbour ও cycle-consistency loss label ছাড়াই per-point motion শেখে; শেখা feature detection-এ transfer করে এবং moving-object segmentation-এ উপযোগী।</li>
+                <li><strong>Pretext হিসেবে forecasting।</strong> অতীত থেকে <em>পরবর্তী</em> scan (বা তার BEV / occupancy) predict করা encoder-কে geometry ও dynamics দুটোই model করতে বাধ্য করে। TREND <a class="ref-link" href="#ref-29">[29]</a> LiDAR perception-এর জন্য একটি স্পষ্ট "temporal forecasting" pretraining; &sect;৯-এর world-model পদ্ধতি একই ধারণার বড়-স্কেল সংস্করণ।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="masked">
+            <div data-lang="en">
+              <h2><span class="s-num">5</span>Masked modeling</h2>
+              <p>Following MAE in images <a class="ref-link" href="#ref-23">[23]</a>, the masked-modeling line hides a large fraction of the input and trains the network to reconstruct it. For point clouds the design choices are the <strong>mask unit</strong> (points, voxels, pillars, range-image patches), the <strong>mask ratio</strong> (typically 60&ndash;80%), and the <strong>reconstruction target</strong>:</p>
+              <ul>
+                <li><strong>Voxel-MAE</strong> <a class="ref-link" href="#ref-9">[9]</a> &mdash; binary voxel occupancy of the masked region, a cheap and surprisingly effective target.</li>
+                <li><strong>Occupancy-MAE</strong> <a class="ref-link" href="#ref-10">[10]</a> &mdash; a range-aware masking that accounts for LiDAR's radial density falloff, reconstructing occupancy at multiple scales.</li>
+                <li><strong>GD-MAE</strong> <a class="ref-link" href="#ref-11">[11]</a> &mdash; a generative decoder that hierarchically infers masked tokens, removing hand-designed masking of multi-scale features.</li>
+                <li><strong>MV-JAR</strong> <a class="ref-link" href="#ref-12">[12]</a> &mdash; combines masked voxel reconstruction with a jigsaw/ordering objective, and ships a matched pretraining/fine-tuning benchmark on Waymo, which is unusually rigorous for this subfield.</li>
+                <li><strong>BEV-MAE</strong> <a class="ref-link" href="#ref-13">[13]</a> &mdash; masks in BEV and reconstructs, aligning the pretext representation with where detectors actually operate.</li>
+              </ul>
+              <p>Masked modeling scales more gracefully than contrastive (no large negative bank, no momentum encoder) and pairs naturally with transformer backbones. Its weakness is that pure geometric reconstruction learns little semantics &mdash; a wall and a truck side are locally similar &mdash; which is why the cross-modal methods in &sect;7 often win on semantic downstream tasks.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৫</span>Masked modeling</h2>
+              <p>image-এ MAE-কে অনুসরণ করে <a class="ref-link" href="#ref-23">[23]</a>, masked-modeling ধারা input-এর একটা বড় অংশ লুকিয়ে network-কে তা পুনর্গঠন করতে train করে। point cloud-এর জন্য ডিজ়াইন পছন্দ হলো <strong>mask unit</strong> (point, voxel, pillar, range-image patch), <strong>mask ratio</strong> (সাধারণত ৬০&ndash;৮০%), এবং <strong>reconstruction target</strong>:</p>
+              <ul>
+                <li><strong>Voxel-MAE</strong> <a class="ref-link" href="#ref-9">[9]</a> &mdash; masked region-এর binary voxel occupancy, একটি সস্তা ও অবাক-করা-কার্যকর target।</li>
+                <li><strong>Occupancy-MAE</strong> <a class="ref-link" href="#ref-10">[10]</a> &mdash; একটি range-aware masking যা LiDAR-এর radial density falloff হিসাবে নেয়, একাধিক scale-এ occupancy পুনর্গঠন করে।</li>
+                <li><strong>GD-MAE</strong> <a class="ref-link" href="#ref-11">[11]</a> &mdash; একটি generative decoder যা masked token শ্রেণিক্রমে অনুমান করে, multi-scale feature-এর হাতে-নকশা masking সরিয়ে দেয়।</li>
+                <li><strong>MV-JAR</strong> <a class="ref-link" href="#ref-12">[12]</a> &mdash; masked voxel reconstruction-কে একটি jigsaw/ordering objective-এর সঙ্গে মেলায়, এবং Waymo-তে একটি matched pretraining/fine-tuning benchmark দেয়, যা এই উপক্ষেত্রের জন্য অস্বাভাবিকভাবে কড়া।</li>
+                <li><strong>BEV-MAE</strong> <a class="ref-link" href="#ref-13">[13]</a> &mdash; BEV-তে mask করে পুনর্গঠন করে, pretext representation-কে detector আসলে যেখানে কাজ করে তার সঙ্গে মেলায়।</li>
+              </ul>
+              <p>Masked modeling contrastive-এর চেয়ে বেশি সাবলীলভাবে scale করে (বড় negative bank নেই, momentum encoder নেই) এবং transformer backbone-এর সঙ্গে স্বাভাবিকভাবে জোড়ে। এর দুর্বলতা হলো বিশুদ্ধ geometric reconstruction সামান্যই semantics শেখে &mdash; একটি দেয়াল আর একটি ট্রাকের পাশ স্থানীয়ভাবে একই রকম &mdash; এজন্যই &sect;৭-এর cross-modal পদ্ধতি semantic downstream task-এ প্রায়ই জেতে।</p>
+            </div>
+          </section>
+
+          <section id="render">
+            <div data-lang="en">
+              <h2><span class="s-num">6</span>Occupancy and rendering pretext</h2>
+              <p><strong>ALSO</strong> <a class="ref-link" href="#ref-14">[14]</a> reframes pretraining as a query: "is this point in space on a surface?" The encoder must produce features from which a small decoder can answer occupancy queries anywhere in the volume, which forces it to learn scene geometry without a codebook or a heavy reconstruction decoder. It transfers well to both detection and segmentation and is cheap.</p>
+              <p><strong>Differentiable rendering</strong> goes further. <strong>UniPAD</strong> <a class="ref-link" href="#ref-15">[15]</a> attaches a NeRF-style volumetric renderer to the encoded features and asks them to re-render the observed depth and RGB along camera/LiDAR rays. Its notable property is <em>modality-agnosticism</em>: the same pretext trains a LiDAR encoder, a camera encoder, or a fused one, so it drops directly into the fusion stacks discussed in the companion writeups. <strong>PonderV2</strong> <a class="ref-link" href="#ref-16">[16]</a> generalizes the rendering pretext toward a "3D foundation model" recipe; <strong>VisionPAD</strong> <a class="ref-link" href="#ref-30">[30]</a> is a vision-centric variant using 3D Gaussian splatting as the rendering primitive and adding photometric consistency and voxel-velocity self-supervision. Rendering pretext is the current front-runner for <em>camera</em> pretraining because it supervises geometry directly, which vanilla masked-image modeling does not.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৬</span>Occupancy ও rendering pretext</h2>
+              <p><strong>ALSO</strong> <a class="ref-link" href="#ref-14">[14]</a> pretraining-কে একটি query হিসেবে সাজায়: "space-এর এই point কি কোনো surface-এ?" encoder-কে এমন feature বানাতে হবে যা থেকে একটি ছোট decoder volume-এর যেকোনো জায়গায় occupancy query-র উত্তর দিতে পারে, যা তাকে একটি codebook বা ভারী reconstruction decoder ছাড়াই scene geometry শিখতে বাধ্য করে। এটি detection ও segmentation দুটোতেই ভালো transfer করে এবং সস্তা।</p>
+              <p><strong>Differentiable rendering</strong> আরও এগোয়। <strong>UniPAD</strong> <a class="ref-link" href="#ref-15">[15]</a> encoded feature-এ একটি NeRF-ধাঁচের volumetric renderer জুড়ে দেয় এবং তাদের camera/LiDAR ray বরাবর observed depth ও RGB পুনরায় render করতে বলে। এর উল্লেখযোগ্য বৈশিষ্ট্য হলো <em>modality-নিরপেক্ষতা</em>: একই pretext একটি LiDAR encoder, একটি camera encoder, বা একটি fused encoder train করে, তাই এটি সঙ্গী রাইটআপে আলোচিত fusion stack-এ সরাসরি বসে যায়। <strong>PonderV2</strong> <a class="ref-link" href="#ref-16">[16]</a> rendering pretext-কে একটি "3D foundation model" recipe-র দিকে সাধারণীকরণ করে; <strong>VisionPAD</strong> <a class="ref-link" href="#ref-30">[30]</a> একটি vision-centric variant, rendering primitive হিসেবে 3D Gaussian splatting ব্যবহার করে এবং photometric consistency ও voxel-velocity self-supervision যোগ করে। <em>camera</em> pretraining-এর জন্য rendering pretext এখন এগিয়ে, কারণ এটি geometry সরাসরি supervise করে, যা সাধারণ masked-image modeling করে না।</p>
+            </div>
+          </section>
+
+          <section id="distill">
+            <div data-lang="en">
+              <h2><span class="s-num">7</span>Cross-modal distillation</h2>
+              <p>If a strong 2D image encoder already exists, why relearn semantics from scratch in 3D? Cross-modal distillation imports it. The mechanism, established by <strong>SLidR</strong> <a class="ref-link" href="#ref-17">[17]</a>: project LiDAR points into the paired image, group points and pixels by <em>superpixels</em>, average each group's features on both sides, and pull the 3D group feature toward the corresponding 2D group feature from a frozen image backbone, with a contrastive loss over groups. The superpixel grouping is what makes it object-aware rather than pixel-noisy.</p>
+              <ul>
+                <li><strong>ST-SLidR</strong> <a class="ref-link" href="#ref-18">[18]</a> makes the contrastive loss "semantically tolerant" &mdash; down-weighting negatives that are probably the same class &mdash; and adds a class-balancing term.</li>
+                <li><strong>Seal</strong> <a class="ref-link" href="#ref-19">[19]</a> replaces heuristic superpixels with segments from a vision foundation model (SAM), giving semantically coherent groups, and adds temporal consistency of point segments across scans.</li>
+                <li><strong>SuperFlow</strong> <a class="ref-link" href="#ref-20">[20]</a> adds spatiotemporal flow consistency across the sweep and dense-to-sparse regularization, so features are stable across point density.</li>
+                <li><strong>HVDistill</strong> <a class="ref-link" href="#ref-31">[31]</a> distills from both image-plane and BEV views of the 2D features.</li>
+              </ul>
+              <p>This family currently gives the best low-label LiDAR-segmentation transfer, precisely because it imports web-scale 2D semantics for free. Its ceiling is bounded by how well image semantics map onto 3D structure &mdash; poorly for fine geometry, occluded extents, and rare vehicle types the 2D model also never saw well.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৭</span>Cross-modal distillation</h2>
+              <p>একটি শক্তিশালী 2D image encoder যদি আগে থেকেই থাকে, তবে 3D-তে scratch থেকে আবার semantics শেখা কেন? Cross-modal distillation তা আমদানি করে। <strong>SLidR</strong> <a class="ref-link" href="#ref-17">[17]</a>-এর প্রতিষ্ঠিত কার্যপদ্ধতি: LiDAR point-কে paired image-এ project করুন, point ও pixel-কে <em>superpixel</em> দিয়ে group করুন, দুই দিকেই প্রতিটি group-এর feature গড় করুন, এবং একটি frozen image backbone থেকে সংশ্লিষ্ট 2D group feature-এর দিকে 3D group feature টানুন, group-এর উপর একটি contrastive loss সহ। superpixel grouping-ই এটিকে pixel-noisy না করে object-aware করে তোলে।</p>
+              <ul>
+                <li><strong>ST-SLidR</strong> <a class="ref-link" href="#ref-18">[18]</a> contrastive loss-কে "semantically tolerant" করে &mdash; যেসব negative সম্ভবত একই class তাদের weight কমিয়ে &mdash; এবং একটি class-balancing term যোগ করে।</li>
+                <li><strong>Seal</strong> <a class="ref-link" href="#ref-19">[19]</a> heuristic superpixel-এর বদলে একটি vision foundation model (SAM) থেকে segment ব্যবহার করে, semantically সুসংগত group দেয়, এবং scan-জুড়ে point segment-এর temporal consistency যোগ করে।</li>
+                <li><strong>SuperFlow</strong> <a class="ref-link" href="#ref-20">[20]</a> sweep-জুড়ে spatiotemporal flow consistency এবং dense-to-sparse regularization যোগ করে, তাই feature point density-জুড়ে স্থিতিশীল।</li>
+                <li><strong>HVDistill</strong> <a class="ref-link" href="#ref-31">[31]</a> 2D feature-এর image-plane ও BEV &mdash; দুটি view থেকেই distill করে।</li>
+              </ul>
+              <p>এই পরিবার এখন সবচেয়ে ভালো low-label LiDAR-segmentation transfer দেয়, ঠিক এই কারণে যে এটি web-scale 2D semantics বিনামূল্যে আমদানি করে। এর সিলিং নির্ধারিত হয় image semantics কতটা ভালোভাবে 3D গঠনে মেলে তার দ্বারা &mdash; সূক্ষ্ম geometry, occluded বিস্তার, এবং যেসব বিরল গাড়ির ধরন 2D মডেলও ভালোভাবে দেখেনি &mdash; এসবে খারাপ।</p>
+            </div>
+          </section>
+
+          <section id="camera">
+            <div data-lang="en">
+              <h2><span class="s-num">8</span>Camera pretraining and foundation-model priors</h2>
+              <p>The trend since 2023 is that the strongest "self-supervised" perception methods are not purely self-supervised &mdash; they lean on a frozen 2D foundation model (DINOv2, CLIP, SAM, Metric3D) as the source of the training signal <a class="ref-link" href="#ref-27">[27]</a>. Concretely, swapping a from-scratch image backbone in a Lift-Splat BEV segmentation model for a frozen DINOv2 feature extractor plus a Metric3D depth prior has been reported to add several IoU points on vehicle segmentation while roughly halving the data and iterations needed <a class="ref-link" href="#ref-32">[32]</a>. CLIP distillation into 3D (<strong>CLIP2Scene</strong> <a class="ref-link" href="#ref-21">[21]</a>, <strong>OpenScene</strong> <a class="ref-link" href="#ref-22">[22]</a>) yields <em>language-queryable</em> 3D features and label-efficient / zero-shot 3D semantic segmentation.</p>
+              <p>This changes the accounting in two ways: (a) the representation quality is inherited from a model trained on hundreds of millions of captioned web images, not learned from the driving logs, so comparisons should state clearly whether a method uses a 2D foundation prior; (b) the web-image biases come along for the ride &mdash; distribution over object types, geographies, and conditions &mdash; and can actively hurt on the long tail.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৮</span>Camera pretraining ও foundation-model prior</h2>
+              <p>২০২৩ থেকে প্রবণতা হলো সবচেয়ে শক্তিশালী "self-supervised" perception পদ্ধতি বিশুদ্ধভাবে self-supervised নয় &mdash; তারা training signal-এর উৎস হিসেবে একটি frozen 2D foundation model (DINOv2, CLIP, SAM, Metric3D)-এর উপর নির্ভর করে <a class="ref-link" href="#ref-27">[27]</a>। সুনির্দিষ্টভাবে, একটি Lift-Splat BEV segmentation মডেলে একটি from-scratch image backbone-কে একটি frozen DINOv2 feature extractor প্লাস একটি Metric3D depth prior দিয়ে বদলালে vehicle segmentation-এ কয়েক IoU point যোগ হয় বলে রিপোর্ট করা হয়েছে, সঙ্গে প্রয়োজনীয় data ও iteration মোটামুটি অর্ধেক হয় <a class="ref-link" href="#ref-32">[32]</a>। 3D-তে CLIP distillation (<strong>CLIP2Scene</strong> <a class="ref-link" href="#ref-21">[21]</a>, <strong>OpenScene</strong> <a class="ref-link" href="#ref-22">[22]</a>) <em>language-queryable</em> 3D feature এবং label-efficient / zero-shot 3D semantic segmentation দেয়।</p>
+              <p>এটি হিসাবটা দুইভাবে বদলায়: (ক) representation-এর মান শত শত মিলিয়ন captioned web image-এ train করা একটি মডেল থেকে উত্তরাধিকারসূত্রে আসে, driving log থেকে শেখা নয়, তাই তুলনায় স্পষ্ট করে বলা উচিত একটি পদ্ধতি 2D foundation prior ব্যবহার করে কিনা; (খ) web-image-এর bias সঙ্গে চলে আসে &mdash; object-এর ধরন, ভূগোল, ও পরিস্থিতির উপর বণ্টন &mdash; এবং long tail-এ সক্রিয়ভাবে ক্ষতি করতে পারে।</p>
+            </div>
+          </section>
+
+          <section id="world">
+            <div data-lang="en">
+              <h2><span class="s-num">9</span>World-model pretraining</h2>
+              <p>The largest-scale version of "forecasting as pretext" is world-model pretraining: predict future 4D occupancy or future point clouds from past multi-sensor observations and (optionally) ego actions, label-free, on the entire unlabeled corpus, then fine-tune.</p>
+              <ul>
+                <li><strong>UniWorld</strong> <a class="ref-link" href="#ref-24">[24]</a> pretrains by predicting 4D geometric occupancy from image&ndash;LiDAR pairs, then fine-tunes for detection, tracking, and mapping.</li>
+                <li><strong>DriveWorld</strong> <a class="ref-link" href="#ref-25">[25]</a> learns compact spatiotemporal BEV representations by predicting 3D occupancy from past multi-camera frames and actions, targeting vision-centric downstream tasks.</li>
+                <li><strong>ViDAR</strong> <a class="ref-link" href="#ref-26">[26]</a> uses <em>visual point-cloud forecasting</em> &mdash; predict future LiDAR from past camera &mdash; as a scalable pretraining objective, reporting gains on detection, segmentation, and planning.</li>
+              </ul>
+              <p>The appeal is a single label-free pretext that plausibly transfers to detection, mapping, <em>and</em> planning, because forecasting requires modelling dynamics and interaction, not just static geometry. The open question is whether the gains hold up against a strong from-scratch baseline at full labels, and against the cheaper occupancy/rendering pretext at equal compute.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৯</span>World-model pretraining</h2>
+              <p>"pretext হিসেবে forecasting"-এর বৃহত্তম-স্কেল সংস্করণ হলো world-model pretraining: অতীত multi-sensor observation ও (ঐচ্ছিকভাবে) ego action থেকে ভবিষ্যৎ 4D occupancy বা ভবিষ্যৎ point cloud predict করা, label ছাড়াই, পুরো unlabeled corpus-এ, তারপর fine-tune।</p>
+              <ul>
+                <li><strong>UniWorld</strong> <a class="ref-link" href="#ref-24">[24]</a> image&ndash;LiDAR জোড়া থেকে 4D geometric occupancy predict করে pretrain করে, তারপর detection, tracking ও mapping-এর জন্য fine-tune করে।</li>
+                <li><strong>DriveWorld</strong> <a class="ref-link" href="#ref-25">[25]</a> অতীত multi-camera frame ও action থেকে 3D occupancy predict করে compact spatiotemporal BEV representation শেখে, vision-centric downstream task লক্ষ্য করে।</li>
+                <li><strong>ViDAR</strong> <a class="ref-link" href="#ref-26">[26]</a> একটি scalable pretraining objective হিসেবে <em>visual point-cloud forecasting</em> &mdash; অতীত camera থেকে ভবিষ্যৎ LiDAR predict &mdash; ব্যবহার করে, detection, segmentation ও planning-এ লাভ রিপোর্ট করে।</li>
+              </ul>
+              <p>আকর্ষণটা হলো একটিমাত্র label-free pretext যা যুক্তিসঙ্গতভাবে detection, mapping, <em>এবং</em> planning-এ transfer করে, কারণ forecasting-এর জন্য কেবল static geometry নয়, dynamics ও interaction model করা লাগে। অমীমাংসিত প্রশ্ন হলো লাভগুলো পূর্ণ label-এ একটি শক্তিশালী from-scratch baseline-এর বিরুদ্ধে, এবং সমান compute-এ সস্তা occupancy/rendering pretext-এর বিরুদ্ধে টেকে কিনা।</p>
+            </div>
+          </section>
+
+          <section id="transfer">
+            <div data-lang="en">
+              <h2><span class="s-num">10</span>What actually transfers</h2>
+              <p>Aggregating across the literature and independent reproductions, the robust findings are:</p>
+              <ul>
+                <li><strong>The gain is concentrated in the low-label regime.</strong> Pretraining most reliably helps when fine-tuning on ~1&ndash;10% of labels; it often recovers most of the full-label score with a fraction of the annotations. At 100% labels the margin over a well-tuned from-scratch baseline is frequently small and sometimes within run-to-run noise.</li>
+                <li><strong>Dense tasks benefit more than detection.</strong> Per-point segmentation transfers more cleanly from contrastive and distillation pretext than box detection, which depends on object-level structure those tasks do not directly encode (hence ProposalContrast and BEV-MAE).</li>
+                <li><strong>Cross-dataset transfer is where pretraining earns its keep.</strong> A backbone pretrained on a large unlabeled corpus and fine-tuned on a small target-domain set generalizes better than a target-only model &mdash; more useful in practice than another point of in-domain nuScenes NDS.</li>
+                <li><strong>Negative transfer is real.</strong> A pretext mismatched to the downstream head (global contrastive for a dense head; pure geometric reconstruction for a semantic task) can initialize <em>worse</em> than random. Always run the from-scratch control.</li>
+                <li><strong>Backbone and schedule dominate.</strong> Many reported SSL gains shrink or vanish when the from-scratch baseline is given the same architecture, augmentations, and training budget as the fine-tuned SSL model.</li>
+                <li><strong>Cross-modal &gt; single-modal for semantics; masked/rendering &gt; contrastive for geometry.</strong> A rough but useful prior when choosing.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১০</span>আসলে কী transfer হয়</h2>
+              <p>literature ও স্বাধীন reproduction মিলিয়ে, শক্ত ফলাফলগুলো:</p>
+              <ul>
+                <li><strong>লাভ low-label ক্ষেত্রে কেন্দ্রীভূত।</strong> Pretraining সবচেয়ে নির্ভরযোগ্যভাবে সাহায্য করে যখন label-এর ~১&ndash;১০%-এ fine-tune করা হয়; এটি প্রায়ই annotation-এর একটি ভগ্নাংশ দিয়ে full-label score-এর বেশিরভাগ পুনরুদ্ধার করে। ১০০% label-এ একটি ভালো-টিউন-করা from-scratch baseline-এর উপর ব্যবধান প্রায়ই ছোট এবং কখনো run-to-run noise-এর ভেতরে।</li>
+                <li><strong>Dense task detection-এর চেয়ে বেশি লাভবান।</strong> Per-point segmentation, box detection-এর চেয়ে contrastive ও distillation pretext থেকে বেশি পরিষ্কারভাবে transfer করে, কারণ box detection object-level গঠনের উপর নির্ভর করে যা ওই task-গুলো সরাসরি encode করে না (তাই ProposalContrast ও BEV-MAE)।</li>
+                <li><strong>Cross-dataset transfer-এই pretraining তার মূল্য প্রমাণ করে।</strong> একটি বড় unlabeled corpus-এ pretrained এবং একটি ছোট target-domain set-এ fine-tuned backbone একটি target-only মডেলের চেয়ে ভালো generalize করে &mdash; বাস্তবে in-domain nuScenes NDS-এর আরেকটি point-এর চেয়ে বেশি উপযোগী।</li>
+                <li><strong>Negative transfer সত্যি।</strong> downstream head-এর সঙ্গে অমিল একটি pretext (dense head-এর জন্য global contrastive; semantic task-এর জন্য বিশুদ্ধ geometric reconstruction) random-এর চেয়েও <em>খারাপ</em> initialize করতে পারে। সবসময় from-scratch control চালান।</li>
+                <li><strong>Backbone ও schedule প্রাধান্য নেয়।</strong> from-scratch baseline-কে fine-tuned SSL মডেলের মতো একই architecture, augmentation ও training budget দিলে রিপোর্ট-করা অনেক SSL লাভ কমে বা মিলিয়ে যায়।</li>
+                <li><strong>semantics-এর জন্য cross-modal &gt; single-modal; geometry-র জন্য masked/rendering &gt; contrastive।</strong> বাছাইয়ের সময় একটি স্থূল কিন্তু উপযোগী prior।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="recipe">
+            <div data-lang="en">
+              <h2><span class="s-num">11</span>A practical recipe</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Choosing a pretext task by downstream head and available modalities.</caption>
+                  <thead><tr><th>Downstream</th><th>Modality</th><th>First choice</th><th>Why</th></tr></thead>
+                  <tbody>
+                    <tr><td>LiDAR semantic seg</td><td>LiDAR + paired images</td><td>Cross-modal distillation (Seal / SuperFlow)</td><td>Imports 2D semantics; best low-label seg transfer</td></tr>
+                    <tr><td>LiDAR 3D detection</td><td>LiDAR only</td><td>Proposal-level contrastive or BEV-MAE</td><td>Object-level invariance matches the head</td></tr>
+                    <tr><td>Camera BEV / occupancy</td><td>Camera (+ LiDAR at train)</td><td>Rendering pretext (UniPAD / VisionPAD) or frozen DINOv2</td><td>Supervises geometry directly</td></tr>
+                    <tr><td>Camera&ndash;LiDAR fusion</td><td>Both</td><td>Modality-agnostic rendering (UniPAD) or world-model</td><td>One pretext for both encoders</td></tr>
+                    <tr><td>Open-vocab 3D</td><td>LiDAR + images</td><td>CLIP distillation (OpenScene)</td><td>Language-aligned features</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ul>
+                <li><strong>Normalize sensors before pretraining.</strong> If the unlabeled pool mixes LiDAR configurations, canonicalize (range-image resampling, intensity calibration, beam subsampling) or the network learns to classify the sensor, not the scene.</li>
+                <li><strong>Point-cloud augmentations that matter:</strong> random rotation about gravity, scaling, flip, elastic distortion, random point/beam dropout, and &mdash; for distillation &mdash; the exact image augmentations used by the frozen 2D teacher.</li>
+                <li><strong>Compute.</strong> Pretraining is cheaper than people expect (no labels, aggressive frame subsampling is fine); the expensive part is the fine-tuning sweep needed to make a fair claim.</li>
+                <li><strong>Evaluation protocol.</strong> Report a full label-efficiency curve (1%, 5%, 10%, 50%, 100%), <em>both</em> linear-probe and full-fine-tune, on at least one detection and one segmentation head, with the from-scratch baseline under identical settings. A single 100%-label number is not evidence.</li>
+                <li><strong>Seeds.</strong> 3&times; at each label fraction; report mean &plusmn; std. Low-label variance is large.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১১</span>একটি ব্যবহারিক recipe</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>downstream head ও উপলব্ধ modality অনুযায়ী একটি pretext task বাছাই।</caption>
+                  <thead><tr><th>Downstream</th><th>Modality</th><th>প্রথম পছন্দ</th><th>কেন</th></tr></thead>
+                  <tbody>
+                    <tr><td>LiDAR semantic seg</td><td>LiDAR + paired image</td><td>Cross-modal distillation (Seal / SuperFlow)</td><td>2D semantics আমদানি করে; সেরা low-label seg transfer</td></tr>
+                    <tr><td>LiDAR 3D detection</td><td>কেবল LiDAR</td><td>Proposal-level contrastive বা BEV-MAE</td><td>Object-level invariance head-এর সঙ্গে মেলে</td></tr>
+                    <tr><td>Camera BEV / occupancy</td><td>Camera (+ train-এ LiDAR)</td><td>Rendering pretext (UniPAD / VisionPAD) বা frozen DINOv2</td><td>geometry সরাসরি supervise করে</td></tr>
+                    <tr><td>Camera&ndash;LiDAR fusion</td><td>দুটোই</td><td>Modality-agnostic rendering (UniPAD) বা world-model</td><td>দুই encoder-এর জন্য এক pretext</td></tr>
+                    <tr><td>Open-vocab 3D</td><td>LiDAR + image</td><td>CLIP distillation (OpenScene)</td><td>Language-aligned feature</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <ul>
+                <li><strong>pretraining-এর আগে sensor normalize করুন।</strong> unlabeled pool-এ যদি একাধিক LiDAR configuration মেশানো থাকে, canonicalize করুন (range-image resampling, intensity calibration, beam subsampling) নয়তো network scene নয়, sensor শ্রেণিবদ্ধ করতে শেখে।</li>
+                <li><strong>যেসব point-cloud augmentation গুরুত্বপূর্ণ:</strong> gravity-র সাপেক্ষে random rotation, scaling, flip, elastic distortion, random point/beam dropout, এবং &mdash; distillation-এর জন্য &mdash; frozen 2D teacher-এর ব্যবহৃত হুবহু image augmentation।</li>
+                <li><strong>Compute।</strong> Pretraining লোকে যা ভাবে তার চেয়ে সস্তা (label নেই, আক্রমণাত্মক frame subsampling চলে); ব্যয়বহুল অংশ হলো একটি সুষ্ঠু দাবি করতে প্রয়োজনীয় fine-tuning sweep।</li>
+                <li><strong>মূল্যায়ন protocol।</strong> একটি পূর্ণ label-efficiency curve রিপোর্ট করুন (1%, 5%, 10%, 50%, 100%), <em>দুটোই</em> linear-probe ও full-fine-tune, অন্তত একটি detection ও একটি segmentation head-এ, অভিন্ন setting-এ from-scratch baseline সহ। একটিমাত্র 100%-label সংখ্যা প্রমাণ নয়।</li>
+                <li><strong>Seed।</strong> প্রতিটি label ভগ্নাংশে 3&times;; mean &plusmn; std রিপোর্ট করুন। Low-label variance বড়।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="pitfalls">
+            <div data-lang="en">
+              <h2><span class="s-num">12</span>Evaluation pitfalls</h2>
+              <ul>
+                <li><strong>Shortcut learning.</strong> Point clouds carry sensor fingerprints &mdash; ring patterns, azimuth quantization, intensity scaling. A contrastive model can satisfy the loss by recognizing the sensor or the augmentation, learning nothing transferable. Probe by testing on a held-out sensor.</li>
+                <li><strong>Weak from-scratch baseline.</strong> The most common way SSL papers overstate gains: the baseline gets fewer epochs, weaker augmentation, or no EMA.</li>
+                <li><strong>Backbone confound.</strong> Comparing an SSL method on backbone X to a baseline on backbone Y. Fix the architecture.</li>
+                <li><strong>Pretrain/fine-tune data leakage.</strong> If pretraining sees frames from the fine-tuning val scenes, the label-efficiency curve is optimistic. Enforce scene-level disjointness.</li>
+                <li><strong>Foundation-prior accounting.</strong> Methods that distill from CLIP/DINOv2/SAM/Metric3D should not be compared head-to-head with methods that do not, without saying so.</li>
+                <li><strong>Cherry-picked label fraction.</strong> Reporting only the 1% point, where gains are largest, and implying it holds everywhere.</li>
+                <li><strong>Linear-probe vs fine-tune conflation.</strong> A representation can be great under linear probe and no better than random init after full fine-tuning, or vice versa. Report both.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১২</span>মূল্যায়নের ফাঁদ</h2>
+              <ul>
+                <li><strong>Shortcut learning।</strong> Point cloud-এ sensor-এর ছাপ থাকে &mdash; ring pattern, azimuth quantization, intensity scaling। একটি contrastive মডেল sensor বা augmentation চিনে loss মেটাতে পারে, transferable কিছু না শিখেই। একটি held-out sensor-এ পরীক্ষা করে যাচাই করুন।</li>
+                <li><strong>দুর্বল from-scratch baseline।</strong> SSL paper যেভাবে সবচেয়ে বেশি লাভ বাড়িয়ে বলে: baseline কম epoch, দুর্বল augmentation, বা কোনো EMA পায় না।</li>
+                <li><strong>Backbone confound।</strong> backbone X-এ একটি SSL পদ্ধতিকে backbone Y-তে একটি baseline-এর সঙ্গে তুলনা। architecture স্থির করুন।</li>
+                <li><strong>Pretrain/fine-tune data leakage।</strong> pretraining যদি fine-tuning val scene-এর frame দেখে, label-efficiency curve আশাবাদী। scene-স্তরে বিচ্ছিন্নতা কার্যকর করুন।</li>
+                <li><strong>Foundation-prior হিসাব।</strong> যেসব পদ্ধতি CLIP/DINOv2/SAM/Metric3D থেকে distill করে, তাদের না-করা পদ্ধতির সঙ্গে মুখোমুখি তুলনা করা উচিত নয়, তা না বলে।</li>
+                <li><strong>Cherry-picked label ভগ্নাংশ।</strong> কেবল 1% point রিপোর্ট করা, যেখানে লাভ সবচেয়ে বেশি, এবং এমন ভাব করা যে তা সর্বত্র সত্য।</li>
+                <li><strong>Linear-probe বনাম fine-tune গুলিয়ে ফেলা।</strong> একটি representation linear probe-এ দারুণ হতে পারে অথচ full fine-tuning-এর পর random init-এর চেয়ে ভালো নয়, বা উল্টোটা। দুটোই রিপোর্ট করুন।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="offboard">
+            <div data-lang="en">
+              <h2><span class="s-num">13</span>The pragmatic alternative: offboard auto-labeling</h2>
+              <p>SSL improves an initialization; <strong>offboard auto-labeling</strong> attacks the label shortage head-on. An offboard model runs on full past-and-future sequences with no latency budget, aggregates hundreds of frames per object, and produces 3D box tracks at &mdash; in some regimes &mdash; near-human quality.</p>
+              <ul>
+                <li><strong>3DAL</strong> <a class="ref-link" href="#ref-33">[33]</a> introduced the object-centric formulation: detect and track across the sequence, then refine each object from its full multi-frame point history.</li>
+                <li><strong>Auto4D</strong> pioneered jointly optimizing box size and trajectory over the sequence.</li>
+                <li><strong>CTRL</strong> <a class="ref-link" href="#ref-34">[34]</a> is track-centric and reports parity with or above manual annotation on some Waymo classes.</li>
+                <li><strong>DetZero</strong> <a class="ref-link" href="#ref-35">[35]</a> adds attention-based long-sequence refinement modules for geometry, position, and confidence.</li>
+              </ul>
+              <p>In practice a team runs both: auto-labels expand the effective training set, and SSL pretraining improves the model that consumes them. They are complementary, not competing &mdash; and the same unlabeled corpus feeds both.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৩</span>বাস্তবসম্মত বিকল্প: offboard auto-labeling</h2>
+              <p>SSL একটি initialization উন্নত করে; <strong>offboard auto-labeling</strong> label-এর ঘাটতিকে সরাসরি আক্রমণ করে। একটি offboard মডেল কোনো latency বাজেট ছাড়াই পূর্ণ অতীত-ও-ভবিষ্যৎ sequence-এ চলে, প্রতি object-এ শত শত frame জমা করে, এবং &mdash; কিছু ক্ষেত্রে &mdash; কাছাকাছি-মানব মানের 3D box track তৈরি করে।</p>
+              <ul>
+                <li><strong>3DAL</strong> <a class="ref-link" href="#ref-33">[33]</a> object-centric গঠনটি এনেছিল: sequence-জুড়ে detect ও track করুন, তারপর প্রতিটি object-কে তার পূর্ণ multi-frame point ইতিহাস থেকে refine করুন।</li>
+                <li><strong>Auto4D</strong> sequence-জুড়ে box size ও trajectory একসঙ্গে optimize করার পথ দেখিয়েছিল।</li>
+                <li><strong>CTRL</strong> <a class="ref-link" href="#ref-34">[34]</a> track-centric এবং কিছু Waymo class-এ manual annotation-এর সমান বা তার উপরে ফল রিপোর্ট করে।</li>
+                <li><strong>DetZero</strong> <a class="ref-link" href="#ref-35">[35]</a> geometry, position ও confidence-এর জন্য attention-ভিত্তিক long-sequence refinement module যোগ করে।</li>
+              </ul>
+              <p>বাস্তবে একটি দল দুটোই চালায়: auto-label কার্যকর training set বাড়ায়, এবং SSL pretraining সেগুলো ব্যবহারকারী মডেলকে উন্নত করে। এগুলো পরিপূরক, প্রতিযোগী নয় &mdash; এবং একই unlabeled corpus দুটোকেই খাওয়ায়।</p>
+            </div>
+          </section>
+
+          <section id="open">
+            <div data-lang="en">
+              <h2><span class="s-num">14</span>Open problems</h2>
+              <ul>
+                <li>A single pretext that jointly pretrains the image and LiDAR encoders of a fusion stack and beats pretraining them separately.</li>
+                <li>Scalable world-model / occupancy pretraining that transfers to detection, mapping, <em>and</em> planning from one initialization, with a fair full-label comparison.</li>
+                <li>SSL that improves the long tail &mdash; rare vehicle types, construction, debris &mdash; rather than sharpening the head classes.</li>
+                <li>Honest, standardized label-efficiency benchmarks (MV-JAR's matched protocol <a class="ref-link" href="#ref-12">[12]</a> is a start) so results are comparable across papers.</li>
+                <li>Understanding when a 2D foundation prior helps 3D and when its web-image biases actively hurt.</li>
+                <li>Radar and 4D-radar SSL &mdash; almost unexplored, and the modality most starved of labels.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১৪</span>অমীমাংসিত সমস্যা</h2>
+              <ul>
+                <li>একটিমাত্র pretext যা একটি fusion stack-এর image ও LiDAR encoder একসঙ্গে pretrain করে এবং আলাদাভাবে pretrain করার চেয়ে ভালো করে।</li>
+                <li>Scalable world-model / occupancy pretraining যা একটি initialization থেকে detection, mapping, <em>এবং</em> planning-এ transfer করে, একটি সুষ্ঠু full-label তুলনা সহ।</li>
+                <li>এমন SSL যা head class ধারালো করার বদলে long tail উন্নত করে &mdash; বিরল গাড়ির ধরন, নির্মাণ, ধ্বংসাবশেষ।</li>
+                <li>সৎ, standardized label-efficiency benchmark (MV-JAR-এর matched protocol <a class="ref-link" href="#ref-12">[12]</a> একটি শুরু) যাতে ফলাফল paper-জুড়ে তুলনীয় হয়।</li>
+                <li>কখন একটি 2D foundation prior 3D-তে সাহায্য করে এবং কখন তার web-image bias সক্রিয়ভাবে ক্ষতি করে তা বোঝা।</li>
+                <li>Radar ও 4D-radar SSL &mdash; প্রায় অনাবিষ্কৃত, এবং label-এর জন্য সবচেয়ে ক্ষুধার্ত modality।</li>
+              </ul>
+            </div>
+          </section>
+
+          <div class="w-key" data-lang="en">
+            <h2>Key takeaways</h2>
+            <ul>
+              <li>SSL's payoff is a left-shifted label-efficiency curve, concentrated at 1&ndash;10% labels and in cross-dataset transfer; at full labels the margin is often small.</li>
+              <li>Match the pretext to the downstream head: cross-modal distillation for semantics, masked/rendering for geometry, proposal-level contrastive for detection. Mismatch can cause negative transfer.</li>
+              <li>The strongest current methods distill from 2D foundation models (DINOv2 / CLIP / SAM / Metric3D) &mdash; account for that when comparing.</li>
+              <li>Rendering and world-model pretext are the promising directions for camera and fusion pretraining; evaluate them against cheap occupancy pretext at equal compute.</li>
+              <li>Most inflated SSL claims come from a weak from-scratch baseline or a backbone/budget confound. Always run the matched control, report linear-probe and fine-tune, and use &ge;3 seeds.</li>
+              <li>Offboard auto-labeling is the complementary lever &mdash; use both.</li>
+            </ul>
+          </div>
+          <div class="w-key" data-lang="bn" lang="bn">
+            <h2>মূল কথা</h2>
+            <ul>
+              <li>SSL-এর প্রতিদান একটি বাঁ দিকে সরানো label-efficiency curve, ১&ndash;১০% label ও cross-dataset transfer-এ কেন্দ্রীভূত; পূর্ণ label-এ ব্যবধান প্রায়ই ছোট।</li>
+              <li>pretext-কে downstream head-এর সঙ্গে মেলান: semantics-এর জন্য cross-modal distillation, geometry-র জন্য masked/rendering, detection-এর জন্য proposal-level contrastive। অমিল negative transfer ঘটাতে পারে।</li>
+              <li>সবচেয়ে শক্তিশালী বর্তমান পদ্ধতিগুলো 2D foundation model (DINOv2 / CLIP / SAM / Metric3D) থেকে distill করে &mdash; তুলনার সময় তা হিসাবে নিন।</li>
+              <li>Rendering ও world-model pretext camera ও fusion pretraining-এর জন্য সম্ভাবনাময় দিক; সমান compute-এ সস্তা occupancy pretext-এর বিরুদ্ধে এগুলো মূল্যায়ন করুন।</li>
+              <li>বেশিরভাগ বাড়িয়ে-বলা SSL দাবি আসে একটি দুর্বল from-scratch baseline বা একটি backbone/budget confound থেকে। সবসময় matched control চালান, linear-probe ও fine-tune রিপোর্ট করুন, এবং &ge;৩ seed ব্যবহার করুন।</li>
+              <li>Offboard auto-labeling হলো পরিপূরক lever &mdash; দুটোই ব্যবহার করুন।</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <section class="w-refs" id="refs">
+          <h2><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></h2>
+          <ol>
+            <li id="ref-1">Caesar, H. et al. &ldquo;nuScenes: A Multimodal Dataset for Autonomous Driving.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1903.11027">arXiv:1903.11027</a></li>
+            <li id="ref-2">Xie, S. et al. &ldquo;PointContrast: Unsupervised Pre-training for 3D Point Cloud Understanding.&rdquo; ECCV 2020. <a href="https://arxiv.org/abs/2007.10985">arXiv:2007.10985</a></li>
+            <li id="ref-3">Zhang, Z. et al. &ldquo;Self-Supervised Pretraining of 3D Features on any Point-Cloud (DepthContrast).&rdquo; ICCV 2021. <a href="https://arxiv.org/abs/2101.02691">arXiv:2101.02691</a></li>
+            <li id="ref-4">Liang, H. et al. &ldquo;Exploring Geometry-aware Contrast and Clustering Harmonization for Self-supervised 3D Object Detection (GCC-3D).&rdquo; ICCV 2021. <a href="https://arxiv.org/abs/2108.04728">arXiv:2108.04728</a></li>
+            <li id="ref-5">Huang, S. et al. &ldquo;Spatio-temporal Self-Supervised Representation Learning for 3D Point Clouds (STRL).&rdquo; ICCV 2021. <a href="https://arxiv.org/abs/2109.00179">arXiv:2109.00179</a></li>
+            <li id="ref-6">Yin, J. et al. &ldquo;ProposalContrast: Unsupervised Pre-training for LiDAR-based 3D Object Detection.&rdquo; ECCV 2022. <a href="https://arxiv.org/abs/2207.12654">arXiv:2207.12654</a></li>
+            <li id="ref-7">Nunes, L. et al. &ldquo;SegContrast: 3D Point Cloud Feature Learning via Class-agnostic Segment Discrimination.&rdquo; IEEE RA-L 2022.</li>
+            <li id="ref-8">Nunes, L. et al. &ldquo;Temporal Consistent 3D LiDAR Representation Learning for Semantic Perception (TARL).&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2310.02016">arXiv:2310.02016</a></li>
+            <li id="ref-9">Hess, G. et al. &ldquo;Masked Autoencoder for Self-Supervised Pre-training on Lidar Point Clouds (Voxel-MAE).&rdquo; WACV 2023 Workshops. <a href="https://arxiv.org/abs/2207.00531">arXiv:2207.00531</a></li>
+            <li id="ref-10">Min, C. et al. &ldquo;Occupancy-MAE: Self-supervised Pre-training for LiDAR-based 3D Object Detection.&rdquo; IEEE T-IV 2023. <a href="https://arxiv.org/abs/2206.09900">arXiv:2206.09900</a></li>
+            <li id="ref-11">Yang, H. et al. &ldquo;GD-MAE: Generative Decoder for MAE Pre-training on LiDAR Point Clouds.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2212.03010">arXiv:2212.03010</a></li>
+            <li id="ref-12">Xu, R. et al. &ldquo;MV-JAR: Masked Voxel Jigsaw and Reconstruction for LiDAR-Based Self-Supervised Pre-Training.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2303.13510">arXiv:2303.13510</a></li>
+            <li id="ref-13">Lin, Z. et al. &ldquo;BEV-MAE: Bird's Eye View Masked Autoencoders for Point Cloud Pre-training in Autonomous Driving.&rdquo; AAAI 2024. <a href="https://arxiv.org/abs/2212.05758">arXiv:2212.05758</a></li>
+            <li id="ref-14">Boulch, A. et al. &ldquo;ALSO: Automotive Lidar Self-supervision by Occupancy Estimation.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2212.05867">arXiv:2212.05867</a></li>
+            <li id="ref-15">Yang, H. et al. &ldquo;UniPAD: A Universal Pre-training Paradigm for Autonomous Driving.&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2310.08370">arXiv:2310.08370</a></li>
+            <li id="ref-16">Zhu, H. et al. &ldquo;PonderV2: Pave the Way for 3D Foundation Model with a Universal Pre-training Paradigm.&rdquo; 2023. <a href="https://arxiv.org/abs/2310.08586">arXiv:2310.08586</a></li>
+            <li id="ref-17">Sautier, C. et al. &ldquo;Image-to-Lidar Self-Supervised Distillation for Autonomous Driving Data (SLidR).&rdquo; CVPR 2022. <a href="https://arxiv.org/abs/2203.16258">arXiv:2203.16258</a></li>
+            <li id="ref-18">Mahmoud, A. et al. &ldquo;Self-Supervised Image-to-Point Distillation via Semantically Tolerant Contrastive Loss (ST-SLidR).&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2301.05709">arXiv:2301.05709</a></li>
+            <li id="ref-19">Liu, Y. et al. &ldquo;Segment Any Point Cloud Sequences by Distilling Vision Foundation Models (Seal).&rdquo; NeurIPS 2023. <a href="https://arxiv.org/abs/2306.09347">arXiv:2306.09347</a></li>
+            <li id="ref-20">Xu, X. et al. &ldquo;4D Contrastive Superflows are Dense 3D Representation Learners (SuperFlow).&rdquo; ECCV 2024. <a href="https://arxiv.org/abs/2407.06190">arXiv:2407.06190</a></li>
+            <li id="ref-21">Chen, R. et al. &ldquo;CLIP2Scene: Towards Label-efficient 3D Scene Understanding by CLIP.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2301.04926">arXiv:2301.04926</a></li>
+            <li id="ref-22">Peng, S. et al. &ldquo;OpenScene: 3D Scene Understanding with Open Vocabularies.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2211.15654">arXiv:2211.15654</a></li>
+            <li id="ref-23">He, K. et al. &ldquo;Masked Autoencoders Are Scalable Vision Learners.&rdquo; CVPR 2022. <a href="https://arxiv.org/abs/2111.06377">arXiv:2111.06377</a></li>
+            <li id="ref-24">Min, C. et al. &ldquo;UniWorld: Autonomous Driving Pre-training via World Models.&rdquo; 2023. <a href="https://arxiv.org/abs/2308.07234">arXiv:2308.07234</a></li>
+            <li id="ref-25">Min, C. et al. &ldquo;DriveWorld: 4D Pre-trained Scene Understanding via World Models for Autonomous Driving.&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2405.04390">arXiv:2405.04390</a></li>
+            <li id="ref-26">Yang, Z. et al. &ldquo;Visual Point Cloud Forecasting enables Scalable Autonomous Driving (ViDAR).&rdquo; CVPR 2024. <a href="https://arxiv.org/abs/2312.17655">arXiv:2312.17655</a></li>
+            <li id="ref-27">Yan, X. et al. &ldquo;Forging Vision Foundation Models for Autonomous Driving: Challenges, Methodologies, and Opportunities.&rdquo; 2024. <a href="https://arxiv.org/abs/2401.08045">arXiv:2401.08045</a></li>
+            <li id="ref-28">Tian, X. et al. &ldquo;Occ3D: A Large-Scale 3D Occupancy Prediction Benchmark for Autonomous Driving.&rdquo; NeurIPS 2023. <a href="https://arxiv.org/abs/2304.14365">arXiv:2304.14365</a></li>
+            <li id="ref-29">Zhang, R. et al. &ldquo;TREND: Unsupervised 3D Representation Learning via Temporal Forecasting for LiDAR Perception.&rdquo; 2024. <a href="https://arxiv.org/abs/2412.03054">arXiv:2412.03054</a></li>
+            <li id="ref-30">Zhang, H. et al. &ldquo;VisionPAD: A Vision-Centric Pre-training Paradigm for Autonomous Driving.&rdquo; 2024. <a href="https://arxiv.org/abs/2411.14716">arXiv:2411.14716</a></li>
+            <li id="ref-31">Zhang, S. et al. &ldquo;HVDistill: Transferring Knowledge from Images to Point Clouds via Unsupervised Hybrid-View Distillation.&rdquo; IJCV 2024. <a href="https://arxiv.org/abs/2403.11817">arXiv:2403.11817</a></li>
+            <li id="ref-32">&ldquo;Revisiting Bird's Eye View Perception Models with Frozen Foundation Models: DINOv2 and Metric3Dv2.&rdquo; 2024. <a href="https://arxiv.org/abs/2501.08118">arXiv:2501.08118</a></li>
+            <li id="ref-33">Qi, C. R. et al. &ldquo;Offboard 3D Object Detection from Point Cloud Sequences (3DAL).&rdquo; CVPR 2021. <a href="https://arxiv.org/abs/2103.05073">arXiv:2103.05073</a></li>
+            <li id="ref-34">Fan, L. et al. &ldquo;Once Detected, Never Lost: Surpassing Human Performance in Offline LiDAR based 3D Object Detection (CTRL).&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2304.12315">arXiv:2304.12315</a></li>
+            <li id="ref-35">Ma, T. et al. &ldquo;DetZero: Rethinking Offboard 3D Object Detection with Long-term Sequential Point Clouds.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2306.06023">arXiv:2306.06023</a></li>
+          </ol>
+        </section>
+
+        <nav class="w-prevnext" aria-label="More writeups">
+          <a class="p" href="camera-lidar-fusion.html">
+            <span class="dir"><span data-lang="en">&#8592; Previous</span><span data-lang="bn" lang="bn">&#8592; পূর্ববর্তী</span></span>
+            <span class="ttl"><span data-lang="en">Camera&ndash;LiDAR Fusion in Practice: Failure Modes and Design Patterns</span><span data-lang="bn" lang="bn">বাস্তবে Camera&ndash;LiDAR Fusion: ব্যর্থতার ধরন ও ডিজ়াইন প্যাটার্ন</span></span>
+          </a>
+          <a class="n" href="vision-language-vehicle-detection.html">
+            <span class="dir"><span data-lang="en">Next &#8594;</span><span data-lang="bn" lang="bn">পরবর্তী &#8594;</span></span>
+            <span class="ttl"><span data-lang="en">Vision&ndash;Language Approaches for Vehicle Detection in Complex Scenarios</span><span data-lang="bn" lang="bn">জটিল দৃশ্যে যানবাহন শনাক্তকরণে Vision&ndash;Language পদ্ধতি</span></span>
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/"><span data-lang="en">Back to portfolio &#8599;</span><span data-lang="bn" lang="bn">পোর্টফোলিওতে ফিরুন &#8599;</span></a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

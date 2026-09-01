@@ -1,20 +1,570 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A practical guide to camera-LiDAR fusion design patterns, calibration pitfalls, and robustness tactics for autonomous systems.">
-  <title>Camera-LiDAR Fusion in Practice | Bipin Saha</title>
+  <meta name="description" content="A practitioner's field-wide taxonomy of camera-LiDAR fusion failure modes for 3D object detection - calibration drift, temporal misalignment, modality laziness, asymmetric weather degradation, missing-modality collapse, sensor spoofing - the fragile projection geometry underneath, online-calibration options, the architectural patterns that contain each failure, and a robustness-evaluation protocol.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/camera-lidar-fusion.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns">
+  <meta property="og:description" content="Fusion beats either sensor on clean benchmarks, then fails in correlated, systematic ways. A field-wide taxonomy of what breaks and the patterns that contain it.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/camera-lidar-fusion.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns">
+  <meta name="twitter:description" content="A practitioner's taxonomy of camera-LiDAR fusion failure modes and mitigations.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns | Bipin Saha</title>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns",
+      "description": "A field-wide taxonomy of camera-LiDAR fusion failure modes for 3D object detection and the architectural patterns that contain them.",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "publisher": { "@type": "Person", "name": "Bipin Saha" },
+      "datePublished": "2026-01-19",
+      "dateModified": "2026-08-31",
+      "mainEntityOfPage": "https://bipin-saha.github.io/writeups/camera-lidar-fusion.html",
+      "about": ["Camera-LiDAR fusion", "3D object detection", "Sensor calibration", "Robustness", "Autonomous driving"],
+      "keywords": "camera-LiDAR fusion, calibration drift, online calibration, modality dropout, Robo3D, nuScenes-C, BEVFusion, TransFusion, CMT",
+      "inLanguage": ["en", "bn"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" },
+        { "@type": "ListItem", "position": 3, "name": "Camera-LiDAR Fusion in Practice", "item": "https://bipin-saha.github.io/writeups/camera-lidar-fusion.html" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+
+  <!-- Apply the English/Bangla choice before first paint (no flash). A ?lang=bn
+       or ?lang=en query param wins and is remembered; otherwise localStorage. -->
+  <script>
+    (function () {
+      try {
+        var q = (location.search.match(/[?&]lang=(bn|en)\b/) || [])[1];
+        var l = q || localStorage.getItem('writeup-lang');
+        if (l === 'bn' || l === 'en') {
+          document.documentElement.setAttribute('lang', l);
+          if (q) localStorage.setItem('writeup-lang', q);
+        }
+      } catch (e) { /* private mode - fall back to lang="en" */ }
+    })();
+  </script>
 </head>
+
 <body>
-  <p><a href="index.html">Back to writeups</a></p>
-  <h1>Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns</h1>
-  <p>This writeup summarizes practical engineering choices for building reliable camera-LiDAR fusion stacks beyond benchmark-only performance.</p>
-  <h2>Problem</h2>
-  <p>Fusion models often degrade under calibration drift, weather-induced LiDAR sparsity, and camera motion blur.</p>
-  <h2>Method</h2>
-  <p>Use explicit calibration validation, confidence-aware modality weighting, and fault-tolerant fallback logic for sensor degradation.</p>
-  <h2>Results</h2>
-  <p>Teams can improve deployment stability by prioritizing calibration health checks and condition-aware fusion policies.</p>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/"><span data-lang="en">Home</span><span data-lang="bn" lang="bn">হোম</span></a><span>/</span><a href="/writeups/"><span data-lang="en">Writeups</span><span data-lang="bn" lang="bn">রাইটআপ</span></a><span>/</span><span class="here">Camera&ndash;LiDAR Fusion</span>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language / ভাষা">
+        <button type="button" data-lang-set="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-set="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="w-layout">
+
+      <aside class="w-toc" aria-label="Contents">
+        <p class="w-toc-label"><span data-lang="en">Contents</span><span data-lang="bn" lang="bn">বিষয়সূচি</span></p>
+        <ul>
+          <li><a href="#premise"><span data-lang="en">1 &middot; The complementarity premise</span><span data-lang="bn" lang="bn">১ &middot; পরিপূরকতার যুক্তি</span></a></li>
+          <li><a href="#taxonomy"><span data-lang="en">2 &middot; A taxonomy of fusion</span><span data-lang="bn" lang="bn">২ &middot; fusion-এর শ্রেণিবিন্যাস</span></a></li>
+          <li><a href="#geometry"><span data-lang="en">3 &middot; The fragile geometry</span><span data-lang="bn" lang="bn">৩ &middot; ভঙ্গুর geometry</span></a></li>
+          <li><a href="#calib"><span data-lang="en">4 &middot; Online calibration</span><span data-lang="bn" lang="bn">৪ &middot; Online calibration</span></a></li>
+          <li><a href="#failures"><span data-lang="en">5 &middot; Failure modes</span><span data-lang="bn" lang="bn">৫ &middot; ব্যর্থতার ধরন</span></a></li>
+          <li><a href="#patterns"><span data-lang="en">6 &middot; Design patterns</span><span data-lang="bn" lang="bn">৬ &middot; ডিজ়াইন প্যাটার্ন</span></a></li>
+          <li><a href="#eval"><span data-lang="en">7 &middot; Evaluating robustness</span><span data-lang="bn" lang="bn">৭ &middot; Robustness মূল্যায়ন</span></a></li>
+          <li><a href="#deploy"><span data-lang="en">8 &middot; Deployment</span><span data-lang="bn" lang="bn">৮ &middot; Deployment</span></a></li>
+          <li><a href="#open"><span data-lang="en">9 &middot; Open problems</span><span data-lang="bn" lang="bn">৯ &middot; অমীমাংসিত সমস্যা</span></a></li>
+          <li><a href="#refs"><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></a></li>
+        </ul>
+      </aside>
+
+      <main class="warticle" id="content">
+        <p class="w-eyebrow" data-lang="en">Technical Writeup</p>
+        <p class="w-eyebrow" data-lang="bn" lang="bn">টেকনিক্যাল রাইটআপ</p>
+        <h1 data-lang="en">Camera&ndash;LiDAR Fusion in Practice: Failure Modes and Design Patterns</h1>
+        <h1 data-lang="bn" lang="bn">বাস্তবে Camera&ndash;LiDAR Fusion: ব্যর্থতার ধরন ও ডিজ়াইন প্যাটার্ন</h1>
+        <p class="w-lede" data-lang="en">On a clean benchmark, camera&ndash;LiDAR fusion beats either sensor alone by a comfortable margin. In deployment it fails in ways single-sensor models do not: quietly, systematically, and often with the fused model performing <em>worse</em> than the better single modality would have. This writeup catalogues those failure modes, the geometry that causes them, and the design patterns that contain them.</p>
+        <p class="w-lede" data-lang="bn" lang="bn">পরিষ্কার benchmark-এ camera&ndash;LiDAR fusion যেকোনো একটি sensor-এর চেয়ে স্বচ্ছন্দ ব্যবধানে ভালো করে। কিন্তু deployment-এ এটি এমনভাবে ব্যর্থ হয় যা single-sensor মডেলে দেখা যায় না: নীরবে, নিয়মিত ধরনে, এবং প্রায়ই fused মডেলটি ভালো single modality-র চেয়েও <em>খারাপ</em> ফল দেয়। এই লেখায় সেই ব্যর্থতার ধরনগুলো, তার পেছনের geometry, এবং যেসব ডিজ়াইন প্যাটার্ন সেগুলো নিয়ন্ত্রণে রাখে &mdash; একসঙ্গে সাজানো হয়েছে।</p>
+        <div class="w-meta" data-lang="en">
+          <span>Published 19&nbsp;Jan&nbsp;2026</span>
+          <span>Updated 31&nbsp;Aug&nbsp;2026</span>
+          <span>~24&nbsp;min read</span>
+        </div>
+        <div class="w-meta" data-lang="bn" lang="bn">
+          <span>প্রকাশ ১৯&nbsp;জানু&nbsp;২০২৬</span>
+          <span>হালনাগাদ ৩১&nbsp;আগস্ট&nbsp;২০২৬</span>
+          <span>~২৪&nbsp;মিনিট পাঠ</span>
+        </div>
+        <ul class="w-tags" data-lang="en">
+          <li>Sensor fusion</li>
+          <li>Calibration</li>
+          <li>Robustness</li>
+          <li>3D detection</li>
+          <li>Adverse weather</li>
+        </ul>
+        <ul class="w-tags" data-lang="bn" lang="bn">
+          <li>Sensor fusion</li>
+          <li>Calibration</li>
+          <li>Robustness</li>
+          <li>3D detection</li>
+          <li>বৈরী আবহাওয়া</li>
+        </ul>
+
+        <div class="prose">
+
+          <section id="premise">
+            <div data-lang="en">
+              <h2><span class="s-num">1</span>The complementarity premise, and its fine print</h2>
+              <p>The case for fusion is a complementarity argument, summarized in the table below.</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>The complementarity that motivates fusion &mdash; and the conditions under which both columns degrade together.</caption>
+                  <thead><tr><th>Property</th><th>LiDAR</th><th>Camera</th></tr></thead>
+                  <tbody>
+                    <tr><td>Depth / metric geometry</td><td>Direct, accurate</td><td>None (monocular ambiguity)</td></tr>
+                    <tr><td>Semantic texture / color</td><td>Minimal (intensity only)</td><td>Rich</td></tr>
+                    <tr><td>Angular resolution at range</td><td>Sparse, thins ~1/r&sup2;</td><td>High, roughly constant</td></tr>
+                    <tr><td>Darkness</td><td>Unaffected</td><td>Fails</td></tr>
+                    <tr><td>Direct sun / headlight glare</td><td>Unaffected</td><td>Blooming, exposure lag</td></tr>
+                    <tr><td>Rain / fog / snow</td><td>Attenuation, spray returns</td><td>Blur, droplets, spray occlusion</td></tr>
+                    <tr><td>Vibration / thermal drift</td><td>Extrinsics shift</td><td>Extrinsics shift</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>The last three rows are the fine print: <strong>complementarity assumes the two failure distributions are independent, and in the real world they are correlated</strong>. Heavy rain degrades both sensors at once. A hard turn onto a low sun degrades the camera exactly when motion distortion is worst for a spinning LiDAR. Vibration on a rough surface knocks the extrinsic calibration off for both. When failures correlate, naive fusion does not average out error &mdash; it can lock in the confident-but-wrong modality. Every design pattern in &sect;6 is, at bottom, a hedge against correlated failure.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">১</span>পরিপূরকতার যুক্তি, এবং তার শর্তাবলি</h2>
+              <p>Fusion-এর পক্ষে মূল যুক্তিটি পরিপূরকতার (complementarity) &mdash; নিচের টেবিলে সংক্ষেপে দেখানো হলো।</p>
+              <div class="t-wrap">
+                <table>
+                  <caption>যে পরিপূরকতা fusion-কে যুক্তিযুক্ত করে &mdash; এবং যে পরিস্থিতিতে দুটি কলামই একসঙ্গে খারাপ হয়।</caption>
+                  <thead><tr><th>বৈশিষ্ট্য</th><th>LiDAR</th><th>Camera</th></tr></thead>
+                  <tbody>
+                    <tr><td>Depth / মেট্রিক জ্যামিতি</td><td>সরাসরি, নির্ভুল</td><td>নেই (monocular অস্পষ্টতা)</td></tr>
+                    <tr><td>Semantic টেক্সচার / রঙ</td><td>নগণ্য (কেবল intensity)</td><td>সমৃদ্ধ</td></tr>
+                    <tr><td>দূরত্বে angular resolution</td><td>বিরল, ~১/r&sup2; হারে পাতলা</td><td>উচ্চ, মোটামুটি ধ্রুব</td></tr>
+                    <tr><td>অন্ধকার</td><td>অপ্রভাবিত</td><td>ব্যর্থ</td></tr>
+                    <tr><td>সরাসরি সূর্য / হেডলাইটের glare</td><td>অপ্রভাবিত</td><td>blooming, exposure দেরি</td></tr>
+                    <tr><td>বৃষ্টি / কুয়াশা / তুষার</td><td>attenuation, spray return</td><td>blur, জলবিন্দু, spray occlusion</td></tr>
+                    <tr><td>কম্পন / তাপীয় drift</td><td>extrinsic সরে যায়</td><td>extrinsic সরে যায়</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>শেষ তিনটি সারিই আসল শর্ত: <strong>পরিপূরকতা ধরে নেয় যে দুটি sensor-এর failure distribution পরস্পর-স্বাধীন, অথচ বাস্তবে সেগুলো correlated</strong>। ভারী বৃষ্টি একসঙ্গে দুটো sensor-কেই দুর্বল করে। নিচু সূর্যের দিকে তীক্ষ্ণ বাঁক নেওয়ার সময় camera ঠিক তখনই খারাপ হয় যখন ঘূর্ণায়মান LiDAR-এর জন্য motion distortion সবচেয়ে বেশি। এবড়োখেবড়ো রাস্তায় কম্পন দুটো sensor-এরই extrinsic calibration নাড়িয়ে দেয়। failure যখন correlated, তখন naive fusion ত্রুটি গড় করে মেলায় না &mdash; বরং আত্মবিশ্বাসী-কিন্তু-ভুল modality-টিকেই আঁকড়ে ধরতে পারে। &sect;৬-এর প্রতিটি ডিজ়াইন প্যাটার্ন মূলত এই correlated failure-এর বিরুদ্ধে একটি রক্ষাকবচ।</p>
+            </div>
+          </section>
+
+          <section id="taxonomy">
+            <div data-lang="en">
+              <h2><span class="s-num">2</span>A taxonomy of fusion, by where the modalities meet</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>Fusion families ordered by the stage at which information crosses modalities. Later fusion is generally more robust to calibration error and missing modalities; earlier fusion can be more accurate on clean data.</caption>
+                  <thead><tr><th>Family</th><th>Mechanism</th><th>Representatives</th><th>Robustness posture</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td>Point / input decoration</td>
+                      <td>Project points into the image, append 2D semantic scores or CNN features to each point, then run a LiDAR detector</td>
+                      <td>PointPainting <a class="ref-link" href="#ref-1">[1]</a>, PointAugmenting <a class="ref-link" href="#ref-2">[2]</a>, MVP <a class="ref-link" href="#ref-3">[3]</a></td>
+                      <td>Brittle: a hard projection, fully dependent on calibration and sync</td>
+                    </tr>
+                    <tr>
+                      <td>Feature / BEV-level</td>
+                      <td>Encode each modality to a shared BEV grid, then concatenate or attend</td>
+                      <td>BEVFusion (MIT) <a class="ref-link" href="#ref-4">[4]</a>, BEVFusion (PKU) <a class="ref-link" href="#ref-5">[5]</a></td>
+                      <td>Moderate: streams independent until the BEV join; graceful drop-out</td>
+                    </tr>
+                    <tr>
+                      <td>Query / proposal-level</td>
+                      <td>Generate object queries (usually from LiDAR), then softly attend to image features per query</td>
+                      <td>TransFusion <a class="ref-link" href="#ref-6">[6]</a>, FUTR3D <a class="ref-link" href="#ref-7">[7]</a>, DeepInteraction <a class="ref-link" href="#ref-8">[8]</a>, CMT <a class="ref-link" href="#ref-9">[9]</a></td>
+                      <td>Good: soft association tolerates calibration drift by design</td>
+                    </tr>
+                    <tr>
+                      <td>Sparse / instance-level</td>
+                      <td>Sparse candidates in both modalities; fuse only at matched instances, with per-modality uncertainty</td>
+                      <td>SparseFusion <a class="ref-link" href="#ref-10">[10]</a>, SparseLIF <a class="ref-link" href="#ref-11">[11]</a></td>
+                      <td>Good and fast: explicit uncertainty weighting</td>
+                    </tr>
+                    <tr>
+                      <td>Result / late</td>
+                      <td>Run independent detectors, fuse boxes (weighted NMS, learned re-scoring)</td>
+                      <td>Weighted box fusion, ensemble heads</td>
+                      <td>Most robust, least accurate ceiling; trivial fallback</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>The historical trajectory has been input decoration &#8594; BEV feature fusion &#8594; query-level fusion, with each step trading a little of the clean-data ceiling for a lot of robustness. On the nuScenes test benchmark, reported figures for the feature/query families cluster in the low-70s NDS (BEVFusion) up to the mid-70s (CMT, GAFusion <a class="ref-link" href="#ref-12">[12]</a>), versus the mid-60s for a LiDAR-only CenterPoint baseline. Treat those as backbone- and TTA-dependent (see the benchmarking writeup); the point here is that leaderboard NDS is a weak predictor of which family you should ship.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">২</span>Modality কোথায় মিলিত হয় &mdash; সেই অনুযায়ী fusion-এর একটি শ্রেণিবিন্যাস</h2>
+              <div class="t-wrap">
+                <table>
+                  <caption>তথ্য কোন পর্যায়ে modality পার হয় &mdash; সেই অনুযায়ী সাজানো fusion পরিবার। দেরিতে করা fusion সাধারণত calibration ত্রুটি ও missing modality-র বিরুদ্ধে বেশি robust; আগেভাগে করা fusion পরিষ্কার ডেটায় বেশি নির্ভুল হতে পারে।</caption>
+                  <thead><tr><th>পরিবার</th><th>কার্যপদ্ধতি</th><th>উদাহরণ</th><th>Robustness অবস্থান</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td>Point / input decoration</td>
+                      <td>point-গুলোকে image-এ project করে প্রতিটি point-এ 2D semantic score বা CNN feature জুড়ে দিয়ে তারপর একটি LiDAR detector চালানো</td>
+                      <td>PointPainting <a class="ref-link" href="#ref-1">[1]</a>, PointAugmenting <a class="ref-link" href="#ref-2">[2]</a>, MVP <a class="ref-link" href="#ref-3">[3]</a></td>
+                      <td>ভঙ্গুর: hard projection, পুরোপুরি calibration ও sync-এর উপর নির্ভরশীল</td>
+                    </tr>
+                    <tr>
+                      <td>Feature / BEV-level</td>
+                      <td>প্রতিটি modality-কে একটি shared BEV grid-এ encode করে তারপর concatenate বা attend করা</td>
+                      <td>BEVFusion (MIT) <a class="ref-link" href="#ref-4">[4]</a>, BEVFusion (PKU) <a class="ref-link" href="#ref-5">[5]</a></td>
+                      <td>মাঝারি: BEV-তে মেলার আগ পর্যন্ত stream দুটি স্বাধীন; drop-out সহনীয়</td>
+                    </tr>
+                    <tr>
+                      <td>Query / proposal-level</td>
+                      <td>object query তৈরি করা (সাধারণত LiDAR থেকে), তারপর প্রতি query-র জন্য image feature-এ softly attend করা</td>
+                      <td>TransFusion <a class="ref-link" href="#ref-6">[6]</a>, FUTR3D <a class="ref-link" href="#ref-7">[7]</a>, DeepInteraction <a class="ref-link" href="#ref-8">[8]</a>, CMT <a class="ref-link" href="#ref-9">[9]</a></td>
+                      <td>ভালো: soft association গঠনগতভাবেই calibration drift সহ্য করে</td>
+                    </tr>
+                    <tr>
+                      <td>Sparse / instance-level</td>
+                      <td>দুই modality-তেই sparse candidate; কেবল মিলে যাওয়া instance-এ fuse, per-modality uncertainty সহ</td>
+                      <td>SparseFusion <a class="ref-link" href="#ref-10">[10]</a>, SparseLIF <a class="ref-link" href="#ref-11">[11]</a></td>
+                      <td>ভালো ও দ্রুত: স্পষ্ট uncertainty weighting</td>
+                    </tr>
+                    <tr>
+                      <td>Result / late</td>
+                      <td>স্বাধীন detector চালিয়ে box fuse করা (weighted NMS, learned re-scoring)</td>
+                      <td>Weighted box fusion, ensemble head</td>
+                      <td>সবচেয়ে robust, নির্ভুলতার সিলিং সবচেয়ে কম; সহজ fallback</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>ঐতিহাসিক ধারা হলো input decoration &#8594; BEV feature fusion &#8594; query-level fusion, প্রতিটি ধাপে clean-data সিলিংয়ের সামান্য অংশ ছেড়ে দিয়ে অনেকটা robustness কেনা। nuScenes test benchmark-এ feature/query পরিবারের রিপোর্ট-করা সংখ্যা low-70s NDS (BEVFusion) থেকে mid-70s (CMT, GAFusion <a class="ref-link" href="#ref-12">[12]</a>) পর্যন্ত জড়ো, যেখানে LiDAR-only CenterPoint baseline mid-60s-এ। এগুলোকে backbone- ও TTA-নির্ভর ধরুন (benchmarking রাইটআপ দ্রষ্টব্য); মূল কথা হলো leaderboard NDS দিয়ে কোন পরিবার ship করবেন তা দুর্বলভাবে অনুমান করা যায়।</p>
+            </div>
+          </section>
+
+          <section id="geometry">
+            <div data-lang="en">
+              <h2><span class="s-num">3</span>The fragile geometry underneath every method</h2>
+              <p>Every fusion method above ultimately relies on knowing, for a 3D point <span class="eq">X</span> in the LiDAR frame, which pixel it corresponds to:</p>
+              <div class="eq-block">
+                &#956; &#8771; K ( R<sub>cam&#8592;lidar</sub> X + t<sub>cam&#8592;lidar</sub> ),
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>with intrinsics <span class="eq">K</span> and extrinsics <span class="eq">(R, t)</span> from calibration, evaluated at a single instant. Three things quietly violate the assumptions:</p>
+              <ul>
+                <li><strong>Extrinsic error.</strong> A small rotational miscalibration <span class="eq">&#948;&#952;</span> displaces the projected point by roughly <span class="eq">r &middot; &#948;&#952;</span> at range <span class="eq">r</span>. At 40&nbsp;m, 0.3&deg; is ~20&nbsp;cm of lateral error &mdash; a full lane-position ambiguity for a distant object. Calibration drifts with temperature, vibration, and minor collisions.</li>
+                <li><strong>Time offset.</strong> Cameras and LiDAR rarely trigger at the same instant, and a spinning LiDAR sweeps over ~100&nbsp;ms. A vehicle closing at 30&nbsp;m/s moves 0.9&nbsp;m in that window. Without motion compensation and timestamp-accurate association, dynamic objects are systematically mislocated relative to their image evidence.</li>
+                <li><strong>Rolling shutter and ego-motion.</strong> The top and bottom of a camera frame are exposed milliseconds apart; the ego vehicle and the target both move during the LiDAR sweep. Compensating one and not the other creates a residual that looks like calibration error but is not.</li>
+              </ul>
+              <p>The recurring lesson: any method that performs a <em>hard</em> point-to-pixel lookup inherits the full sensitivity of Eq.&nbsp;(1). Methods that use a <em>soft</em>, learned association &mdash; attention over a projected neighbourhood rather than a single pixel &mdash; absorb these residuals. This is the explicit motivation of TransFusion's soft-association module <a class="ref-link" href="#ref-6">[6]</a> and of CMT's decision to encode 3D position into tokens and skip explicit projection entirely <a class="ref-link" href="#ref-9">[9]</a>.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৩</span>প্রতিটি পদ্ধতির নিচে থাকা ভঙ্গুর geometry</h2>
+              <p>উপরের প্রতিটি fusion পদ্ধতি শেষমেশ নির্ভর করে এটা জানার উপর যে LiDAR frame-এ থাকা একটি 3D point <span class="eq">X</span> কোন pixel-এর সঙ্গে মেলে:</p>
+              <div class="eq-block">
+                &#956; &#8771; K ( R<sub>cam&#8592;lidar</sub> X + t<sub>cam&#8592;lidar</sub> ),
+                <span class="eq-num">(1)</span>
+              </div>
+              <p>এখানে intrinsics <span class="eq">K</span> এবং extrinsics <span class="eq">(R, t)</span> calibration থেকে আসে, এবং একটি নির্দিষ্ট মুহূর্তে মূল্যায়িত। তিনটি জিনিস নীরবে এই অনুমানগুলো ভাঙে:</p>
+              <ul>
+                <li><strong>Extrinsic ত্রুটি।</strong> ছোট একটি rotational miscalibration <span class="eq">&#948;&#952;</span>, <span class="eq">r</span> দূরত্বে projected point-কে মোটামুটি <span class="eq">r &middot; &#948;&#952;</span> পরিমাণে সরিয়ে দেয়। ৪০&nbsp;মিটারে ০.৩&deg; মানে ~২০&nbsp;সেমি পার্শ্বীয় ত্রুটি &mdash; দূরের object-এর জন্য পুরো একটা lane-position অস্পষ্টতা। তাপমাত্রা, কম্পন ও ছোটখাটো ধাক্কায় calibration drift করে।</li>
+                <li><strong>Time offset।</strong> Camera ও LiDAR কদাচিৎ একই মুহূর্তে trigger হয়, আর ঘূর্ণায়মান LiDAR ~১০০&nbsp;ms ধরে sweep করে। ৩০&nbsp;মি/সে বেগে এগিয়ে আসা একটি গাড়ি ওই সময়ে ০.৯&nbsp;মিটার সরে যায়। motion compensation এবং timestamp-নির্ভুল association ছাড়া dynamic object-গুলো তাদের image-প্রমাণের তুলনায় নিয়মিতভাবে ভুল জায়গায় বসে।</li>
+                <li><strong>Rolling shutter ও ego-motion।</strong> একটি camera frame-এর উপরের ও নিচের অংশ কয়েক মিলিসেকেন্ড ব্যবধানে expose হয়; LiDAR sweep চলাকালে ego গাড়ি ও target দুটোই সরে। একটিকে compensate করে অন্যটিকে না করলে এমন একটি residual তৈরি হয় যা দেখতে calibration ত্রুটির মতো, কিন্তু আসলে তা নয়।</li>
+              </ul>
+              <p>বারবার ফিরে আসা শিক্ষা: যে পদ্ধতি <em>hard</em> point-to-pixel lookup করে, তা Eq.&nbsp;(1)-এর পুরো sensitivity উত্তরাধিকারসূত্রে পায়। যেসব পদ্ধতি <em>soft</em>, learned association ব্যবহার করে &mdash; একটিমাত্র pixel-এর বদলে একটি projected neighbourhood-এর উপর attention &mdash; সেগুলো এই residual শুষে নেয়। এটাই TransFusion-এর soft-association module <a class="ref-link" href="#ref-6">[6]</a> এবং CMT-এর 3D position-কে token-এ encode করে explicit projection সম্পূর্ণ বাদ দেওয়ার <a class="ref-link" href="#ref-9">[9]</a> স্পষ্ট প্রেরণা।</p>
+            </div>
+          </section>
+
+          <section id="calib">
+            <div data-lang="en">
+              <h2><span class="s-num">4</span>Online and targetless calibration</h2>
+              <p>Factory calibration with a checkerboard is a one-time snapshot; the extrinsics you actually run with drift. Options, roughly in order of maturity:</p>
+              <ul>
+                <li><strong>Targetless geometric calibration.</strong> Align LiDAR-projected depth discontinuities with image edges / intensity gradients, or maximize mutual information between the projected point cloud and the image, and optimize <span class="eq">(R, t)</span> to the alignment. Cheap to run periodically; noisy per-frame.</li>
+                <li><strong>Learned calibration regression.</strong> Networks in the CalibNet / RegNet / LCCNet line <a class="ref-link" href="#ref-21">[21]</a> take a mis-calibrated (image, projected-depth) pair and regress the correcting transform, iterated to convergence. Useful as an initializer or a drift detector.</li>
+                <li><strong>Motion-based (hand&ndash;eye) calibration.</strong> Estimate each sensor's ego-trajectory independently and solve <span class="eq">AX = XB</span> for the rig transform; recovers extrinsics from normal driving with no targets.</li>
+                <li><strong>Calibration health monitoring.</strong> Even without correcting, a lightweight runtime alignment score (edge overlap, reprojection residual on static structure) that flags drift and triggers recalibration or a fallback to LiDAR-only.</li>
+              </ul>
+              <p>Whatever you use, feed small random SE(3) perturbations of the extrinsics into training so the detector is not overfit to the dataset's fixed calibration &mdash; this alone recovers most of the calibration-noise robustness gap for the point-decoration family.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৪</span>Online ও targetless calibration</h2>
+              <p>checkerboard দিয়ে factory calibration একবারের snapshot মাত্র; বাস্তবে যে extrinsics নিয়ে চালান তা drift করে। বিকল্পগুলো, মোটামুটি পরিপক্বতার ক্রমে:</p>
+              <ul>
+                <li><strong>Targetless geometric calibration।</strong> LiDAR-projected depth discontinuity-কে image edge / intensity gradient-এর সঙ্গে মেলানো, অথবা projected point cloud ও image-এর মধ্যে mutual information সর্বোচ্চ করা, এবং সেই alignment অনুযায়ী <span class="eq">(R, t)</span> optimize করা। পর্যায়ক্রমে চালানো সস্তা; per-frame হিসেবে noisy।</li>
+                <li><strong>Learned calibration regression।</strong> CalibNet / RegNet / LCCNet ধারার network <a class="ref-link" href="#ref-21">[21]</a> একটি mis-calibrated (image, projected-depth) জোড়া নিয়ে সংশোধনী transform regress করে, convergence পর্যন্ত iterate করে। initializer বা drift detector হিসেবে কাজে লাগে।</li>
+                <li><strong>Motion-based (hand&ndash;eye) calibration।</strong> প্রতিটি sensor-এর ego-trajectory আলাদাভাবে estimate করে rig transform-এর জন্য <span class="eq">AX = XB</span> সমাধান করা; কোনো target ছাড়াই সাধারণ driving থেকে extrinsics পুনরুদ্ধার করে।</li>
+                <li><strong>Calibration health monitoring।</strong> সংশোধন না করেও, একটি হালকা runtime alignment score (edge overlap, static structure-এ reprojection residual) যা drift চিহ্নিত করে এবং recalibration বা LiDAR-only fallback চালু করে।</li>
+              </ul>
+              <p>যা-ই ব্যবহার করুন, training-এ extrinsics-এর ছোট random SE(3) perturbation ঢোকান যাতে detector dataset-এর নির্দিষ্ট calibration-এ overfit না হয় &mdash; কেবল এটুকুই point-decoration পরিবারের বেশিরভাগ calibration-noise robustness gap পুনরুদ্ধার করে।</p>
+            </div>
+          </section>
+
+          <section id="failures">
+            <div data-lang="en">
+              <h2><span class="s-num">5</span>Failure modes</h2>
+
+              <h3>5.1 &nbsp;Calibration drift</h3>
+              <p>The single most under-tested axis. Models trained on a dataset's fixed calibration overfit to it; inject a few tenths of a degree of extrinsic noise at inference and point-decoration methods lose double-digit AP while BEV and query methods lose less. Mitigation is the training-time SE(3) augmentation from &sect;4 plus an architectural choice for soft association. If your fusion model has never seen calibration noise in training, assume it is fragile to it.</p>
+
+              <h3>5.2 &nbsp;Temporal misalignment and motion distortion</h3>
+              <p>The robustness benchmarks are blunt about this: in the CVPR&nbsp;2023 common-corruptions study <a class="ref-link" href="#ref-13">[13]</a> and in Robo3D <a class="ref-link" href="#ref-14">[14]</a>, <strong>motion-level corruptions are the most damaging category for every model tested</strong>, fused or not. The failure is not random noise &mdash; it is a consistent bias that couples with velocity, so it is worst exactly for the fast-moving objects that matter most for planning.</p>
+
+              <h3>5.3 &nbsp;Depth ambiguity and long-range camera degradation</h3>
+              <p>The camera branch's contribution decays with range because monocular depth error grows roughly quadratically. Past ~40&nbsp;m on a 32-beam sensor, LiDAR is also sparse, so a fused model has weak evidence from both. Symptoms: unstable range estimates, orientation flips, and phantom or missed detections at the grid boundary. Camera-only stacks address the depth problem with longitudinal-error-tolerant metrics (LET-3D-AP <a class="ref-link" href="#ref-15">[15]</a>); a fused model should be evaluated <em>stratified by distance</em>, not just on the aggregate.</p>
+
+              <h3>5.4 &nbsp;Modality laziness ("lazy fusion")</h3>
+              <p>Because LiDAR alone already solves most of nuScenes, gradient descent has little incentive to develop the camera branch. The fused model converges to a solution that leans almost entirely on LiDAR, with the camera branch contributing a small residual. You discover this only when you ablate: drop the camera at inference and the score barely moves. Work on single-modal adversarial attacks against fusion models <a class="ref-link" href="#ref-16">[16]</a> makes the same point from the security side &mdash; if perturbing one modality collapses the whole detector, the fusion was never balanced. Causes include unbalanced GT-paste augmentation (see the BEV roadmap writeup), a camera branch that is under-parameterized or under-pretrained, and joint-from-scratch training.</p>
+
+              <h3>5.5 &nbsp;Asymmetric adverse-weather degradation</h3>
+              <p>Rain, fog, and snow do not hit the two sensors equally or at the same time. The corruption studies find snow among the two worst corruptions for 3D detectors, and note that fusion models are <em>more</em> robust than LiDAR-only on average but still lose heavily <a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a>. The danger case is a model that has learned a fixed modality weighting from good-weather data and cannot shift weight to the camera when LiDAR fills with spray returns &mdash; or vice versa in fog.</p>
+
+              <h3>5.6 &nbsp;Missing modality / cross-sensor</h3>
+              <p>A dropped camera, a fully occluded lens, or a LiDAR packet loss is common in the field. The corruption benchmarks identify "cross-sensor" (evaluating on a different LiDAR configuration than training) as the other worst-case, degrading every detector by large margins <a class="ref-link" href="#ref-14">[14]</a>. A fusion model must have a defined, tested behavior when a modality is absent &mdash; ideally a graceful fallback to the surviving branch, never a hard crash or a confident hallucination.</p>
+
+              <h3>5.7 &nbsp;Domain and dataset gap</h3>
+              <p>Beam count, mounting height, FOV, and intensity calibration differ across platforms; camera color science and lens geometry differ too. A model trained on a 32-beam nuScenes <a class="ref-link" href="#ref-19">[19]</a> rig transfers poorly to a 64-beam rig without adaptation. Report cross-dataset numbers (train nuScenes, test Waymo Open <a class="ref-link" href="#ref-20">[20]</a> or vice versa) as a first-class result if you claim generality.</p>
+
+              <h3>5.8 &nbsp;Adversarial and spoofing inputs</h3>
+              <p>LiDAR can be spoofed with crafted laser pulses that inject or remove points <a class="ref-link" href="#ref-22">[22]</a>; cameras with adversarial patches or projected light. A fusion model that trusts one modality unconditionally (see 5.4) is exactly as attackable as that modality. Cross-checking modalities &mdash; flagging a detection that one sensor sees and the other flatly contradicts &mdash; is a partial defense and a useful monitor.</p>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৫</span>ব্যর্থতার ধরন</h2>
+
+              <h3>৫.১ &nbsp;Calibration drift</h3>
+              <p>সবচেয়ে কম-পরীক্ষিত axis। একটি dataset-এর নির্দিষ্ট calibration-এ train করা মডেল সেটাতেই overfit করে; inference-এ ডিগ্রির কয়েক দশমাংশ extrinsic noise ঢোকালে point-decoration পদ্ধতি double-digit AP হারায়, যেখানে BEV ও query পদ্ধতি কম হারায়। প্রশমন হলো &sect;৪-এর training-time SE(3) augmentation, সঙ্গে soft association-এর architectural পছন্দ। আপনার fusion মডেল training-এ কখনো calibration noise না দেখে থাকলে ধরে নিন এটি এর প্রতি ভঙ্গুর।</p>
+
+              <h3>৫.২ &nbsp;Temporal misalignment ও motion distortion</h3>
+              <p>Robustness benchmark-গুলো এ ব্যাপারে স্পষ্ট: CVPR&nbsp;2023-এর common-corruptions গবেষণা <a class="ref-link" href="#ref-13">[13]</a> এবং Robo3D <a class="ref-link" href="#ref-14">[14]</a>-তে, পরীক্ষিত প্রতিটি মডেলের জন্য &mdash; fused হোক বা না হোক &mdash; <strong>motion-level corruption সবচেয়ে ক্ষতিকর শ্রেণি</strong>। এই ব্যর্থতা random noise নয় &mdash; এটি velocity-র সঙ্গে যুক্ত একটি consistent bias, তাই planning-এর জন্য সবচেয়ে গুরুত্বপূর্ণ দ্রুতগামী object-গুলোর ক্ষেত্রেই এটি সবচেয়ে খারাপ।</p>
+
+              <h3>৫.৩ &nbsp;Depth অস্পষ্টতা ও দূরপাল্লায় camera-র অবনতি</h3>
+              <p>camera branch-এর অবদান দূরত্বের সঙ্গে কমে, কারণ monocular depth ত্রুটি মোটামুটি quadratically বাড়ে। ৩২-beam sensor-এ ~৪০&nbsp;মিটারের পরে LiDAR-ও sparse, তাই fused মডেলের কাছে দুই দিক থেকেই দুর্বল প্রমাণ। লক্ষণ: অস্থির range estimate, orientation উল্টে যাওয়া, এবং grid-সীমানায় phantom বা মিস-করা detection। Camera-only stack depth সমস্যা সামলায় longitudinal-error-tolerant metric দিয়ে (LET-3D-AP <a class="ref-link" href="#ref-15">[15]</a>); fused মডেলকে কেবল aggregate-এ নয়, <em>দূরত্ব অনুযায়ী stratified</em> করে মূল্যায়ন করা উচিত।</p>
+
+              <h3>৫.৪ &nbsp;Modality laziness ("lazy fusion")</h3>
+              <p>যেহেতু কেবল LiDAR-ই nuScenes-এর বেশিরভাগ সমাধান করে ফেলে, gradient descent-এর কাছে camera branch গড়ে তোলার তেমন প্রণোদনা নেই। fused মডেল এমন একটি সমাধানে converge করে যা প্রায় পুরোটাই LiDAR-এর উপর নির্ভর করে, camera branch কেবল ছোট একটি residual যোগ করে। এটি ধরা পড়ে কেবল ablate করলে: inference-এ camera বাদ দিন, score প্রায় নড়ে না। fusion মডেলের বিরুদ্ধে single-modal adversarial attack নিয়ে কাজ <a class="ref-link" href="#ref-16">[16]</a> security দিক থেকে একই কথা বলে &mdash; একটি modality perturb করলেই যদি পুরো detector ভেঙে পড়ে, তবে fusion কখনোই balanced ছিল না। কারণগুলোর মধ্যে আছে unbalanced GT-paste augmentation (BEV roadmap রাইটআপ দ্রষ্টব্য), under-parameterized বা under-pretrained camera branch, এবং joint-from-scratch training।</p>
+
+              <h3>৫.৫ &nbsp;অসম বৈরী-আবহাওয়া অবনতি</h3>
+              <p>বৃষ্টি, কুয়াশা ও তুষার দুটি sensor-কে সমানভাবে বা একই সময়ে আঘাত করে না। corruption গবেষণাগুলো তুষারকে 3D detector-এর জন্য সবচেয়ে খারাপ দুটি corruption-এর একটি হিসেবে পায়, এবং উল্লেখ করে যে fusion মডেল গড়ে LiDAR-only-র চেয়ে <em>বেশি</em> robust হলেও তবু ভারীভাবে হারায় <a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a>। বিপদের ক্ষেত্রটি হলো এমন একটি মডেল যা ভালো-আবহাওয়ার ডেটা থেকে একটি নির্দিষ্ট modality weighting শিখেছে এবং LiDAR যখন spray return-এ ভরে যায় তখন camera-র দিকে weight সরাতে পারে না &mdash; বা কুয়াশায় উল্টোটা।</p>
+
+              <h3>৫.৬ &nbsp;Missing modality / cross-sensor</h3>
+              <p>একটি বাদ-পড়া camera, সম্পূর্ণ occluded lens, বা LiDAR packet loss মাঠে সাধারণ ঘটনা। corruption benchmark-গুলো "cross-sensor"-কে (training-এর চেয়ে ভিন্ন LiDAR configuration-এ মূল্যায়ন) আরেকটি worst-case হিসেবে চিহ্নিত করে, যা প্রতিটি detector-কে বড় ব্যবধানে দুর্বল করে <a class="ref-link" href="#ref-14">[14]</a>। modality অনুপস্থিত থাকলে fusion মডেলের একটি নির্ধারিত, পরীক্ষিত আচরণ থাকতেই হবে &mdash; আদর্শভাবে টিকে-থাকা branch-এ graceful fallback, কখনোই hard crash বা আত্মবিশ্বাসী hallucination নয়।</p>
+
+              <h3>৫.৭ &nbsp;Domain ও dataset gap</h3>
+              <p>beam সংখ্যা, mounting উচ্চতা, FOV ও intensity calibration platform-ভেদে আলাদা; camera-র color science ও lens geometry-ও আলাদা। ৩২-beam nuScenes <a class="ref-link" href="#ref-19">[19]</a> rig-এ train করা মডেল adaptation ছাড়া ৬৪-beam rig-এ খারাপভাবে transfer করে। generality দাবি করলে cross-dataset সংখ্যা (train nuScenes, test Waymo Open <a class="ref-link" href="#ref-20">[20]</a> বা উল্টোটা) একটি প্রথম-শ্রেণির ফলাফল হিসেবে রিপোর্ট করুন।</p>
+
+              <h3>৫.৮ &nbsp;Adversarial ও spoofing input</h3>
+              <p>point যোগ বা অপসারণ করে এমন সাজানো laser pulse দিয়ে LiDAR-কে spoof করা যায় <a class="ref-link" href="#ref-22">[22]</a>; camera-কে adversarial patch বা projected আলো দিয়ে। যে fusion মডেল একটি modality-কে নিঃশর্তে বিশ্বাস করে (৫.৪ দ্রষ্টব্য) সেটি ঠিক ওই modality-র মতোই আক্রমণযোগ্য। modality পরস্পর ক্রস-চেক করা &mdash; এক sensor যা দেখে অথচ অন্যটি সরাসরি অস্বীকার করে এমন detection চিহ্নিত করা &mdash; একটি আংশিক প্রতিরক্ষা ও উপযোগী monitor।</p>
+            </div>
+          </section>
+
+          <section id="patterns">
+            <div data-lang="en">
+              <h2><span class="s-num">6</span>Design patterns that contain the failures</h2>
+              <ul>
+                <li><strong>Soft association over hard projection.</strong> Replace single-pixel lookups with attention over a projected neighborhood, or with position-encoded cross-attention (CMT <a class="ref-link" href="#ref-9">[9]</a>). Directly buys tolerance to calibration and time-sync error.</li>
+                <li><strong>Modality dropout during training.</strong> Randomly zero one modality for a fraction of iterations, as in the PKU BEVFusion robustness recipe <a class="ref-link" href="#ref-5">[5]</a>. Forces each branch to be independently useful and defines missing-modality behavior.</li>
+                <li><strong>Calibration-noise augmentation.</strong> Perturb extrinsics (and, less aggressively, intrinsics) with small random SE(3) transforms each iteration. Cheap; large robustness return on the point-decoration family.</li>
+                <li><strong>Uncertainty- or confidence-aware weighting.</strong> Predict per-modality, per-region reliability and gate the fusion by it (SparseLIF's uncertainty-aware fusion <a class="ref-link" href="#ref-11">[11]</a>). Lets the model shift weight to the camera when LiDAR is degraded, and vice versa.</li>
+                <li><strong>Consistent multimodal augmentation.</strong> Any spatial augmentation (BEV rotate / scale / flip, GT-paste, image crop) must be applied coherently across points, boxes, and image geometry, or you manufacture calibration error in training.</li>
+                <li><strong>Redundant single-modality heads / graceful degradation.</strong> Keep lightweight LiDAR-only and camera-only heads alive alongside the fused head, so a modality failure has a defined fallback and the system never depends on fusion succeeding.</li>
+                <li><strong>Online calibration monitoring.</strong> A cheap runtime check (edge alignment between projected LiDAR and image gradients) that flags drift and can trigger recalibration or a fallback to LiDAR-only (&sect;4).</li>
+                <li><strong>Cross-modal consistency checks.</strong> At inference, flag detections that one modality asserts strongly and the other flatly contradicts &mdash; a monitor for spoofing, gross miscalibration, and hallucination.</li>
+                <li><strong>Vision-foundation-model priors for robustness.</strong> Denoising or feature extraction with a strong pretrained image model (SAM-based front ends, as in RoboFusion <a class="ref-link" href="#ref-17">[17]</a>) improves out-of-distribution behavior of the camera branch.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৬</span>যেসব ডিজ়াইন প্যাটার্ন ব্যর্থতা নিয়ন্ত্রণে রাখে</h2>
+              <ul>
+                <li><strong>Hard projection-এর বদলে soft association।</strong> single-pixel lookup-এর জায়গায় একটি projected neighborhood-এর উপর attention, অথবা position-encoded cross-attention (CMT <a class="ref-link" href="#ref-9">[9]</a>) ব্যবহার করুন। সরাসরি calibration ও time-sync ত্রুটির প্রতি সহনশীলতা কেনে।</li>
+                <li><strong>Training-এ modality dropout।</strong> PKU BEVFusion robustness recipe <a class="ref-link" href="#ref-5">[5]</a>-এর মতো, কিছু অংশ iteration-এ একটি modality randomly শূন্য করে দিন। প্রতিটি branch-কে স্বাধীনভাবে উপযোগী হতে বাধ্য করে এবং missing-modality আচরণ নির্ধারণ করে।</li>
+                <li><strong>Calibration-noise augmentation।</strong> প্রতি iteration-এ ছোট random SE(3) transform দিয়ে extrinsics (এবং কম মাত্রায় intrinsics) perturb করুন। সস্তা; point-decoration পরিবারে বড় robustness লাভ।</li>
+                <li><strong>Uncertainty- বা confidence-aware weighting।</strong> per-modality, per-region নির্ভরযোগ্যতা predict করে তা দিয়ে fusion gate করুন (SparseLIF-এর uncertainty-aware fusion <a class="ref-link" href="#ref-11">[11]</a>)। LiDAR দুর্বল হলে মডেলকে camera-র দিকে weight সরাতে দেয়, এবং উল্টোটাও।</li>
+                <li><strong>Consistent multimodal augmentation।</strong> যেকোনো spatial augmentation (BEV rotate / scale / flip, GT-paste, image crop) point, box ও image geometry-জুড়ে সঙ্গতভাবে প্রয়োগ করতে হবে, নয়তো আপনি training-এই calibration ত্রুটি বানিয়ে ফেলছেন।</li>
+                <li><strong>Redundant single-modality head / graceful degradation।</strong> fused head-এর পাশাপাশি হালকা LiDAR-only ও camera-only head সচল রাখুন, যাতে modality ব্যর্থতায় একটি নির্ধারিত fallback থাকে এবং system কখনো fusion সফল হওয়ার উপর নির্ভর না করে।</li>
+                <li><strong>Online calibration monitoring।</strong> একটি সস্তা runtime check (projected LiDAR ও image gradient-এর মধ্যে edge alignment) যা drift চিহ্নিত করে এবং recalibration বা LiDAR-only fallback (&sect;৪) চালু করতে পারে।</li>
+                <li><strong>Cross-modal consistency check।</strong> inference-এ এমন detection চিহ্নিত করুন যা এক modality জোরালোভাবে দাবি করে অথচ অন্যটি সরাসরি অস্বীকার করে &mdash; spoofing, বড় miscalibration ও hallucination-এর একটি monitor।</li>
+                <li><strong>Robustness-এর জন্য vision-foundation-model prior।</strong> শক্তিশালী pretrained image model দিয়ে denoising বা feature extraction (RoboFusion <a class="ref-link" href="#ref-17">[17]</a>-এর মতো SAM-ভিত্তিক front end) camera branch-এর out-of-distribution আচরণ উন্নত করে।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="eval">
+            <div data-lang="en">
+              <h2><span class="s-num">7</span>Evaluating robustness, not just accuracy</h2>
+              <p>A fusion model's clean-set NDS says little about deployment behavior. Report, at minimum:</p>
+              <ul>
+                <li><strong>Corruption robustness</strong> on nuScenes-C / Robo3D <a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a> &mdash; the mean corrupted score and, more informatively, the per-corruption breakdown and the clean&ndash;corrupt gap. The corruption families to cover: weather (rain / fog / snow), sensor noise (Gaussian, impulse), density (subsampling, beam loss), motion (compensation error, ego jitter), object-level (occlusion, shear), and cross-sensor. MultiCorrupt <a class="ref-link" href="#ref-18">[18]</a> specifically targets misaligned and missing multi-sensor inputs.</li>
+                <li><strong>Missing-modality</strong> scores: camera-dropped, LiDAR-dropped, both-degraded.</li>
+                <li><strong>Calibration-noise sweeps</strong>: AP vs. injected extrinsic rotation and translation.</li>
+                <li><strong>Distance-stratified</strong> metrics: 0&ndash;20&nbsp;m, 20&ndash;30&nbsp;m, 30&nbsp;m+.</li>
+                <li><strong>Modality-attribution ablation</strong>: score with each branch alone, to quantify how much fusion is actually doing.</li>
+                <li><strong>Temporal stability</strong>: box jitter and ID stability across frames, which per-frame AP hides.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৭</span>কেবল accuracy নয়, robustness মূল্যায়ন</h2>
+              <p>একটি fusion মডেলের clean-set NDS deployment আচরণ সম্পর্কে সামান্যই বলে। অন্তত এগুলো রিপোর্ট করুন:</p>
+              <ul>
+                <li><strong>Corruption robustness</strong> nuScenes-C / Robo3D <a class="ref-link" href="#ref-13">[13]</a><a class="ref-link" href="#ref-14">[14]</a>-এ &mdash; mean corrupted score এবং, আরও তথ্যবহুলভাবে, per-corruption breakdown ও clean&ndash;corrupt gap। যে corruption পরিবারগুলো ঢাকতে হবে: weather (বৃষ্টি / কুয়াশা / তুষার), sensor noise (Gaussian, impulse), density (subsampling, beam loss), motion (compensation ত্রুটি, ego jitter), object-level (occlusion, shear), এবং cross-sensor। MultiCorrupt <a class="ref-link" href="#ref-18">[18]</a> বিশেষভাবে misaligned ও missing multi-sensor input লক্ষ্য করে।</li>
+                <li><strong>Missing-modality</strong> score: camera বাদ, LiDAR বাদ, দুটোই দুর্বল।</li>
+                <li><strong>Calibration-noise sweep</strong>: injected extrinsic rotation ও translation-এর সাপেক্ষে AP।</li>
+                <li><strong>দূরত্ব-অনুযায়ী stratified</strong> metric: ০&ndash;২০&nbsp;মি, ২০&ndash;৩০&nbsp;মি, ৩০&nbsp;মি+।</li>
+                <li><strong>Modality-attribution ablation</strong>: প্রতিটি branch একা রেখে score, যাতে fusion আসলে কতটা কাজ করছে তা পরিমাপ করা যায়।</li>
+                <li><strong>Temporal stability</strong>: frame-জুড়ে box jitter ও ID stability, যা per-frame AP আড়াল করে।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="deploy">
+            <div data-lang="en">
+              <h2><span class="s-num">8</span>Deployment considerations</h2>
+              <ul>
+                <li><strong>Fail-operational architecture.</strong> The fused head is the primary; the single-modality heads are hot standbys with a defined arbitration rule. A modality dropout should degrade the output, not stop it.</li>
+                <li><strong>Watchdogs.</strong> Calibration-health score, per-modality point/pixel statistics, and cross-modal consistency, all monitored; a threshold breach downgrades to LiDAR-only and raises a maintenance flag.</li>
+                <li><strong>Latency parity.</strong> The two branches run in parallel, so the slower one sets the budget; do not let a heavy image backbone stall the LiDAR path. Asynchronous fusion (use the most recent camera features with a LiDAR-rate head) is a common compromise.</li>
+                <li><strong>Export.</strong> Sparse convolution and any custom projection / pooling op need TensorRT plugins with numerical-parity tests against the training reference (see the BEV roadmap writeup).</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৮</span>Deployment বিবেচনা</h2>
+              <ul>
+                <li><strong>Fail-operational architecture।</strong> fused head-ই মুখ্য; single-modality head-গুলো নির্ধারিত arbitration নিয়ম সহ hot standby। modality dropout-এ output দুর্বল হওয়া উচিত, থেমে যাওয়া নয়।</li>
+                <li><strong>Watchdog।</strong> Calibration-health score, per-modality point/pixel statistics, এবং cross-modal consistency &mdash; সবই monitor করা; threshold অতিক্রম করলে LiDAR-only-তে নেমে আসে এবং একটি maintenance flag তোলে।</li>
+                <li><strong>Latency parity।</strong> দুটি branch সমান্তরালে চলে, তাই ধীরটিই budget ঠিক করে; ভারী image backbone যেন LiDAR path আটকে না দেয়। Asynchronous fusion (LiDAR-rate head-এর সঙ্গে সাম্প্রতিকতম camera feature ব্যবহার) একটি সাধারণ আপস।</li>
+                <li><strong>Export।</strong> Sparse convolution এবং যেকোনো custom projection / pooling op-এর জন্য TensorRT plugin দরকার, training reference-এর সঙ্গে numerical-parity test সহ (BEV roadmap রাইটআপ দ্রষ্টব্য)।</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="open">
+            <div data-lang="en">
+              <h2><span class="s-num">9</span>Open problems</h2>
+              <ul>
+                <li>Learned, calibration-free association that stays accurate at range without any extrinsics at inference.</li>
+                <li>Fusion that provably degrades to the better single modality under arbitrary corruption &mdash; a monotonicity guarantee, not just an empirical average.</li>
+                <li>Test-time adaptation of modality weighting to weather and sensor state, online, without labels.</li>
+                <li>Physically grounded weather simulation for training data, since real adverse-weather labels are scarce.</li>
+                <li>Open-vocabulary and long-tail objects in fused 3D detection &mdash; today's fusion detectors are firmly closed-set.</li>
+                <li>Certified robustness to sensor spoofing for a safety case.</li>
+              </ul>
+            </div>
+            <div data-lang="bn" lang="bn">
+              <h2><span class="s-num">৯</span>অমীমাংসিত সমস্যা</h2>
+              <ul>
+                <li>Learned, calibration-free association যা inference-এ কোনো extrinsics ছাড়াই দূরত্বে নির্ভুল থাকে।</li>
+                <li>এমন fusion যা যেকোনো corruption-এ প্রমাণসাপেক্ষে ভালো single modality-তে নেমে আসে &mdash; কেবল empirical গড় নয়, একটি monotonicity গ্যারান্টি।</li>
+                <li>label ছাড়াই, online, আবহাওয়া ও sensor অবস্থার সঙ্গে modality weighting-এর test-time adaptation।</li>
+                <li>Training ডেটার জন্য physically grounded weather simulation, যেহেতু বাস্তব বৈরী-আবহাওয়ার label দুষ্প্রাপ্য।</li>
+                <li>Fused 3D detection-এ open-vocabulary ও long-tail object &mdash; আজকের fusion detector দৃঢ়ভাবে closed-set।</li>
+                <li>safety case-এর জন্য sensor spoofing-এর বিরুদ্ধে certified robustness।</li>
+              </ul>
+            </div>
+          </section>
+
+          <div class="w-key" data-lang="en">
+            <h2>Key takeaways</h2>
+            <ul>
+              <li>Fusion's benefit rests on independent sensor failures; real failures are correlated, so unhedged fusion can be worse than the better single modality.</li>
+              <li>Hard point-to-pixel projection inherits full sensitivity to calibration and time-sync error. Prefer soft, learned association; monitor and re-estimate calibration online.</li>
+              <li>Watch for modality laziness: always ablate each branch. If dropping the camera barely changes the score, your fusion is decorative &mdash; and attackable.</li>
+              <li>Train with modality dropout and calibration-noise augmentation; keep single-modality fallback heads and cross-modal consistency watchdogs.</li>
+              <li>Report corruption robustness, missing-modality behavior, calibration-noise sweeps, and distance-stratified metrics &mdash; not just clean NDS.</li>
+            </ul>
+          </div>
+          <div class="w-key" data-lang="bn" lang="bn">
+            <h2>মূল কথা</h2>
+            <ul>
+              <li>Fusion-এর সুবিধা নির্ভর করে sensor failure স্বাধীন হওয়ার উপর; বাস্তব failure correlated, তাই রক্ষাকবচহীন fusion ভালো single modality-র চেয়েও খারাপ হতে পারে।</li>
+              <li>Hard point-to-pixel projection calibration ও time-sync ত্রুটির পুরো sensitivity বহন করে। soft, learned association বেছে নিন; calibration online monitor ও re-estimate করুন।</li>
+              <li>Modality laziness-এর দিকে খেয়াল রাখুন: প্রতিটি branch সর্বদা ablate করুন। camera বাদ দিলে score প্রায় না বদলালে আপনার fusion কেবল সাজসজ্জা &mdash; এবং আক্রমণযোগ্য।</li>
+              <li>Modality dropout ও calibration-noise augmentation দিয়ে train করুন; single-modality fallback head ও cross-modal consistency watchdog রাখুন।</li>
+              <li>কেবল clean NDS নয় &mdash; corruption robustness, missing-modality আচরণ, calibration-noise sweep, ও দূরত্ব-অনুযায়ী metric রিপোর্ট করুন।</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <section class="w-refs" id="refs">
+          <h2><span data-lang="en">References</span><span data-lang="bn" lang="bn">তথ্যসূত্র</span></h2>
+          <ol>
+            <li id="ref-1">Vora, S. et al. &ldquo;PointPainting: Sequential Fusion for 3D Object Detection.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1911.10150">arXiv:1911.10150</a></li>
+            <li id="ref-2">Wang, C. et al. &ldquo;PointAugmenting: Cross-Modal Augmentation for 3D Object Detection.&rdquo; CVPR 2021.</li>
+            <li id="ref-3">Yin, T. et al. &ldquo;Multimodal Virtual Point 3D Detection (MVP).&rdquo; NeurIPS 2021. <a href="https://arxiv.org/abs/2111.06881">arXiv:2111.06881</a></li>
+            <li id="ref-4">Liu, Z. et al. &ldquo;BEVFusion: Multi-Task Multi-Sensor Fusion with Unified BEV Representation.&rdquo; ICRA 2023. <a href="https://arxiv.org/abs/2205.13542">arXiv:2205.13542</a></li>
+            <li id="ref-5">Liang, T. et al. &ldquo;BEVFusion: A Simple and Robust LiDAR-Camera Fusion Framework.&rdquo; NeurIPS 2022. <a href="https://arxiv.org/abs/2205.13790">arXiv:2205.13790</a></li>
+            <li id="ref-6">Bai, X. et al. &ldquo;TransFusion: Robust LiDAR-Camera Fusion for 3D Object Detection with Transformers.&rdquo; CVPR 2022. <a href="https://arxiv.org/abs/2203.11496">arXiv:2203.11496</a></li>
+            <li id="ref-7">Chen, X. et al. &ldquo;FUTR3D: A Unified Sensor Fusion Framework for 3D Detection.&rdquo; CVPR 2023 Workshops. <a href="https://arxiv.org/abs/2203.10642">arXiv:2203.10642</a></li>
+            <li id="ref-8">Yang, Z. et al. &ldquo;DeepInteraction: 3D Object Detection via Modality Interaction.&rdquo; NeurIPS 2022. <a href="https://arxiv.org/abs/2208.11112">arXiv:2208.11112</a></li>
+            <li id="ref-9">Yan, J. et al. &ldquo;Cross Modal Transformer: Towards Fast and Robust 3D Object Detection.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2301.01283">arXiv:2301.01283</a></li>
+            <li id="ref-10">Xie, Y. et al. &ldquo;SparseFusion: Fusing Multi-Modal Sparse Representations for Multi-Sensor 3D Object Detection.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2304.14340">arXiv:2304.14340</a></li>
+            <li id="ref-11">Zhang, H. et al. &ldquo;SparseLIF: High-Performance Sparse LiDAR-Camera Fusion for 3D Object Detection.&rdquo; ECCV 2024. <a href="https://arxiv.org/abs/2403.07284">arXiv:2403.07284</a></li>
+            <li id="ref-12">Li, X. et al. &ldquo;GAFusion: Adaptive Fusing LiDAR and Camera with Multiple Guidance for 3D Object Detection.&rdquo; CVPR 2024.</li>
+            <li id="ref-13">Dong, Y. et al. &ldquo;Benchmarking Robustness of 3D Object Detection to Common Corruptions in Autonomous Driving.&rdquo; CVPR 2023. <a href="https://arxiv.org/abs/2303.11040">arXiv:2303.11040</a></li>
+            <li id="ref-14">Kong, L. et al. &ldquo;Robo3D: Towards Robust and Reliable 3D Perception against Corruptions.&rdquo; ICCV 2023. <a href="https://arxiv.org/abs/2303.17597">arXiv:2303.17597</a></li>
+            <li id="ref-15">Hung, W.-C. et al. &ldquo;LET-3D-AP: Longitudinal Error Tolerant 3D Average Precision for Camera-Only 3D Detection.&rdquo; 2022. <a href="https://arxiv.org/abs/2206.07705">arXiv:2206.07705</a></li>
+            <li id="ref-16">Zhu, Z. et al. &ldquo;Fusion is Not Enough: Single Modal Attacks on Fusion Models for 3D Object Detection.&rdquo; ICLR 2024. <a href="https://arxiv.org/abs/2304.14614">arXiv:2304.14614</a></li>
+            <li id="ref-17">Song, Z. et al. &ldquo;RoboFusion: Towards Robust Multi-Modal 3D Object Detection via SAM.&rdquo; IJCAI 2024. <a href="https://arxiv.org/abs/2401.03907">arXiv:2401.03907</a></li>
+            <li id="ref-18">Beemelmanns, T. et al. &ldquo;MultiCorrupt: A Multi-Modal Robustness Dataset and Benchmark of LiDAR-Camera Fusion for 3D Object Detection.&rdquo; 2024. <a href="https://arxiv.org/abs/2402.11677">arXiv:2402.11677</a></li>
+            <li id="ref-19">Caesar, H. et al. &ldquo;nuScenes: A Multimodal Dataset for Autonomous Driving.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1903.11027">arXiv:1903.11027</a></li>
+            <li id="ref-20">Sun, P. et al. &ldquo;Scalability in Perception for Autonomous Driving: Waymo Open Dataset.&rdquo; CVPR 2020. <a href="https://arxiv.org/abs/1912.04838">arXiv:1912.04838</a></li>
+            <li id="ref-21">Lv, X. et al. &ldquo;LCCNet: LiDAR and Camera Self-Calibration using Cost Volume Network.&rdquo; CVPR 2021 Workshops. <a href="https://arxiv.org/abs/2012.13901">arXiv:2012.13901</a></li>
+            <li id="ref-22">Cao, Y. et al. &ldquo;Adversarial Sensor Attack on LiDAR-based Perception in Autonomous Driving.&rdquo; ACM CCS 2019. <a href="https://arxiv.org/abs/1907.06826">arXiv:1907.06826</a></li>
+          </ol>
+        </section>
+
+        <nav class="w-prevnext" aria-label="More writeups">
+          <a class="p" href="bevfusion-roadmap.html">
+            <span class="dir"><span data-lang="en">&#8592; Previous</span><span data-lang="bn" lang="bn">&#8592; পূর্ববর্তী</span></span>
+            <span class="ttl"><span data-lang="en">From 2D Perception to BEV Fusion: An Implementation Roadmap</span><span data-lang="bn" lang="bn">2D Perception থেকে BEV Fusion: একটি বাস্তবায়ন রোডম্যাপ</span></span>
+          </a>
+          <a class="n" href="self-supervised-perception.html">
+            <span class="dir"><span data-lang="en">Next &#8594;</span><span data-lang="bn" lang="bn">পরবর্তী &#8594;</span></span>
+            <span class="ttl"><span data-lang="en">Self-Supervised Perception for Autonomous Driving: A Practical Overview</span><span data-lang="bn" lang="bn">স্বয়ংক্রিয় ড্রাইভিংয়ের জন্য Self-Supervised Perception: একটি ব্যবহারিক পরিচিতি</span></span>
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/"><span data-lang="en">Back to portfolio &#8599;</span><span data-lang="bn" lang="bn">পোর্টফোলিওতে ফিরুন &#8599;</span></a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

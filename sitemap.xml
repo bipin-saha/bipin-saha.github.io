@@ -19,39 +19,39 @@
 
   <!-- Technical writeups -->
   <url>
-    <loc>https://bipin-saha.github.io/writeups/index.html</loc>
-    <lastmod>2026-03-22</lastmod>
+    <loc>https://bipin-saha.github.io/writeups/</loc>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://bipin-saha.github.io/writeups/bevfusion-roadmap.html</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://bipin-saha.github.io/writeups/camera-lidar-fusion.html</loc>
-    <lastmod>2026-03-22</lastmod>
-    <changefreq>yearly</changefreq>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/self-supervised-perception.html</loc>
-    <lastmod>2026-03-22</lastmod>
-    <changefreq>yearly</changefreq>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/vision-language-vehicle-detection.html</loc>
-    <lastmod>2026-03-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://bipin-saha.github.io/writeups/bevfusion-roadmap.html</loc>
-    <lastmod>2026-03-22</lastmod>
-    <changefreq>yearly</changefreq>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://bipin-saha.github.io/writeups/perception-benchmarks.html</loc>
-    <lastmod>2026-03-22</lastmod>
-    <changefreq>yearly</changefreq>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 

@@ -1,38 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Technical writeups by Bipin Saha on autonomous driving perception, multimodal fusion, and AV research workflows.">
+  <meta name="description" content="Technical writeups by Bipin Saha on autonomous-driving perception: camera-LiDAR / BEV fusion, self-supervised learning, open-vocabulary detection, and reproducible benchmarking.">
+  <meta name="author" content="Bipin Saha">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://bipin-saha.github.io/writeups/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Bipin Saha Portfolio">
+  <meta property="og:title" content="Technical Writeups | Bipin Saha">
+  <meta property="og:description" content="Field notes on autonomous-driving perception: multimodal fusion, self-supervised learning, open-vocabulary detection, and benchmarking.">
+  <meta property="og:url" content="https://bipin-saha.github.io/writeups/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Technical Writeups | Bipin Saha">
+  <meta name="twitter:description" content="Field notes on autonomous-driving perception by Bipin Saha.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>Technical Writeups | Bipin Saha</title>
-  <link rel="canonical" href="https://bipin-saha.github.io/writeups/index.html">
-  <style>
-    body { font-family: Georgia, serif; max-width: 860px; margin: 40px auto; padding: 0 16px; line-height: 1.7; color: #222; }
-    h1 { margin-bottom: 8px; }
-    .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
-    a { color: #0a4b8f; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-  <p><a href="../index.html">Back to homepage</a></p>
-  <h1>Technical Writeups</h1>
-  <p>Applied notes and implementation guides focused on autonomous systems, perception, and multimodal learning.</p>
 
-  <div class="card">
-    <a href="camera-lidar-fusion.html"><strong>Camera-LiDAR Fusion in Practice: Failure Modes and Design Patterns</strong></a>
-  </div>
-  <div class="card">
-    <a href="self-supervised-perception.html"><strong>Self-Supervised Perception for Autonomous Driving: A Practical Overview</strong></a>
-  </div>
-  <div class="card">
-    <a href="vision-language-vehicle-detection.html"><strong>Vision-Language Approaches for Vehicle Detection in Complex Scenarios</strong></a>
-  </div>
-  <div class="card">
-    <a href="bevfusion-roadmap.html"><strong>From 2D Perception to BEV Fusion: Implementation Roadmap</strong></a>
-  </div>
-  <div class="card">
-    <a href="perception-benchmarks.html"><strong>How to Build Reproducible Perception Benchmarks for AV Research</strong></a>
-  </div>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Technical Writeups",
+      "url": "https://bipin-saha.github.io/writeups/",
+      "author": { "@type": "Person", "name": "Bipin Saha", "url": "https://bipin-saha.github.io/" },
+      "about": ["Autonomous driving perception", "Camera-LiDAR fusion", "Self-supervised learning", "Open-vocabulary detection", "Benchmarking"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bipin-saha.github.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Writeups", "item": "https://bipin-saha.github.io/writeups/" }
+      ]
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/writeup.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="wm">
+    <div class="container wm-inner">
+      <a class="wm-home" href="/">Bipin Saha</a>
+      <nav class="wm-crumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><span class="here">Writeups</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container w-index" id="content">
+    <h1>Technical Writeups</h1>
+    <p class="lead">Longer-form field notes on autonomous-driving perception &mdash; the parts that do not fit in a paper: implementation roadmaps, failure taxonomies, and evaluation practice. Written for researchers and engineers building the stack.</p>
+
+    <ol class="w-list">
+      <li>
+        <h2><a href="bevfusion-roadmap.html">From 2D Perception to BEV Fusion: An Implementation Roadmap</a></h2>
+        <p class="w-list-meta">Nov 2025 &middot; updated Aug 2026 &middot; ~22 min &middot; 22 refs</p>
+        <p class="w-list-sum">A staged path from a working 2D detector to a multi-sensor bird's-eye-view stack &mdash; monocular 3D, push vs. pull view transforms, LiDAR BEV, and camera&ndash;LiDAR fusion &mdash; with the coordinate-frame, training-recipe, and deployment pitfalls that bite at each stage.</p>
+      </li>
+      <li>
+        <h2><a href="camera-lidar-fusion.html">Camera&ndash;LiDAR Fusion in Practice: Failure Modes and Design Patterns</a></h2>
+        <p class="w-list-meta">Jan 2026 &middot; updated Aug 2026 &middot; ~24 min &middot; 22 refs</p>
+        <p class="w-list-sum">Fusion beats either sensor alone on clean benchmarks, then fails in correlated, systematic ways: calibration drift, temporal misalignment, modality laziness, and asymmetric weather degradation. A taxonomy of what breaks and the architectural patterns that contain it.</p>
+      </li>
+      <li>
+        <h2><a href="self-supervised-perception.html">Self-Supervised Perception for Autonomous Driving: A Practical Overview</a></h2>
+        <p class="w-list-meta">Feb 2026 &middot; updated Aug 2026 &middot; ~28 min &middot; 35 refs</p>
+        <p class="w-list-sum">Fleet vehicles record far more than anyone can label. A survey of contrastive, masked-modeling, rendering, and cross-modal-distillation pretext tasks for LiDAR and multi-sensor data &mdash; what actually transfers, where it does not, and how to evaluate it honestly.</p>
+      </li>
+      <li>
+        <h2><a href="vision-language-vehicle-detection.html">Vision&ndash;Language Approaches for Vehicle Detection in Complex Scenarios</a></h2>
+        <p class="w-list-meta">Mar 2026 &middot; updated Aug 2026 &middot; ~26 min &middot; 18 refs</p>
+        <p class="w-list-sum">Closed-set detectors fail on the long tail: region-specific vehicle types, dense occlusion, adverse weather, distribution shift. How CNN, transformer, and vision&ndash;language detector families compare on these cases, and a discovery-then-distillation pipeline for shipping the result.</p>
+      </li>
+      <li>
+        <h2><a href="perception-benchmarks.html">How to Build Reproducible Perception Benchmarks for AV Research</a></h2>
+        <p class="w-list-meta">Apr 2026 &middot; updated Aug 2026 &middot; ~29 min &middot; 18 refs</p>
+        <p class="w-list-sum">Why 3D-perception leaderboard gains so often fail to reproduce &mdash; hidden backbones, test-time augmentation, split leakage, seed variance &mdash; and a concrete checklist for benchmark, metric, and split design that supports fair, compute-matched comparison.</p>
+      </li>
+    </ol>
+  </main>
+
+  <footer class="container site-footer">
+    <span>Bipin Saha</span>
+    <span>Greensboro, NC</span>
+    <span><a href="mailto:bsaha@aggies.ncat.edu">bsaha@aggies.ncat.edu</a></span>
+    <span><a href="/">Back to portfolio &#8599;</a></span>
+  </footer>
+
+  <script data-goatcounter="https://bipinsaha.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+  <script src="/js/writeup.js" defer></script>
 </body>
+
 </html>

@@ -1,0 +1,576 @@
+/* ==========================================================================
+   Bipin Saha - Writeup / article template  ("archival" redesign, 2026)
+   --------------------------------------------------------------------------
+   Shared styling for every page under /writeups/. Builds on the tokens,
+   reset, and fonts defined in /css/main.css - load that file FIRST, then
+   this one. Same warm-ivory paper, one oxblood accent, hairlines not
+   shadows, IBM Plex Mono for labels / dates / metrics.
+
+   Contents
+     1. Skip link
+     2. Masthead-lite (wordmark + breadcrumb + language toggle)
+     3. Article layout (contents rail + column)
+     4. Article header (eyebrow, lede, meta, tags)
+     5. Prose (headings, links, lists, quotes, rules)
+     6. Figures & tables
+     7. Code & equations
+     8. Callouts & key-points
+     9. References
+    10. Prev / next nav
+    11. Responsive
+    12. Bilingual (English / Bangla) toggle
+   ========================================================================== */
+
+
+/* 1. Skip link ========================================================== */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0 0 6px 0;
+}
+.skip-link:focus { left: 0; }
+
+
+/* 2. Masthead-lite ===================================================== */
+
+.wm {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.wm-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1.25rem;
+  padding-top: 1.1rem;
+  padding-bottom: 1.1rem;
+}
+.wm-home {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--head);
+  letter-spacing: -0.01em;
+}
+.wm-home:hover { color: var(--accent-ink); text-decoration: none; }
+
+.wm-crumbs {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.wm-crumbs a { color: var(--accent-ink); }
+.wm-crumbs span { margin: 0 0.35rem; color: var(--line); }
+.wm-crumbs .here { color: var(--muted); margin-left: 0.35rem; }
+
+
+/* 3. Article layout =================================================== */
+
+.w-layout {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  gap: 3.5rem;
+  padding: 3rem 0 3.5rem;
+}
+
+.w-toc { position: sticky; top: 2rem; align-self: start; }
+.w-toc-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.w-toc ul { list-style: none; margin: 0; padding: 0; }
+.w-toc a {
+  display: block;
+  padding: 0.3rem 0.6rem;
+  border-left: 2px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--muted);
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.w-toc a:hover { color: var(--ink); text-decoration: none; }
+.w-toc a.is-active {
+  color: var(--accent-ink);
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+  font-weight: 500;
+}
+
+.warticle { min-width: 0; max-width: 44rem; }
+
+
+/* 4. Article header ================================================== */
+
+.w-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.7rem;
+}
+.w-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 0.9rem;
+  height: 2px;
+  background: var(--accent);
+  vertical-align: 0.22em;
+  margin-right: 0.5rem;
+}
+
+.warticle > h1 {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  margin: 0;
+}
+
+.w-lede {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 1.1rem 0 0;
+}
+
+.w-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+  margin: 1.3rem 0 0;
+  padding: 0.7rem 0 0;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  color: var(--muted);
+}
+
+.w-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.w-tags li {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 0.18rem 0.62rem;
+}
+
+
+/* 5. Prose ========================================================== */
+
+.prose { margin-top: 2.5rem; }
+.prose > section + section { margin-top: 2.75rem; }
+
+.prose h2 {
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.4rem;
+  margin: 0 0 1.1rem;
+}
+.prose h2 .s-num {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-ink);
+  margin-right: 0.6rem;
+}
+.prose h3 {
+  font-size: 1.08rem;
+  margin: 1.9rem 0 0.6rem;
+  color: var(--head);
+}
+
+.prose p { margin: 0 0 1rem; }
+.prose ul, .prose ol { margin: 0 0 1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.35rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.35rem 0 0.5rem; }
+
+.prose strong { font-weight: 600; color: var(--head); }
+.prose em { font-style: italic; }
+
+.prose a { color: var(--accent-ink); text-decoration: none; border-bottom: 1px solid var(--line); }
+.prose a:hover { border-bottom-color: var(--accent); text-decoration: none; }
+
+/* heading anchor, injected by writeup.js */
+.w-anchor {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--line);
+  border: 0 !important;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.prose h2:hover .w-anchor,
+.prose h3:hover .w-anchor,
+.w-anchor:focus { opacity: 1; color: var(--accent-ink); }
+
+.prose blockquote {
+  margin: 1.3rem 0;
+  padding: 0.3rem 0 0.3rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+  font-style: italic;
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2.5rem 0;
+}
+
+.ref-link {
+  border: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  vertical-align: 0.35em;
+  padding: 0 0.05em;
+}
+
+
+/* 6. Figures & tables =============================================== */
+
+.prose figure { margin: 1.75rem 0; }
+.prose figure img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.prose figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 0.6rem;
+}
+
+.t-wrap { overflow-x: auto; margin: 1.6rem 0; }
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 32rem;
+}
+.prose caption {
+  caption-side: bottom;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: left;
+  padding-top: 0.6rem;
+}
+.prose th, .prose td {
+  text-align: left;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+.prose thead th {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.prose tbody tr:last-child td { border-bottom: 1px solid var(--line); }
+.prose td.num { font-family: var(--font-mono); white-space: nowrap; }
+
+
+/* 7. Code & equations ============================================= */
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--paper-sink);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+}
+.prose pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem;
+  background: var(--paper-sink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* lightweight inline / display math - no external library */
+.eq {
+  font-family: var(--font-body);
+  font-style: italic;
+}
+.eq sub, .eq sup { font-style: normal; font-size: 0.7em; }
+.eq-block {
+  margin: 1.4rem 0;
+  padding: 0.9rem 1rem;
+  background: var(--paper-sink);
+  border-left: 2px solid var(--line);
+  border-radius: 0 6px 6px 0;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+.eq-block .eq-num {
+  float: right;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+
+/* 8. Callouts & key-points ======================================= */
+
+.w-note {
+  margin: 1.6rem 0;
+  padding: 0.9rem 1.1rem;
+  background: var(--accent-wash);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
+.w-note p:last-child { margin-bottom: 0; }
+.w-note b {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.w-key {
+  margin: 2.25rem 0;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+.w-key h2 {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.7rem;
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.w-key ul { margin: 0; padding-left: 1.2rem; }
+.w-key li { margin: 0.4rem 0; font-size: 0.95rem; }
+
+
+/* 9. References ================================================== */
+
+.w-refs { margin-top: 3rem; }
+.w-refs h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.4rem;
+  margin: 0 0 1.1rem;
+}
+.w-refs ol {
+  margin: 0;
+  padding-left: 1.6rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.w-refs li { margin: 0.5rem 0; }
+.w-refs li::marker { font-family: var(--font-mono); font-size: 0.78rem; }
+.w-refs a { color: var(--accent-ink); word-break: break-word; }
+
+
+/* 10. Prev / next nav ========================================== */
+
+.w-prevnext {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+.w-prevnext a {
+  display: block;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  transition: border-color 0.18s ease;
+}
+.w-prevnext a:hover { border-color: var(--accent); text-decoration: none; }
+.w-prevnext .dir {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.w-prevnext .ttl {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--head);
+  line-height: 1.3;
+}
+.w-prevnext .n { text-align: right; }
+.w-prevnext .n.only { grid-column: 2; }
+
+
+/* --- writeups index listing --- */
+.w-index { padding: 2.75rem 0 3.5rem; max-width: 44rem; }
+.w-index > h1 {
+  font-size: clamp(1.9rem, 5vw, 2.5rem);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.w-index > .lead {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 1rem 0 0;
+}
+.w-list { list-style: none; padding: 0; margin: 2.25rem 0 0; }
+.w-list > li {
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.w-list > li:last-child { border-bottom: 0; }
+.w-list h2 {
+  font-size: 1.1rem;
+  line-height: 1.3;
+  margin: 0;
+}
+.w-list h2 a { color: var(--head); }
+.w-list h2 a:hover { color: var(--accent-ink); text-decoration: none; }
+.w-list .w-list-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 0.4rem 0 0;
+}
+.w-list .w-list-sum {
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 0.5rem 0 0;
+}
+
+
+/* 11. Responsive ============================================== */
+
+@media (max-width: 900px) {
+  .w-layout { grid-template-columns: 1fr; gap: 0; padding: 2.25rem 0 3rem; }
+  .w-toc { display: none; }
+  .warticle { max-width: none; }
+}
+
+@media (max-width: 620px) {
+  .w-prevnext { grid-template-columns: 1fr; }
+  .w-prevnext .n, .w-prevnext .n.only { text-align: left; grid-column: auto; }
+  .warticle > h1 { font-size: 1.7rem; }
+  .w-lede { font-size: 1.05rem; }
+}
+
+@media print {
+  .wm, .w-toc, .w-prevnext, .skip-link, .site-footer { display: none !important; }
+  .w-layout { display: block; padding: 0; }
+  .warticle { max-width: none; }
+  .prose a { border: 0; color: inherit; }
+  [data-lang]:not([data-lang="en"]) { display: none !important; }
+}
+
+
+/* 12. Bilingual (English / Bangla) toggle ===================================
+   Every translatable block appears twice - once with data-lang="en", once
+   with data-lang="bn". js/writeup.js sets <html lang="en|bn"> from a stored
+   preference (a small inline <head> script applies it before first paint to
+   avoid a flash). Bangla is hidden until chosen. Reference lists and paper
+   titles stay English in both modes - citations are language-neutral. */
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.lang-toggle button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  padding: 0.28rem 0.72rem;
+  color: var(--muted);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.lang-toggle button + button { border-left: 1px solid var(--line); }
+.lang-toggle button:hover { color: var(--ink); }
+.lang-toggle button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Visibility: Bangla blocks are hidden by default; swap when <html lang="bn">. */
+[data-lang="bn"] { display: none; }
+html[lang="bn"] [data-lang="bn"] { display: revert; }
+html[lang="bn"] [data-lang="en"] { display: none; }
+
+/* Bangla typography - Noto Bengali families, loaded per page. Only the token
+   values change; every existing rule keeps working through var(--font-*). */
+html[lang="bn"] {
+  --font-display: "Noto Sans Bengali", "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Noto Serif Bengali", "Newsreader", Georgia, serif;
+  --font-mono: "Noto Sans Bengali", "IBM Plex Mono", ui-monospace, monospace;
+}
+html[lang="bn"] .w-lede,
+html[lang="bn"] .prose,
+html[lang="bn"] .w-key li,
+html[lang="bn"] .w-note { line-height: 1.75; }
