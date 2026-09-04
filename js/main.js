@@ -90,6 +90,10 @@ document.addEventListener('click', function (e) {
     track('click-writeup-' + slug(href.split('/').pop().replace(/\.html$/, '')), 'Writeup: ' + text);
     return;
   }
+  if (a.closest('#talks')) {
+    track('click-talk-' + slug(text), 'Talk: ' + text);
+    return;
+  }
   if (a.closest('#publications') && /^https?:/i.test(href)) {
     var pub = a.closest('.pub');
     var titleEl = pub && pub.querySelector('.pub-title');
